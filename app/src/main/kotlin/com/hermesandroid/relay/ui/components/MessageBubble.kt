@@ -16,6 +16,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import com.hermesandroid.relay.ui.theme.readableContentColor
 import com.hermesandroid.relay.ui.theme.LocalBrand
 import com.hermesandroid.relay.ui.theme.LocalAppearanceShapeScale
 import com.hermesandroid.relay.ui.theme.appearanceRoundedCornerShape
@@ -36,13 +37,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FormatQuote
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -89,7 +85,6 @@ import com.hermesandroid.relay.data.parseChatQuotedPrompt
 import com.hermesandroid.relay.ui.components.pet.petObstacleSurface
 import com.hermesandroid.relay.ui.components.pet.petPerchSurface
 import com.hermesandroid.relay.ui.components.pet.petVisitTargetSurface
-import com.hermesandroid.relay.ui.theme.leftEdgeGlow
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -212,14 +207,14 @@ fun MessageBubble(
     )
 
     val backgroundColor = when {
-        message.role == MessageRole.USER -> MaterialTheme.colorScheme.primary
+        message.role == MessageRole.USER -> LocalBrand.current.electric
         message.role == MessageRole.SYSTEM -> MaterialTheme.colorScheme.tertiaryContainer
         isActionBubble -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f)
         else -> MaterialTheme.colorScheme.surfaceContainerLow
     }
 
     val textColor = when (message.role) {
-        MessageRole.USER -> MaterialTheme.colorScheme.onPrimary
+        MessageRole.USER -> readableContentColor(LocalBrand.current.electric)
         MessageRole.ASSISTANT -> MaterialTheme.colorScheme.onSurface
         MessageRole.SYSTEM -> MaterialTheme.colorScheme.onTertiaryContainer
     }
@@ -379,7 +374,7 @@ fun MessageBubble(
                         // realtime engine chip ("Realtime Agent") are spoken
                         // turns, so they share it; only the text differs.
                         leadingIcon = if (badge == "Voice" || badge == "Realtime Agent") {
-                            Icons.AutoMirrored.Filled.VolumeUp
+                            RelayIcons.VolumeUp
                         } else {
                             null
                         },
@@ -557,7 +552,7 @@ fun MessageBubble(
                         text = { Text(stringResource(R.string.msg_bubble_speak_response)) },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                                imageVector = RelayIcons.VolumeUp,
                                 contentDescription = null,
                             )
                         },
@@ -572,7 +567,7 @@ fun MessageBubble(
                         text = { Text(stringResource(R.string.msg_bubble_stop_speaking)) },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Filled.Stop,
+                                imageVector = RelayIcons.Stop,
                                 contentDescription = null,
                             )
                         },
@@ -611,21 +606,9 @@ fun MessageBubble(
             shape = if (standaloneCards) RectangleShape else bubbleShape,
             color = if (standaloneCards) Color.Transparent else backgroundColor,
             modifier = Modifier
-                .then(
-                    if (!isUser && !isSystem && isDarkTheme && !standaloneCards) {
-                        Modifier.leftEdgeGlow(
-                            alpha = 0.12f,
-                            width = 28.dp,
-                            isDarkTheme = true
-                        )
-                    } else Modifier
-                )
                 .combinedClickable(
                     onClick = { showInlineActions = !showInlineActions },
                     onLongClick = {
-                        // Buzz the instant the long-press registers — opening the
-                        // action menu is the discoverability moment, so it gets the
-                        // same tactile confirm every chat app fires.
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         if (
                             onQuoteMessage != null || onReact != null || showEditAction || showSpeakAction ||
@@ -1018,7 +1001,7 @@ private fun MessageInlineActions(
         ) {
             IconButton(onClick = onCopy, modifier = Modifier.size(48.dp)) {
                 Icon(
-                    imageVector = Icons.Filled.ContentCopy,
+                    imageVector = RelayIcons.ContentCopy,
                     contentDescription = stringResource(R.string.msg_bubble_copy),
                     modifier = Modifier.size(18.dp),
                 )
@@ -1026,7 +1009,7 @@ private fun MessageInlineActions(
             if (showQuote) {
                 IconButton(onClick = onQuote, modifier = Modifier.size(48.dp)) {
                     Icon(
-                        imageVector = Icons.Filled.FormatQuote,
+                        imageVector = RelayIcons.FormatQuote,
                         contentDescription = stringResource(R.string.msg_bubble_quote),
                         modifier = Modifier.size(18.dp),
                     )
@@ -1035,7 +1018,7 @@ private fun MessageInlineActions(
             if (showSpeak) {
                 IconButton(onClick = onSpeak, modifier = Modifier.size(48.dp)) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                        imageVector = RelayIcons.VolumeUp,
                         contentDescription = stringResource(R.string.msg_bubble_speak_response),
                         modifier = Modifier.size(18.dp),
                     )
@@ -1044,7 +1027,7 @@ private fun MessageInlineActions(
             if (showStopSpeaking) {
                 IconButton(onClick = onStopSpeaking, modifier = Modifier.size(48.dp)) {
                     Icon(
-                        imageVector = Icons.Filled.Stop,
+                        imageVector = RelayIcons.Stop,
                         contentDescription = stringResource(R.string.msg_bubble_stop_speaking),
                         modifier = Modifier.size(18.dp),
                     )
@@ -1053,7 +1036,7 @@ private fun MessageInlineActions(
             if (showEdit) {
                 IconButton(onClick = onEdit, modifier = Modifier.size(48.dp)) {
                     Icon(
-                        imageVector = Icons.Filled.Edit,
+                        imageVector = RelayIcons.Edit,
                         contentDescription = stringResource(R.string.msg_bubble_edit),
                         modifier = Modifier.size(18.dp),
                     )

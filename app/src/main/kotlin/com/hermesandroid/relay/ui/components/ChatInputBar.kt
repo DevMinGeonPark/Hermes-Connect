@@ -31,22 +31,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ContentPaste
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -76,10 +65,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hermesandroid.relay.R
+import com.hermesandroid.relay.ui.theme.LocalBrand
+import com.hermesandroid.relay.ui.theme.readableContentColor
 import com.hermesandroid.relay.ui.theme.RelayRefresh
 import com.hermesandroid.relay.ui.theme.appearanceComposerShape
 import com.hermesandroid.relay.ui.theme.appearanceRoundedCornerShape
-import com.hermesandroid.relay.ui.theme.purpleGlow
 import com.hermesandroid.relay.ui.theme.relayMetadataStyle
 import kotlinx.coroutines.delay
 
@@ -138,14 +128,12 @@ data class ChatInputPickerControl(
  *  - [caption] renders a single relayMetadataStyle line above the bar
  *    (correct/queue hinting during streaming-with-text); Cyan when the slot
  *    is STEER, muted otherwise. Null collapses the row.
- *  - Voice: GraphicEq glyph ("voice session", not "record"); when
+ *  - Voice: the microphone opens a voice session; when
  *    ![voiceReady] the button stays FULL alpha with a 6dp Amber dot badge
  *    ("needs setup" reads intentional, not broken) and the tap still goes
  *    to [onVoice] for the route-specific toast. [showVoiceHint] one-shot
  *    floats the "Live voice conversation" pill above the button for ~3s
  *    (DataStore flag owned by the caller, consumed via [onVoiceHintShown]).
- *  - [purpleGlow] on the trailing button (dark theme only) when it is an
- *    enabled SEND — the bar's one flourish, exactly as before.
  *  - [topContent] lets an active mode share the composer's outer surface.
  *    Conversation voice uses it for the dock and sets [suppressVoiceTrailing]
  *    so the dock remains the only idle/stop voice action; typed send/steer/
@@ -331,8 +319,8 @@ fun ChatInputBar(
         ) {
         Surface(
             shape = appearanceComposerShape(),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+            color = MaterialTheme.colorScheme.surface,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 3.dp)
@@ -466,7 +454,7 @@ fun ChatInputBar(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Add,
+                                imageVector = RelayIcons.Add,
                                 contentDescription = stringResource(R.string.chat_input_add_attachment_hold),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -478,7 +466,7 @@ fun ChatInputBar(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.chat_input_photos)) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
+                                    Icon(RelayIcons.PhotoLibrary, contentDescription = null)
                                 },
                                 onClick = {
                                     attachMenuExpanded = false
@@ -488,7 +476,7 @@ fun ChatInputBar(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.chat_input_files)) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.InsertDriveFile, contentDescription = null)
+                                    Icon(RelayIcons.InsertDriveFile, contentDescription = null)
                                 },
                                 onClick = {
                                     attachMenuExpanded = false
@@ -498,7 +486,7 @@ fun ChatInputBar(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.chat_input_camera)) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.PhotoCamera, contentDescription = null)
+                                    Icon(RelayIcons.PhotoCamera, contentDescription = null)
                                 },
                                 onClick = {
                                     attachMenuExpanded = false
@@ -508,7 +496,7 @@ fun ChatInputBar(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.chat_input_paste_image)) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.ContentPaste, contentDescription = null)
+                                    Icon(RelayIcons.ContentPaste, contentDescription = null)
                                 },
                                 onClick = {
                                     attachMenuExpanded = false
@@ -539,14 +527,7 @@ fun ChatInputBar(
                     Spacer(modifier = Modifier.weight(1f))
 
                     // Trailing slot
-                    val glow = trailing == ChatInputTrailing.SEND && enabled && isDarkTheme
-                    Box(
-                        modifier = if (glow) {
-                            Modifier.purpleGlow(radius = 24.dp, alpha = 0.35f, isDarkTheme = true)
-                        } else {
-                            Modifier
-                        },
-                    ) {
+                    Box {
                         AnimatedContent(
                             targetState = trailing,
                             transitionSpec = {
@@ -559,11 +540,15 @@ fun ChatInputBar(
                                 ChatInputTrailing.SEND -> IconButton(
                                     onClick = onSend,
                                     enabled = canSubmit,
+                                    modifier = Modifier.background(
+                                        if (canSubmit) LocalBrand.current.electric else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        CircleShape,
+                                    ),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Send,
+                                        imageVector = RelayIcons.Send,
                                         contentDescription = stringResource(R.string.chat_input_send_message),
-                                        tint = if (canSubmit) MaterialTheme.colorScheme.primary
+                                        tint = if (canSubmit) readableContentColor(LocalBrand.current.electric)
                                             else MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
@@ -573,7 +558,7 @@ fun ChatInputBar(
                                         Box {
                                             IconButton(onClick = onVoice) {
                                                 Icon(
-                                                    imageVector = Icons.Filled.GraphicEq,
+                                                    imageVector = RelayIcons.GraphicEq,
                                                     contentDescription = if (voiceReady) stringResource(R.string.chat_input_start_voice)
                                                         else stringResource(R.string.chat_input_voice_setup_needed),
                                                     tint = MaterialTheme.colorScheme.primary,
@@ -605,7 +590,7 @@ fun ChatInputBar(
                                                 contentAlignment = Alignment.Center,
                                             ) {
                                                 Icon(
-                                                    imageVector = Icons.Filled.Stop,
+                                                    imageVector = RelayIcons.Stop,
                                                     contentDescription = stringResource(R.string.chat_input_stop_streaming),
                                                     tint = MaterialTheme.colorScheme.error,
                                                     modifier = Modifier.size(18.dp),
@@ -618,11 +603,16 @@ fun ChatInputBar(
                                 ChatInputTrailing.STEER -> IconButton(
                                     onClick = onSend,
                                     enabled = canSubmit,
+                                    modifier = Modifier.background(
+                                        if (canSubmit) LocalBrand.current.electric else MaterialTheme.colorScheme.surfaceContainerHigh,
+                                        CircleShape,
+                                    ),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Filled.Send,
+                                        imageVector = RelayIcons.Send,
                                         contentDescription = stringResource(R.string.chat_input_steer_response),
-                                        tint = MaterialTheme.colorScheme.tertiary,
+                                        tint = if (canSubmit) readableContentColor(LocalBrand.current.electric)
+                                            else MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
 
@@ -632,12 +622,12 @@ fun ChatInputBar(
                                 ) {
                                     Box {
                                         Icon(
-                                            imageVector = Icons.AutoMirrored.Filled.Send,
+                                            imageVector = RelayIcons.Send,
                                             contentDescription = stringResource(R.string.chat_input_queue_message),
                                             tint = MaterialTheme.colorScheme.tertiary,
                                         )
                                         Icon(
-                                            imageVector = Icons.Filled.Schedule,
+                                            imageVector = RelayIcons.Schedule,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.tertiary,
                                             modifier = Modifier
@@ -734,7 +724,7 @@ private fun ChatInputPickerChip(
                     modifier = Modifier.weight(1f, fill = false),
                 )
                 Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    imageVector = RelayIcons.KeyboardArrowDown,
                     contentDescription = control.contentDescription,
                     tint = contentColor,
                     modifier = Modifier.size(16.dp),
@@ -792,7 +782,7 @@ private fun ChatInputPickerChip(
                     leadingIcon = if (option.selected) {
                         {
                             Icon(
-                                imageVector = Icons.Filled.Check,
+                                imageVector = RelayIcons.Check,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
                             )

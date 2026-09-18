@@ -22,13 +22,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -124,7 +119,7 @@ fun ChatBusyActionSelector(
                             horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             if (option == action) {
-                                Icon(Icons.Default.Check, null, Modifier.size(14.dp),
+                                Icon(RelayIcons.Check, null, Modifier.size(14.dp),
                                     tint = MaterialTheme.colorScheme.onSurface)
                             } else Spacer(Modifier.size(14.dp))
                             Text(
@@ -153,13 +148,13 @@ fun ChatBusyActionSelector(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Icon(
-                        if (expanded) Icons.Default.ExpandMore else Icons.Default.ExpandLess,
+                        if (expanded) RelayIcons.ExpandMore else RelayIcons.ExpandLess,
                         null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 if (onStop != null) {
                     IconButton(onClick = onStop) {
-                        Icon(Icons.Default.Stop, stringResource(R.string.chat_input_stop_streaming), Modifier.size(18.dp))
+                        Icon(RelayIcons.Stop, stringResource(R.string.chat_input_stop_streaming), Modifier.size(18.dp))
                     }
                 }
             }
@@ -206,7 +201,7 @@ fun ChatMessageQueue(
                             .padding(vertical = 12.dp),
                     )
                     IconButton(onClick = { onRemove(index) }) {
-                        Icon(Icons.Default.Close, stringResource(R.string.chat_queue_remove))
+                        Icon(RelayIcons.Close, stringResource(R.string.chat_queue_remove))
                     }
                 }
             }

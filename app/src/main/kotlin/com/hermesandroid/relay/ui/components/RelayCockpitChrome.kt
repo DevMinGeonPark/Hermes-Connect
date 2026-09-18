@@ -18,12 +18,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -37,7 +33,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.hermesandroid.relay.ui.theme.RelayDottedOverlay
 import com.hermesandroid.relay.ui.theme.RelayRefresh
 import com.hermesandroid.relay.ui.theme.relayMetadataStyle
 import com.hermesandroid.relay.ui.theme.relayPanel
@@ -180,10 +175,10 @@ fun RelayReturnStrip(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = RelayIcons.ArrowBack,
                     contentDescription = null,
                     tint = RelayRefresh.Paper,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }
@@ -241,7 +236,6 @@ fun RelayHeroPanel(
             .clip(RoundedCornerShape(RelayRefresh.CardRadius))
             .relaySelectedPanel(),
     ) {
-        RelayDottedOverlay(alpha = 0.18f)
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -318,15 +312,14 @@ fun RelayNavTile(
         Surface(
             modifier = Modifier.size(34.dp),
             shape = RoundedCornerShape(7.dp),
-            color = RelayRefresh.Navy3.copy(alpha = if (enabled) 0.86f else 0.38f),
-            border = BorderStroke(1.dp, RelayRefresh.Line),
+            color = Color.Transparent,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = if (enabled) RelayRefresh.Relay else RelayRefresh.Dim,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }
@@ -350,10 +343,10 @@ fun RelayNavTile(
             trailing()
         } else {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = RelayIcons.KeyboardArrowRight,
                 contentDescription = null,
                 tint = if (enabled) RelayRefresh.Muted else RelayRefresh.Dim,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
     }
@@ -404,7 +397,7 @@ fun RelayStatusPill(
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         Icon(
-            imageVector = if (active) Icons.Filled.CheckCircle else Icons.Filled.RadioButtonUnchecked,
+            imageVector = if (active) RelayIcons.CheckCircle else RelayIcons.RadioButtonUnchecked,
             contentDescription = null,
             tint = if (active) RelayRefresh.Green else RelayRefresh.Muted,
             modifier = Modifier.size(13.dp),
@@ -428,17 +421,16 @@ fun RelayChromeIconButton(
     borderColor: Color = RelayRefresh.LineStrong,
 ) {
     Surface(
-        modifier = modifier.size(38.dp),
+        modifier = modifier.size(48.dp),
         shape = RoundedCornerShape(RelayRefresh.CardRadius),
-        color = RelayRefresh.Background.copy(alpha = 0.52f),
-        border = BorderStroke(1.dp, borderColor),
+        color = Color.Transparent,
     ) {
         IconButton(onClick = onClick) {
             Icon(
                 imageVector = icon,
                 contentDescription = contentDescription,
                 tint = tint,
-                modifier = Modifier.size(19.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
     }

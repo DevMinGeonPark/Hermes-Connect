@@ -21,20 +21,11 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
@@ -210,6 +201,7 @@ fun ProfileShelf(
                                             serverDefaultProfile,
                                             label,
                                             36,
+                                            presentation.colors,
                                         )
                                         Text(
                                             text = label,
@@ -220,7 +212,7 @@ fun ProfileShelf(
                                             overflow = TextOverflow.Ellipsis,
                                         )
                                         Icon(
-                                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                            RelayIcons.KeyboardArrowRight,
                                             contentDescription = null,
                                             modifier = Modifier.size(18.dp),
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -257,6 +249,7 @@ fun ProfileShelf(
                                     serverDefaultProfile,
                                     label,
                                     36,
+                                    presentation.colors,
                                 )
                             }
                         }
@@ -277,7 +270,7 @@ fun ProfileShelf(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                Icons.Filled.MoreHoriz,
+                                RelayIcons.MoreHoriz,
                                 contentDescription = stringResource(R.string.profile_shelf_all_profiles),
                                 modifier = Modifier.size(20.dp),
                             )
@@ -394,10 +387,10 @@ fun ProfileSwitcherSheet(
                         null
                     },
                     leadingContent = {
-                        ProfileChoiceAvatar(connectionViewModel, choice, serverDefaultProfile, label, 42)
+                        ProfileChoiceAvatar(connectionViewModel, choice, serverDefaultProfile, label, 48, presentation.colors)
                     },
                     trailingContent = if (selected) {
-                        { Icon(Icons.Filled.Check, contentDescription = null) }
+                        { Icon(RelayIcons.Check, contentDescription = null) }
                     } else {
                         null
                     },
@@ -431,7 +424,7 @@ fun ProfileSwitcherSheet(
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp, vertical = 4.dp),
             ) {
-                Icon(Icons.Filled.Tune, contentDescription = null)
+                Icon(RelayIcons.Tune, contentDescription = null)
                 Spacer(Modifier.size(8.dp))
                 Text(stringResource(R.string.conn_info_manage_profiles))
             }
@@ -446,18 +439,16 @@ private fun ProfileChoiceAvatar(
     resolvedProfile: Profile?,
     label: String,
     size: Int,
+    colors: Map<String, String> = emptyMap(),
 ) {
     val iconProfileName = ProfileShelfPolicy.iconProfileName(choice)
     val iconPath by connectionViewModel.profileIconFlow(iconProfileName).collectAsState(initial = null)
+    val identityColor = profileIdentityColor(choice.profile?.name, colors)
     Box(modifier = Modifier.size(size.dp)) {
         Surface(
             modifier = Modifier.fillMaxSize(),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.primary,
-            border = BorderStroke(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f),
-            ),
+            color = identityColor,
         ) {
             when {
                 !iconPath.isNullOrBlank() -> AsyncImage(
@@ -466,22 +457,7 @@ private fun ProfileChoiceAvatar(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
                 )
-                resolvedProfile == null && choice.isServerDefault -> Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Filled.Home,
-                        contentDescription = null,
-                        modifier = Modifier.size((size * 0.48f).dp),
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
-                else -> Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = label.trim().firstOrNull()?.uppercase() ?: "H",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
+                else -> ProfileIdentitySymbol(choice.profile?.name, label, identityColor)
             }
         }
         if (choice.isServerDefault && resolvedProfile != null) {
@@ -495,7 +471,7 @@ private fun ProfileChoiceAvatar(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        Icons.Filled.Home,
+                        RelayIcons.Home,
                         contentDescription = null,
                         modifier = Modifier.size((size * 0.22f).dp),
                         tint = MaterialTheme.colorScheme.onSurface,
@@ -524,21 +500,21 @@ private fun ProfileShelfActionsDialog(
         title = { Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
-                ProfileActionRow(Icons.Filled.Visibility, stringResource(R.string.profile_shelf_inspect), canInspect, onInspect)
+                ProfileActionRow(RelayIcons.Visibility, stringResource(R.string.profile_shelf_inspect), canInspect, onInspect)
                 ProfileActionRow(
-                    Icons.Filled.Person,
+                    RelayIcons.Person,
                     stringResource(R.string.conn_info_agent_passport),
                     selected || canSwitch,
                     onPassport,
                 )
                 ProfileActionRow(
-                    Icons.Filled.Lock,
+                    RelayIcons.Lock,
                     stringResource(if (lockedToChoice) R.string.settings_unlock else R.string.settings_profile_lock),
                     true,
                     onToggleLock,
                 )
                 ProfileActionRow(
-                    Icons.Filled.VisibilityOff,
+                    RelayIcons.VisibilityOff,
                     stringResource(R.string.profile_shelf_hide),
                     !selected,
                     onHide,

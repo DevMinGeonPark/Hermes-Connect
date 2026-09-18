@@ -37,4 +37,4 @@ internal fun chatResponsiveLayout(screenWidthDp: Int): ChatResponsiveLayout = wh
 }
 
 internal fun useSplitVoiceLayout(screenWidthDp: Int, screenHeightDp: Int): Boolean =
-    screenWidthDp >= 840 && screenWidthDp > screenHeightDp
+    screenWidthDp >= 720 && screenHeightDp >= 480

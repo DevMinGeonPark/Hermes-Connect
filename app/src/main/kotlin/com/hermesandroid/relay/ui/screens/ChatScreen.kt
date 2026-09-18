@@ -51,19 +51,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.AlertDialog
@@ -79,6 +66,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
+import com.hermesandroid.relay.ui.components.ProfileIdentitySymbol
+import com.hermesandroid.relay.ui.components.profileIdentityColor
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalNavigationDrawer
@@ -156,7 +146,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.SmallFloatingActionButton
 import com.hermesandroid.relay.ui.components.ThemedMessageHost
 import androidx.compose.material3.Scaffold
@@ -171,7 +160,6 @@ import com.hermesandroid.relay.ui.UiMessageBus
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.platform.LocalContext
 import com.hermesandroid.relay.data.AgentDisplay
 import com.hermesandroid.relay.data.Attachment
@@ -286,7 +274,6 @@ import com.hermesandroid.relay.util.HumanErrorAction
 import com.hermesandroid.relay.ui.theme.RelayRefresh
 import com.hermesandroid.relay.ui.theme.appearanceRoundedCornerShape
 import kotlin.math.abs
-import com.hermesandroid.relay.ui.theme.relayGridTexture
 import com.hermesandroid.relay.ui.theme.relayMetadataStyle
 import androidx.compose.ui.text.style.TextAlign
 import kotlin.math.roundToInt
@@ -790,7 +777,7 @@ fun ChatScreen(
                     title = { Text(stringResource(R.string.ko_supervised_chat_unavailable)) },
                     actions = {
                         IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.screen_settings_label))
+                            Icon(RelayIcons.Settings, contentDescription = stringResource(R.string.screen_settings_label))
                         }
                     },
                 )
@@ -2750,7 +2737,6 @@ fun ChatScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(RelayRefresh.Background)
-                .relayGridTexture(alpha = 0.14f)
                 .imePadding()
                 .alpha(chatAlpha)
         ) {
@@ -2760,11 +2746,7 @@ fun ChatScreen(
                 navigationIcon = {
                     if (!supervised || supervisedPolicy.capabilities.conversationHistory) {
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.cd_sessions))
-                        }
-                    } else if (supervisedPolicy.capabilities.newChat) {
-                        IconButton(onClick = { chatViewModel.createNewChat() }) {
-                            Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.pet_creator_new_chat))
+                            Icon(RelayIcons.Menu, contentDescription = stringResource(R.string.cd_sessions))
                         }
                     }
                 },
@@ -2886,7 +2868,7 @@ fun ChatScreen(
                                 onClick = {
                                 showChatDebug = false
                                 if (profileShelfAvailable) {
-                                    showProfileShelf = !showProfileShelf
+                                    showProfileSwitcher = true
                                 } else {
                                     showAgentInfo = true
                                 }
@@ -2894,26 +2876,18 @@ fun ChatScreen(
                             .testTag("chat-agent-header")
                             .semantics {
                                 contentDescription = if (profileShelfAvailable) {
-                                    context.getString(
-                                        if (showProfileShelf) {
-                                            R.string.profile_shelf_collapse
-                                        } else {
-                                            R.string.profile_shelf_expand
-                                        },
-                                    )
+                                    context.getString(R.string.profile_shelf_switch_agent)
                                 } else {
                                     context.getString(R.string.profile_shelf_open_passport)
                                 }
                             }
                     ) {
-                        // Avatar — a plain 40dp circle whose letter swaps to the
-                        // active agent (profile or personality). No overlay ring:
-                        // the letter itself is the indicator.
+                        // Preserve custom portraits; built-in profiles use a stable symbol and color.
                         if (!supervised || supervisedVisibility.showAgentIdentity) Box(modifier = Modifier.size(40.dp)) {
                             Surface(
                                 modifier = Modifier.size(40.dp),
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primary
+                                color = profileIdentityColor(conversationProfile?.name, profilePresentation.colors)
                             ) {
                                 if (isChatConnecting) {
                                     ChatConnectingAvatarGlyph()
@@ -2934,28 +2908,11 @@ fun ChatScreen(
                                             modifier = Modifier.fillMaxSize(),
                                         )
                                     } else {
-                                        // Cross-fade the letter when the
-                                        // effective agent (profile or personality)
-                                        // changes so the avatar feels alive on a
-                                        // profile switch instead of snapping.
-                                        val avatarLetter = if (agentDisplayName.isNotBlank()) {
-                                            agentDisplayName.first().uppercase()
-                                        } else "H"
-                                        AnimatedContent(
-                                            targetState = avatarLetter,
-                                            transitionSpec = {
-                                                fadeIn(tween(220)) togetherWith fadeOut(tween(220))
-                                            },
-                                            label = "chatAvatarLetter",
-                                        ) { letter ->
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Text(
-                                                    text = letter,
-                                                    style = MaterialTheme.typography.titleSmall,
-                                                    color = MaterialTheme.colorScheme.onPrimary
-                                                )
-                                            }
-                                        }
+                                        ProfileIdentitySymbol(
+                                            name = conversationProfile?.name,
+                                            label = agentDisplayName,
+                                            color = profileIdentityColor(conversationProfile?.name, profilePresentation.colors),
+                                        )
                                     }
                                 }
                             }
@@ -2973,12 +2930,14 @@ fun ChatScreen(
 
                         // Name + single-line subtitle.
                         Column(
-                            modifier = Modifier.animateContentSize(
+                            modifier = Modifier.weight(1f).animateContentSize(
                                 animationSpec = tween(durationMillis = 220),
                             ),
                             verticalArrangement = Arrangement.Top,
                         ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
+                                modifier = Modifier.weight(1f, fill = false),
                                 text = if (supervised && !supervisedVisibility.showAgentIdentity) {
                                     stringResource(R.string.screen_chat_label)
                                 } else if (agentDisplayName.isNotBlank()) {
@@ -2990,6 +2949,12 @@ fun ChatScreen(
                                 maxLines = 1,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             )
+                            if (profileShelfAvailable) Icon(
+                                RelayIcons.KeyboardArrowDown, contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(start = 6.dp).size(14.dp),
+                            )
+                            }
                             // Keep the exact persisted identity visible while the
                             // Gateway wakes. The existing loaded-content motion
                             // animates status → confirmed model/personality without
@@ -3022,6 +2987,14 @@ fun ChatScreen(
                     }
                 },
                 actions = {
+                    if (!supervised || supervisedPolicy.capabilities.newChat) {
+                        RelayChromeIconButton(
+                            icon = RelayIcons.Edit,
+                            contentDescription = stringResource(R.string.pet_creator_new_chat),
+                            onClick = { chatViewModel.createNewChat() },
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                     // Approval-bypass marker, demoted from the subtitle to a
                     // single amber ⚡ icon: present only when approvals are
                     // effectively off, tapping into the agent sheet where the
@@ -3030,7 +3003,7 @@ fun ChatScreen(
                     // width on every turn.
                     if (!supervised && yoloEnabled == true) {
                         RelayChromeIconButton(
-                            icon = Icons.Filled.Bolt,
+                            icon = RelayIcons.Bolt,
                             contentDescription = stringResource(R.string.cd_approvals_off),
                             onClick = { showAgentInfo = true },
                             tint = RelayRefresh.Amber,
@@ -3038,49 +3011,12 @@ fun ChatScreen(
                             modifier = Modifier.padding(end = 4.dp),
                         )
                     }
-                    // (The ADR-24 LAN/Tailscale/Public endpoint-role chip that
-                    // used to live here was redundant with the global footer
-                    // status strip, which already renders "<status> / <route>"
-                    // from the same activeEndpoint.displayLabel() — and shows it
-                    // on every screen, not just chat. The footer strip is now
-                    // tappable → Connections, so the affordance moved with the
-                    // info. Dropping it here declutters the actions row and frees
-                    // width for the title subtitle.)
-                    if (!supervised) {
-                        if (showGitWorkspaceContextEntry) {
-                            ChatGitContextButton(
-                                onClick = onNavigateToGitWorkspace,
-                                modifier = Modifier.padding(end = 4.dp),
-                            )
-                        }
-                        RelayChromeIconButton(
-                            icon = Icons.Filled.Code,
-                            contentDescription = stringResource(R.string.cd_terminal),
-                            onClick = onNavigateToTerminal,
-                            modifier = Modifier.padding(end = 4.dp),
-                        )
-                    }
-                    RelayChromeIconButton(
-                        icon = Icons.Filled.Tune,
-                        contentDescription = stringResource(R.string.cd_settings),
-                        onClick = onNavigateToSettings,
-                        modifier = Modifier.padding(end = 4.dp),
-                    )
-                    // Share is the least-used trailing action (and only valid
-                    // once there's a conversation), so it folds into a ⋮
-                    // overflow instead of competing for width with Terminal +
-                    // Settings — which is what was squeezing the title subtitle.
-                    // Session identity is useful before the first message; sharing only appears
-                    // once the conversation has content.
-                    if (
-                        (!supervised && (messages.isNotEmpty() || !currentSessionId.isNullOrBlank())) ||
-                        (supervised && messages.isNotEmpty() &&
-                            supervisedPolicy.allowsSessionAction(SupervisedSessionAction.ShareTranscript))
-                    ) {
+                    // Secondary destinations remain available without crowding the profile title.
+                    run {
                         var showOverflowMenu by remember { mutableStateOf(false) }
                         Box {
                             RelayChromeIconButton(
-                                icon = Icons.Filled.MoreVert,
+                                icon = RelayIcons.MoreVert,
                                 contentDescription = stringResource(R.string.chat_more_actions_a11y),
                                 onClick = { showOverflowMenu = true },
                                 modifier = Modifier.padding(end = 4.dp),
@@ -3089,11 +3025,35 @@ fun ChatScreen(
                                 expanded = showOverflowMenu,
                                 onDismissRequest = { showOverflowMenu = false },
                             ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.cd_settings)) },
+                                    leadingIcon = { Icon(RelayIcons.Tune, contentDescription = null) },
+                                    onClick = { showOverflowMenu = false; onNavigateToSettings() },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.profile_shelf_open_passport)) },
+                                    leadingIcon = { Icon(RelayIcons.Person, contentDescription = null) },
+                                    onClick = { showOverflowMenu = false; showAgentInfo = true },
+                                )
+                                if (!supervised) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.cd_terminal)) },
+                                        leadingIcon = { Icon(RelayIcons.Code, contentDescription = null) },
+                                        onClick = { showOverflowMenu = false; onNavigateToTerminal() },
+                                    )
+                                    if (showGitWorkspaceContextEntry) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.chat_git_open_workspace)) },
+                                            leadingIcon = { Icon(RelayIcons.AccountTree, contentDescription = null) },
+                                            onClick = { showOverflowMenu = false; onNavigateToGitWorkspace() },
+                                        )
+                                    }
+                                }
                                 currentSessionId?.takeIf { !supervised && it.isNotBlank() }?.let { sessionId ->
                                     DropdownMenuItem(
                                         text = { Text(copySessionIdLabel) },
                                         leadingIcon = {
-                                            Icon(Icons.Filled.ContentCopy, contentDescription = null)
+                                            Icon(RelayIcons.ContentCopy, contentDescription = null)
                                         },
                                         onClick = {
                                             showOverflowMenu = false
@@ -3118,7 +3078,7 @@ fun ChatScreen(
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.chat_search_conversation)) },
                                         leadingIcon = {
-                                            Icon(Icons.Filled.Search, contentDescription = null)
+                                            Icon(RelayIcons.Search, contentDescription = null)
                                         },
                                         onClick = {
                                             showOverflowMenu = false
@@ -3129,7 +3089,7 @@ fun ChatScreen(
                                         text = { Text(stringResource(R.string.chat_share_conversation)) },
                                         leadingIcon = {
                                             Icon(
-                                                imageVector = Icons.Filled.Share,
+                                                imageVector = RelayIcons.Share,
                                                 contentDescription = null,
                                             )
                                         },
@@ -3147,7 +3107,7 @@ fun ChatScreen(
                                     DropdownMenuItem(
                                         text = { Text(stringResource(R.string.chat_share_conversation)) },
                                         leadingIcon = {
-                                            Icon(Icons.Filled.Share, contentDescription = null)
+                                            Icon(RelayIcons.Share, contentDescription = null)
                                         },
                                         onClick = {
                                             showOverflowMenu = false
@@ -3343,6 +3303,7 @@ fun ChatScreen(
                             // ASCII sphere (constrained to square aspect)
                             if (
                                 LocalBackgroundVisualizationEnabled.current &&
+                                LocalAgentAvatar.current.id != "sphere" &&
                                 (!supervised || supervisedVisibility.showAgentIdentity)
                             ) {
                                 val avatarModifier = responsiveLayout.avatarSize?.let { size ->
@@ -3528,6 +3489,7 @@ fun ChatScreen(
                     // Ambient avatar behind messages
                     if (
                         LocalBackgroundVisualizationEnabled.current &&
+                        LocalAgentAvatar.current.id != "sphere" &&
                         (!supervised || supervisedVisibility.showAgentIdentity) &&
                         animationBehindChat
                     ) {
@@ -4050,7 +4012,7 @@ fun ChatScreen(
                                 },
                             ) {
                                 Icon(
-                                    Icons.Filled.KeyboardArrowDown,
+                                    RelayIcons.KeyboardArrowDown,
                                     contentDescription = null,
                                 )
                             }
@@ -4221,7 +4183,7 @@ fun ChatScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Edit,
+                        imageVector = RelayIcons.Edit,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.tertiary,
@@ -4242,7 +4204,7 @@ fun ChatScreen(
                         modifier = Modifier.size(24.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Close,
+                            imageVector = RelayIcons.Close,
                             contentDescription = stringResource(R.string.cd_cancel_editing),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,

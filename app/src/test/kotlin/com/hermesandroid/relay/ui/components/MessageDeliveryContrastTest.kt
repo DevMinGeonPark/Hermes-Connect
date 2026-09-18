@@ -22,8 +22,13 @@ import com.hermesandroid.relay.data.ChatMessage
 import com.hermesandroid.relay.data.MessageDeliveryStatus
 import com.hermesandroid.relay.data.MessageRole
 import com.hermesandroid.relay.ui.theme.HermesRelayTheme
+import com.hermesandroid.relay.ui.theme.LocalBrand
+import com.hermesandroid.relay.ui.theme.readableContentColor
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.ColorUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,8 +49,8 @@ class MessageDeliveryContrastTest {
         var background = Color.Unspecified
         compose.setContent {
             HermesRelayTheme(themePreference = theme) {
-                foreground = MaterialTheme.colorScheme.onPrimary
-                background = MaterialTheme.colorScheme.primary
+                background = LocalBrand.current.electric
+                foreground = readableContentColor(background)
                 Surface(Modifier.fillMaxSize()) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -69,6 +74,8 @@ class MessageDeliveryContrastTest {
         }
 
         assertNotEquals(background, foreground)
+        assertTrue("Small delivery labels need at least 4.5:1 contrast",
+            ColorUtils.calculateContrast(foreground.toArgb(), background.toArgb()) >= 4.5)
         listOf("Sending…", "Queued", "Correction sent", "Delivered", "Not sent").forEach { label ->
             val layouts = mutableListOf<TextLayoutResult>()
             compose.onNodeWithText(label, useUnmergedTree = true)

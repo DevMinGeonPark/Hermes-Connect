@@ -289,54 +289,33 @@ private fun darkBrand(
  */
 object BrandPalettes {
 
-    /** Shipped dark brand — preserved byte-for-byte from the original RelayRefresh. */
+    /** Neutral surfaces and blue actions shared with the approved UI study. */
     val HermesDark = BrandPalette(
         isDark = true,
-        ink = Color(0xFFF7F6F0),
-        paper = Color(0xFFF7F3EA),
-        muted = Color(0xFFA7A4B7),
-        dim = Color(0xFF68647D),
-        background = Color(0xFF08090D),
-        surfaceLowest = Color(0xFF05060A),
-        surfaceLow = Color(0xFF0B0C12),
-        navy = Color(0xFF121426),
-        navy2 = Color(0xFF191B31),
-        navy3 = Color(0xFF22243C),
-        relay = Color(0xFFAEBFFF),
-        purple = Color(0xFF8C5CFF),
-        electric = Color(0xFF0E18D6),
-        electricMuted = Color(0xFF4F5BD5),
-        cyan = Color(0xFF6BDCFF),
-        green = Color(0xFF58D36F),
-        amber = Color(0xFFF2B14B),
-        danger = Color(0xFFFF6B78),
-        line = Color(0x24F7F6F0),
-        lineStrong = Color(0x47F7F6F0),
+        ink = Color(0xFFF5F5F7), paper = Color(0xFFF5F5F7),
+        muted = Color(0xFFA5A5AC), dim = Color(0xFF8E8E93),
+        background = Color(0xFF000000), surfaceLowest = Color(0xFF000000),
+        surfaceLow = Color(0xFF1C1C1E), navy = Color(0xFF1C1C1E),
+        navy2 = Color(0xFF262629), navy3 = Color(0xFF38383A),
+        relay = Color(0xFF409CFF), purple = Color(0xFF409CFF),
+        electric = Color(0xFF006CDE), electricMuted = Color(0xFF2379C5),
+        cyan = Color(0xFF70D8E8), green = Color(0xFF30D158),
+        amber = Color(0xFFFFB340), danger = Color(0xFFFF453A),
+        line = Color(0xFF38383A), lineStrong = Color(0xFF636366),
     )
 
-    /** Clean light variant of the Hermes Relay brand — fully inverted surfaces + text. */
     val HermesLight = BrandPalette(
         isDark = false,
-        ink = Color(0xFF171826),
-        paper = Color(0xFF23202E),
-        muted = Color(0xFF5A576C),
-        dim = Color(0xFF83809A),
-        background = Color(0xFFF6F4FB),
-        surfaceLowest = Color(0xFFFFFFFF),
-        surfaceLow = Color(0xFFF0EEF7),
-        navy = Color(0xFFECE9F4),
-        navy2 = Color(0xFFE4E1EE),
-        navy3 = Color(0xFFD9D5E6),
-        relay = Color(0xFF3D4BC9),
-        purple = Color(0xFF6A3FE0),
-        electric = Color(0xFF1A24D6),
-        electricMuted = Color(0xFF4F5BD5),
-        cyan = Color(0xFF0E84B8),
-        green = Color(0xFF2E9E48),
-        amber = Color(0xFFB5791E),
-        danger = Color(0xFFC7283A),
-        line = Color(0xFF171826).copy(alpha = 0.10f),
-        lineStrong = Color(0xFF171826).copy(alpha = 0.22f),
+        ink = Color(0xFF1C1C1E), paper = Color(0xFF1C1C1E),
+        muted = Color(0xFF6C6C70), dim = Color(0xFF76767C),
+        background = Color(0xFFFFFFFF), surfaceLowest = Color(0xFFFFFFFF),
+        surfaceLow = Color(0xFFF2F2F7), navy = Color(0xFFF5F5F7),
+        navy2 = Color(0xFFF0F0F3), navy3 = Color(0xFFE5E5EA),
+        relay = Color(0xFF0066CC), purple = Color(0xFF0066CC),
+        electric = Color(0xFF0072EE), electricMuted = Color(0xFF0066CC),
+        cyan = Color(0xFF006C82), green = Color(0xFF248A3D),
+        amber = Color(0xFFA76500), danger = Color(0xFFC62A30),
+        line = Color(0xFFE5E5EA), lineStrong = Color(0xFF929297),
     )
 
     /** Hermes Teal — the canonical Hermes look: deep teal + warm cream/amber. */
@@ -491,11 +470,11 @@ object AppThemes {
     val HermesRelay = AppTheme(
         id = DEFAULT_ID,
         label = "Hermes Relay",
-        description = "The signature electric-blue brand — follows light/dark",
+        description = "Neutral surfaces and blue actions — follows light/dark",
         mode = ThemeMode.BOTH,
         darkPalette = BrandPalettes.HermesDark,
         lightPalette = BrandPalettes.HermesLight,
-        swatch = listOf(Color(0xFF08090D), Color(0xFF0E18D6), Color(0xFFAEBFFF)),
+        swatch = listOf(Color(0xFF000000), Color(0xFF0072EE), Color(0xFFF5F5F7)),
     )
 
     val HermesTeal = AppTheme(

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+
+- Android uses neutral light/dark surfaces, official Ionicons, direct profile switching, and bottom navigation for Chat, Manage, and Gateways. Secondary chat actions remain available from More.
+- Voice focus uses a circular signal tied to live voice state and amplitude, with the transcript alongside it in wide windows, including portrait foldable layouts. New installations use the system typeface.
+
 ## [Android 1.17.0] - 2026-09-13
 
 ### Added

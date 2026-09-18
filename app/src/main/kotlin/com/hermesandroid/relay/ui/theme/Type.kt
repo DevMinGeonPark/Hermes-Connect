@@ -9,17 +9,14 @@ import androidx.compose.ui.unit.sp
 /**
  * Build the app [Typography] from a user-selected body [FontFamily].
  *
- * Every text role uses [body] except [Typography.labelSmall], which stays on
- * [FontFamily.Monospace] — it is the app's metadata voice (timestamps, token
- * counts, path badges, agent-name labels) and is intentionally monospaced
- * regardless of the chosen UI font. `HermesRelayTheme` calls this with the
+ * Every text role uses [body]. Code blocks opt into monospace locally. `HermesRelayTheme` calls this with the
  * active [AppFont]'s family so the whole app re-themes live when the choice
  * changes; see [AppFont].
  */
 fun appTypography(body: FontFamily): Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = body,
-        fontWeight = FontWeight.ExtraBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 57.sp,
         lineHeight = 64.sp,
         letterSpacing = 0.sp
@@ -60,7 +57,7 @@ fun appTypography(body: FontFamily): Typography = Typography(
         letterSpacing = 0.sp
     ),
     labelSmall = TextStyle(
-        fontFamily = FontFamily.Monospace,
+        fontFamily = body,
         fontWeight = FontWeight.SemiBold,
         fontSize = 11.sp,
         lineHeight = 16.sp,

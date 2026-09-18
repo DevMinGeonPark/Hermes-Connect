@@ -1,5 +1,8 @@
 package com.hermesandroid.relay.ui
 
+import com.hermesandroid.relay.ui.icons.RelayIcons
+import com.hermesandroid.relay.ui.components.ConnectNavigationBar
+import com.hermesandroid.relay.ui.components.ConnectDestination
 import com.hermesandroid.relay.ui.components.connectionDisplayLabel
 import com.hermesandroid.relay.util.localizedResources
 import android.os.SystemClock
@@ -28,13 +31,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Extension
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -449,7 +445,7 @@ sealed class Screen(
     val label: String,
     val icon: ImageVector
 ) {
-    data object Onboarding : Screen("onboarding", "Onboarding", Icons.Filled.Settings)
+    data object Onboarding : Screen("onboarding", "Onboarding", RelayIcons.Settings)
     // `openAgentSheet` — optional flag that tells ChatScreen to auto-open
     // its consolidated AgentInfoSheet on first composition. Added so the
     // Settings → Active Agent card can bounce the user straight to Chat
@@ -468,7 +464,7 @@ sealed class Screen(
         "chat?openAgentSheet={openAgentSheet}&sessionId={sessionId}&profile={profile}" +
             "&proactiveChatId={proactiveChatId}",
         "Chat",
-        Icons.AutoMirrored.Filled.Chat,
+        RelayIcons.Chat,
     ) {
         const val ARG_OPEN_AGENT_SHEET: String = "openAgentSheet"
         const val ARG_SESSION_ID: String = "sessionId"
@@ -495,11 +491,11 @@ sealed class Screen(
             return if (params.isEmpty()) "chat" else "chat?${params.joinToString("&")}"
         }
     }
-    data object BotMode : Screen("bot_mode", "Bot Mode", Icons.Filled.Groups)
+    data object BotMode : Screen("bot_mode", "Bot Mode", RelayIcons.Groups)
     data object BotGroup : Screen(
         "bot_mode/groups/{roomKey}",
         "Bot group",
-        Icons.Filled.Groups,
+        RelayIcons.Groups,
     ) {
         const val ARG_ROOM_KEY: String = "roomKey"
         fun route(roomKey: String): String =
@@ -508,7 +504,7 @@ sealed class Screen(
     data object BotChat : Screen(
         "bot_mode/chat/{connectionId}/{profileName}/{sessionId}",
         "Bot Chat",
-        Icons.AutoMirrored.Filled.Chat,
+        RelayIcons.Chat,
     ) {
         const val ARG_CONNECTION_ID: String = "connectionId"
         const val ARG_PROFILE_NAME: String = "profileName"
@@ -517,13 +513,13 @@ sealed class Screen(
             "bot_mode/chat/${android.net.Uri.encode(connectionId)}/" +
                 "${android.net.Uri.encode(profileName)}/${android.net.Uri.encode(sessionId)}"
     }
-    data object Terminal : Screen("terminal", "Terminal", Icons.Filled.Code)
-    data object Bridge : Screen("bridge", "Bridge", Icons.Filled.PhoneAndroid)
-    data object Manage : Screen("manage", "Manage", Icons.Filled.Settings)
+    data object Terminal : Screen("terminal", "Terminal", RelayIcons.Code)
+    data object Bridge : Screen("bridge", "Bridge", RelayIcons.PhoneAndroid)
+    data object Manage : Screen("manage", "Manage", RelayIcons.Settings)
     data object DashboardSignIn : Screen(
         "dashboard_sign_in?source={source}",
         "Dashboard sign in",
-        Icons.Filled.Settings,
+        RelayIcons.Settings,
     ) {
         const val ARG_SOURCE: String = "source"
         const val SOURCE_GENERAL: String = "general"
@@ -531,13 +527,13 @@ sealed class Screen(
         const val SOURCE_ONBOARDING: String = "onboarding"
         fun route(source: String = SOURCE_GENERAL): String = "dashboard_sign_in?source=$source"
     }
-    data object Settings : Screen("settings", "Settings", Icons.Filled.Settings)
-    data object Plugins : Screen("plugins", "Plugins", Icons.Filled.Extension)
-    data object GitState : Screen("git_state", "Git", Icons.Filled.Code)
+    data object Settings : Screen("settings", "Settings", RelayIcons.Settings)
+    data object Plugins : Screen("plugins", "Plugins", RelayIcons.Extension)
+    data object GitState : Screen("git_state", "Git", RelayIcons.Code)
     data object PluginPage : Screen(
         "plugins/{pluginId}/pages/{pageId}",
         "Plugin",
-        Icons.Filled.Extension,
+        RelayIcons.Extension,
     ) {
         const val ARG_PLUGIN_ID: String = "pluginId"
         const val ARG_PAGE_ID: String = "pageId"
@@ -553,7 +549,7 @@ sealed class Screen(
     // object name keeps `PairedDevices` to avoid churning navigation identifiers
     // and deep-link routes. Opened from Settings → Relay sessions and from the
     // active connection card's Security section.
-    data object PairedDevices : Screen("paired_devices", "Relay sessions", Icons.Filled.Settings)
+    data object PairedDevices : Screen("paired_devices", "Relay sessions", RelayIcons.Settings)
     // Full-screen pair wizard route. Replaces the old in-Settings Dialog
     // launch so the chooser + Confirm + Verify steps + the camera viewport
     // get a real fullscreen surface (the Dialog wasn't actually filling the
@@ -566,7 +562,7 @@ sealed class Screen(
     data object Pair : Screen(
         "pair?connectionId={connectionId}&autoStart={autoStart}",
         "Connect",
-        Icons.Filled.Settings,
+        RelayIcons.Settings,
     ) {
         const val ARG_CONNECTION_ID: String = "connectionId"
         /**
@@ -586,7 +582,7 @@ sealed class Screen(
             return if (params.isEmpty()) "pair" else "pair?${params.joinToString("&")}"
         }
     }
-    data object ConnectionsSettings : Screen("settings/connections", "Gateways", Icons.Filled.Settings)
+    data object ConnectionsSettings : Screen("settings/connections", "Gateways", RelayIcons.Settings)
     // Level-2 detail for a single connection (tabbed: Overview / Routes /
     // Advanced / Security). Drilled into from the Connections list. The
     // `connectionId` path segment survives process death via SavedStateHandle;
@@ -595,7 +591,7 @@ sealed class Screen(
     data object ConnectionDetail : Screen(
         "settings/connections/{connectionId}",
         "Connection",
-        Icons.Filled.Settings,
+        RelayIcons.Settings,
     ) {
         const val ARG_CONNECTION_ID: String = "connectionId"
         fun route(connectionId: String): String {
@@ -604,17 +600,17 @@ sealed class Screen(
             return "settings/connections/$encoded"
         }
     }
-    data object VoiceSettings : Screen("voice_settings", "Voice", Icons.Filled.Settings)
+    data object VoiceSettings : Screen("voice_settings", "Voice", RelayIcons.Settings)
     // === PHASE3-notif-listener-followup ===
     data object NotificationCompanionSettings :
-        Screen("settings/notifications", "Notification companion", Icons.Filled.Settings)
+        Screen("settings/notifications", "Notification companion", RelayIcons.Settings)
     // === END PHASE3-notif-listener-followup ===
     data object ProactiveSettings :
-        Screen("settings/proactive", "Threads", Icons.Filled.Settings)
-    data object PermissionsSettings : Screen("settings/permissions", "Permissions", Icons.Filled.Settings)
+        Screen("settings/proactive", "Threads", RelayIcons.Settings)
+    data object PermissionsSettings : Screen("settings/permissions", "Permissions", RelayIcons.Settings)
     // === PHASE3-safety-rails: bridge safety route ===
     data object BridgeSafetySettings :
-        Screen("settings/bridge_safety", "Bridge safety", Icons.Filled.Settings)
+        Screen("settings/bridge_safety", "Bridge safety", RelayIcons.Settings)
     // === END PHASE3-safety-rails ===
     // Per-category settings sub-screens — split out of the mega SettingsScreen
     // following the VoiceSettingsScreen pattern (see DEVLOG 2026-04-11).
@@ -622,29 +618,29 @@ sealed class Screen(
     // when its underlying screen was collapsed into the active card of
     // the plural `ConnectionsSettings` subpage. See `ConnectionsSettings`
     // above for the surviving route.)
-    data object ChatSettings : Screen("settings/chat", "Chat", Icons.Filled.Settings)
-    data object AdvancedSettings : Screen("settings/advanced", "Advanced", Icons.Filled.Settings)
+    data object ChatSettings : Screen("settings/chat", "Chat", RelayIcons.Settings)
+    data object AdvancedSettings : Screen("settings/advanced", "Advanced", RelayIcons.Settings)
     data object SupervisedAppearanceSettings : Screen(
         "settings/supervised/appearance",
         "Appearance",
-        Icons.Filled.Settings,
+        RelayIcons.Settings,
     )
     data object SupervisedControls : Screen(
         "settings/supervised",
         "Supervised mode",
-        Icons.Filled.Settings,
+        RelayIcons.Settings,
     )
-    data object ProviderUsage : Screen("settings/usage", "Usage & limits", Icons.Filled.Settings)
-    data object MediaSettings : Screen("settings/media", "Media", Icons.Filled.Settings)
-    data object AppearanceSettings : Screen("settings/appearance", "Appearance", Icons.Filled.Settings)
-    data object CustomTheme : Screen("settings/appearance/custom-theme", "Custom", Icons.Filled.Settings)
-    data object PetdexBrowse : Screen("settings/appearance/petdex", "Petdex", Icons.Filled.Settings)
-    data object CustomPetGuide : Screen("settings/appearance/custom-pet", "Create a pet", Icons.Filled.Settings)
-    data object Analytics : Screen("settings/analytics", "Analytics", Icons.Filled.Settings)
-    data object Diagnostics : Screen("settings/diagnostics", "Diagnostics", Icons.Filled.Settings)
-    data object DeveloperSettings : Screen("settings/developer", "Developer", Icons.Filled.Settings)
-    data object RealtimeVoiceTest : Screen("settings/developer/realtime_voice", "Realtime voice", Icons.Filled.Settings)
-    data object About : Screen("settings/about", "About", Icons.Filled.Settings)
+    data object ProviderUsage : Screen("settings/usage", "Usage & limits", RelayIcons.Settings)
+    data object MediaSettings : Screen("settings/media", "Media", RelayIcons.Settings)
+    data object AppearanceSettings : Screen("settings/appearance", "Appearance", RelayIcons.Settings)
+    data object CustomTheme : Screen("settings/appearance/custom-theme", "Custom", RelayIcons.Settings)
+    data object PetdexBrowse : Screen("settings/appearance/petdex", "Petdex", RelayIcons.Settings)
+    data object CustomPetGuide : Screen("settings/appearance/custom-pet", "Create a pet", RelayIcons.Settings)
+    data object Analytics : Screen("settings/analytics", "Analytics", RelayIcons.Settings)
+    data object Diagnostics : Screen("settings/diagnostics", "Diagnostics", RelayIcons.Settings)
+    data object DeveloperSettings : Screen("settings/developer", "Developer", RelayIcons.Settings)
+    data object RealtimeVoiceTest : Screen("settings/developer/realtime_voice", "Realtime voice", RelayIcons.Settings)
+    data object About : Screen("settings/about", "About", RelayIcons.Settings)
 
     // Profile Inspector — full-screen read-only viewer with 4 tabs
     // (Config / SOUL / Memory / Skills) for a single profile. The
@@ -655,7 +651,7 @@ sealed class Screen(
     data object ProfileInspector : Screen(
         "settings/profile_inspector/{profileName}?section={section}",
         "Profile Inspector",
-        Icons.Filled.Settings,
+        RelayIcons.Settings,
     ) {
         const val ARG_PROFILE_NAME: String = "profileName"
         const val ARG_SECTION: String = "section"
@@ -2134,7 +2130,20 @@ fun RelayApp() {
                 ),
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
-                if (
+                val primaryDestination = when (currentRoute) {
+                    Screen.Chat.route -> ConnectDestination.Chat
+                    Screen.Manage.route -> ConnectDestination.Manage
+                    Screen.ConnectionsSettings.route -> ConnectDestination.Connections
+                    else -> null
+                }
+                if (primaryDestination != null && !suppressGlobalChrome &&
+                    !isKeyboardVisible && !showStartupSphere && !voiceUiState.voiceMode &&
+                    !supervisedPolicy.enabled
+                ) {
+                    ConnectNavigationBar(selected = primaryDestination, onSelect = { destination ->
+                        navController.openConnectDestination(destination)
+                    })
+                } else if (
                     !suppressGlobalChrome &&
                     !isKeyboardVisible &&
                     !showStartupSphere &&

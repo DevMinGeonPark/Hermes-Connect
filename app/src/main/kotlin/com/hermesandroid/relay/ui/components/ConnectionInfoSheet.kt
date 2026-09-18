@@ -29,34 +29,11 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Bolt
-import androidx.compose.material.icons.filled.ChatBubble
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Speed
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material.icons.filled.ViewInAr
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -333,7 +310,7 @@ fun SessionInfoSheet(
                         }
                     }) {
                         Icon(
-                            imageVector = Icons.Default.ContentCopy,
+                            imageVector = RelayIcons.ContentCopy,
                             contentDescription = stringResource(R.string.conn_info_copy_pairing_code)
                         )
                     }
@@ -611,7 +588,7 @@ fun RelayInfoSheet(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Warning,
+                        imageVector = RelayIcons.Warning,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -1006,7 +983,7 @@ fun AgentInfoSheet(
                             fontWeight = FontWeight.SemiBold,
                         )
                         PassportConfigRow(
-                            icon = Icons.Filled.ViewInAr,
+                            icon = RelayIcons.ViewInAr,
                             title = stringResource(R.string.conn_info_model_title),
                             value = if (sessionModelState.inheritsProfileDefault) {
                                 stringResource(R.string.conn_info_server_default_model, modelLabel)
@@ -1023,7 +1000,7 @@ fun AgentInfoSheet(
                         ) {
                             PassportDivider()
                             PassportConfigRow(
-                                icon = Icons.Filled.Psychology,
+                                icon = RelayIcons.Psychology,
                                 title = stringResource(R.string.chat_select_reasoning_effort),
                                 value = selectedReasoning?.let { reasoningEffortLabel(it) }
                                     ?: serverDefaultLabel,
@@ -1060,7 +1037,7 @@ fun AgentInfoSheet(
                             fontWeight = FontWeight.SemiBold,
                         )
                         PassportConfigRow(
-                            icon = Icons.Filled.Person,
+                            icon = RelayIcons.Person,
                             title = stringResource(R.string.conn_info_personality_title),
                             value = AgentDisplay.personalityLabel(
                                 selectedPersonality,
@@ -1110,7 +1087,7 @@ fun AgentInfoSheet(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            Icons.Outlined.AddComment,
+                            RelayIcons.AddComment,
                             contentDescription = null,
                             tint = brand.paper,
                             modifier = Modifier.size(22.dp),
@@ -1129,7 +1106,7 @@ fun AgentInfoSheet(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { showIdentityEditor = true },
                 ) {
-                    Icon(Icons.Filled.Edit, contentDescription = null)
+                    Icon(RelayIcons.Edit, contentDescription = null)
                     Spacer(Modifier.size(8.dp))
                     Text(stringResource(R.string.conn_info_customize_identity))
                 }
@@ -1141,7 +1118,7 @@ fun AgentInfoSheet(
                             onNavigateToProfileInspector(profile.name)
                         },
                     ) {
-                        Icon(Icons.Filled.Visibility, contentDescription = null)
+                        Icon(RelayIcons.Visibility, contentDescription = null)
                         Spacer(Modifier.size(8.dp))
                         Text(
                             stringResource(
@@ -1357,7 +1334,7 @@ internal fun AgentPassportSheetHost(
                     modifier = Modifier.testTag(AGENT_PASSPORT_CLOSE_TAG),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Close,
+                        imageVector = RelayIcons.Close,
                         contentDescription = stringResource(R.string.common_close),
                     )
                 }
@@ -1396,7 +1373,7 @@ private fun AgentPassportIdentityEditor(
     ) {
         IconButton(onClick = onBack) {
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                imageVector = RelayIcons.ArrowBack,
                 contentDescription = stringResource(R.string.settings_back),
             )
         }
@@ -1433,7 +1410,7 @@ private fun AgentPassportIdentityEditor(
             onClick = onManageProfiles,
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Icon(imageVector = Icons.Filled.Tune, contentDescription = null)
+            Icon(imageVector = RelayIcons.Tune, contentDescription = null)
             Spacer(modifier = Modifier.size(8.dp))
             Text(stringResource(R.string.conn_info_manage_profiles))
         }
@@ -1586,7 +1563,7 @@ private fun AgentPassportHeader(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Person,
+                            imageVector = RelayIcons.Person,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp),
@@ -1610,7 +1587,7 @@ private fun AgentPassportHeader(
                             }
                         }
                         Icon(
-                            imageVector = Icons.Filled.KeyboardArrowDown,
+                            imageVector = RelayIcons.KeyboardArrowDown,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                         )
@@ -1768,9 +1745,9 @@ private fun PassportConfigRow(
         }
         Icon(
             imageVector = if (expanded) {
-                Icons.Filled.KeyboardArrowUp
+                RelayIcons.KeyboardArrowUp
             } else {
-                Icons.AutoMirrored.Filled.KeyboardArrowRight
+                RelayIcons.KeyboardArrowRight
             },
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1838,7 +1815,7 @@ internal fun AgentPassportSafetyCard(
                 fontWeight = FontWeight.SemiBold,
             )
             PassportSafetyRow(
-                icon = Icons.Filled.Security,
+                icon = RelayIcons.Security,
                 title = stringResource(R.string.conn_info_approval_policy),
                 description = stringResource(R.string.conn_info_approval_mode_short_desc),
             ) {
@@ -1878,7 +1855,7 @@ internal fun AgentPassportSafetyCard(
 
             PassportDivider()
             PassportSafetyRow(
-                icon = Icons.Filled.ChatBubble,
+                icon = RelayIcons.ChatBubble,
                 title = stringResource(R.string.conn_info_chat_override),
                 description = if (approvalMode == GatewayApprovalMode.Off) {
                     stringResource(R.string.conn_info_profile_already_bypasses)
@@ -1913,7 +1890,7 @@ internal fun AgentPassportSafetyCard(
 
             PassportDivider()
             PassportSafetyRow(
-                icon = Icons.Filled.Bolt,
+                icon = RelayIcons.Bolt,
                 title = stringResource(R.string.conn_info_fast_tier),
                 description = stringResource(R.string.conn_info_fast_mode_desc),
             ) {
@@ -2211,7 +2188,7 @@ private fun AgentPassportSessionTab(
         modifier = Modifier.fillMaxWidth(),
         shape = appearanceRoundedCornerShape(18.dp),
     ) {
-        Icon(Icons.Filled.Tune, contentDescription = null)
+        Icon(RelayIcons.Tune, contentDescription = null)
         Spacer(Modifier.size(8.dp))
         Text(stringResource(R.string.conn_info_manage_connections))
     }
@@ -2753,7 +2730,7 @@ private fun LegacyAgentInfoSheet(
                         onClick = { showProfileManager = true },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(imageVector = Icons.Filled.Tune, contentDescription = null)
+                        Icon(imageVector = RelayIcons.Tune, contentDescription = null)
                         Spacer(modifier = Modifier.size(8.dp))
                         Text(stringResource(R.string.conn_info_manage_profiles))
                     }
@@ -2809,9 +2786,9 @@ private fun LegacyAgentInfoSheet(
                                         ) {
                                             Icon(
                                                 imageVector = if (profileApiKeyVisible) {
-                                                    Icons.Filled.VisibilityOff
+                                                    RelayIcons.VisibilityOff
                                                 } else {
-                                                    Icons.Filled.Visibility
+                                                    RelayIcons.Visibility
                                                 },
                                                 contentDescription = null,
                                             )
@@ -3295,7 +3272,7 @@ private fun LegacyAgentInfoSheet(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Warning,
+                                imageVector = RelayIcons.Warning,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onErrorContainer,
                             )
@@ -3533,7 +3510,7 @@ private fun LegacyAgentInfoSheet(
                                 }
                             }) {
                                 Icon(
-                                    imageVector = Icons.Default.ContentCopy,
+                                    imageVector = RelayIcons.ContentCopy,
                                     contentDescription = copyPairingCodeDesc,
                                 )
                             }
@@ -3570,7 +3547,7 @@ private fun LegacyAgentInfoSheet(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Tune,
+                    imageVector = RelayIcons.Tune,
                     contentDescription = null,
                 )
                 Spacer(modifier = Modifier.size(8.dp))
@@ -3676,14 +3653,14 @@ private fun ProfileDisplayManagerRow(
             overflow = TextOverflow.Ellipsis,
         )
         IconButton(onClick = onMoveUp, enabled = canMoveUp) {
-            Icon(Icons.Filled.KeyboardArrowUp, stringResource(R.string.conn_info_move_profile_up, label))
+            Icon(RelayIcons.KeyboardArrowUp, stringResource(R.string.conn_info_move_profile_up, label))
         }
         IconButton(onClick = onMoveDown, enabled = canMoveDown) {
-            Icon(Icons.Filled.KeyboardArrowDown, stringResource(R.string.conn_info_move_profile_down, label))
+            Icon(RelayIcons.KeyboardArrowDown, stringResource(R.string.conn_info_move_profile_down, label))
         }
         IconButton(onClick = { onHiddenChange(!hidden) }, enabled = canHide) {
             Icon(
-                imageVector = if (hidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                imageVector = if (hidden) RelayIcons.VisibilityOff else RelayIcons.Visibility,
                 contentDescription = stringResource(
                     if (hidden) R.string.conn_info_show_profile else R.string.conn_info_hide_profile,
                     label,
@@ -3756,7 +3733,7 @@ private fun CollapsiblePickerSection(
                 )
             }
             Icon(
-                imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                imageVector = if (expanded) RelayIcons.KeyboardArrowUp else RelayIcons.KeyboardArrowDown,
                 contentDescription = if (expanded) collapseDesc else expandDesc,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -4008,7 +3985,7 @@ private fun ProfileRadioRow(
         }
         if (selected) {
             Icon(
-                imageVector = Icons.Filled.Check,
+                imageVector = RelayIcons.Check,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
             )
@@ -4034,7 +4011,7 @@ private fun LockedProfileRow(lockedDisplayName: String) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Icon(
-            imageVector = Icons.Filled.Lock,
+            imageVector = RelayIcons.Lock,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(20.dp),

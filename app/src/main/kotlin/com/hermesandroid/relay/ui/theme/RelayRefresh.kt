@@ -85,16 +85,8 @@ fun Modifier.relayPanel(
 fun Modifier.relaySelectedPanel(
     shape: Shape = RoundedCornerShape(RelayRefresh.CardRadius),
 ): Modifier = this
-    .background(
-        Brush.linearGradient(
-            listOf(
-                RelayRefresh.Electric.copy(alpha = 0.52f),
-                RelayRefresh.Purple.copy(alpha = 0.18f),
-            ),
-        ),
-        shape,
-    )
-    .border(1.dp, RelayRefresh.Electric.copy(alpha = 0.72f), shape)
+    .background(RelayRefresh.Electric.copy(alpha = 0.10f), shape)
+    .border(1.dp, RelayRefresh.Line, shape)
 
 fun Modifier.relayGridTexture(
     grid: Dp = 42.dp,
@@ -145,8 +137,7 @@ fun RelayTextureBox(
 ) {
     Box(
         modifier = modifier
-            .background(RelayRefresh.Background)
-            .relayGridTexture(alpha = 0.18f),
+            .background(RelayRefresh.Background),
         content = content,
     )
 }
@@ -177,7 +168,7 @@ fun RelayDottedOverlay(
 @Composable
 fun relayMetadataStyle(): TextStyle =
     MaterialTheme.typography.labelSmall.copy(
-        fontFamily = RelayRefresh.Mono,
+        fontFamily = MaterialTheme.typography.bodySmall.fontFamily,
         fontWeight = FontWeight.Medium,
         letterSpacing = 0.sp,
     )
