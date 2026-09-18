@@ -7,6 +7,12 @@ Language → 한국어**, or use Android's per-app language settings. Existing l
 remain available. Commands, protocol identifiers, and content supplied by your
 agent or server retain their original meaning.
 
+Hermes-Connect는 [Hermes-Relay](https://github.com/Codename-11/hermes-relay)를
+기반으로 하는 Hermes용 Android 앱입니다. 기존 언어를 유지하면서 한국어를 추가했습니다.
+**설정 → 화면 설정 → 언어 → 한국어**에서 선택할 수 있습니다.
+설치와 연결 방법은 [한국어 안내](docs/readme/README.ko.md)를 확인하세요.
+아래의 원프로젝트 스토어·릴리스 링크는 Hermes-Relay 배포판을 가리킵니다.
+
 The original project's setup and architecture documentation follows below;
 upstream store and release links refer to Hermes-Relay.
 
@@ -37,6 +43,7 @@ upstream store and release links refer to Hermes-Relay.
   <a href="docs/readme/README.de.md">Deutsch</a> ·
   <a href="docs/readme/README.es.md">Español</a> ·
   <a href="docs/readme/README.ja.md">日本語</a> ·
+  <a href="docs/readme/README.ko.md">한국어</a> ·
   <a href="docs/readme/README.pt-BR.md">Português (Brasil)</a> ·
   <a href="docs/readme/README.ru.md">Русский</a> ·
   <a href="docs/readme/README.zh-CN.md">简体中文</a><br>
@@ -192,7 +199,7 @@ manual fallbacks when QR or clipboard transfer is unavailable.
 </table>
 
 The Android app ships complete AI-assisted catalogs for **Deutsch**, **Español**,
-**日本語**, **Português (Brasil)**, **Русский**, and **简体中文**. Choose a language from
+**日本語**, **한국어**, **Português (Brasil)**, **Русский**, and **简体中文**. Choose a language from
 **Settings → Appearance → Language**; translation status and fluent review are
 tracked independently so community corrections remain easy to contribute.
 
