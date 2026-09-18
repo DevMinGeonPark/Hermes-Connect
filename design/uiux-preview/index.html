@@ -7,13 +7,13 @@
     <meta name="color-scheme" content="light dark" />
     <title>Hermes Connect · 화면 디자인</title>
     <link rel="icon" href="assets/hermes.svg" type="image/svg+xml" />
-    <script src="appearance.js?v=5"></script>
-    <link rel="stylesheet" href="review.css?v=5" />
+    <script src="appearance.js?v=6"></script>
+    <link rel="stylesheet" href="review.css?v=6" />
   </head>
   <body>
     <header class="review-header">
       <a class="wordmark" href="./">Hermes Connect</a
-      ><span class="edition">화면 디자인 <b>03</b></span
+      ><span class="edition">화면 디자인 <b>04</b></span
       ><button class="quiet" id="audit-button">디자인 기준</button>
     </header>
     <main class="review-layout">
@@ -68,7 +68,9 @@
               <option value="2">200%</option>
             </select></label
           ><span id="viewport-label" aria-live="polite"></span
-          ><a id="fullscreen" target="_blank" rel="noopener">전체 화면 ↗</a>
+          ><a id="fullscreen" target="_blank" rel="noopener"
+            >전체 화면 <span class="inline-icon" data-symbol="external"></span
+          ></a>
         </div>
         <div class="canvas" data-device="phone">
           <div class="device-frame">
@@ -97,8 +99,12 @@
     </main>
     <dialog id="audit-dialog" aria-labelledby="audit-title">
       <div class="dialog-heading">
-        <span>수정안 03</span
-        ><button id="close-audit" aria-label="점검 내용 닫기">✕</button>
+        <span>수정안 04</span
+        ><button
+          id="close-audit"
+          aria-label="점검 내용 닫기"
+          data-symbol="close"
+        ></button>
       </div>
       <h2 id="audit-title">내용이 먼저 보이는 화면</h2>
       <div class="audit-grid">
@@ -133,9 +139,10 @@
         href="https://developer.apple.com/design/human-interface-guidelines/layout"
         target="_blank"
         rel="noopener"
-        >Apple Human Interface Guidelines: Layout ↗</a
-      >
+        >Apple Human Interface Guidelines: Layout
+        <span class="inline-icon" data-symbol="external"></span
+      ></a>
     </dialog>
-    <script type="module" src="review.js?v=5"></script>
+    <script type="module" src="review.js?v=6"></script>
   </body>
 </html>

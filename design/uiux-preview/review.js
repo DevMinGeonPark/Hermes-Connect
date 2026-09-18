@@ -1,4 +1,4 @@
-import { icon } from "./icons.js?v=5";
+import { icon } from "./icons.js?v=6";
 const concepts = [
   {
     id: "focus",
@@ -56,6 +56,9 @@ let current =
 const appearance = window.previewAppearance;
 let device = query.get("device") === "fold" ? "fold" : "phone";
 const $ = (s) => document.querySelector(s);
+document.querySelectorAll("[data-symbol]").forEach((el) => {
+  el.innerHTML = icon(el.dataset.symbol);
+});
 $("#appearance").value = appearance.getPreference();
 $("#directions").innerHTML = concepts
   .map(
@@ -64,7 +67,7 @@ $("#directions").innerHTML = concepts
   )
   .join("");
 function appUrl() {
-  return `app.html?concept=${current.id}&scenario=${$("#scenario").value}&font=${$("#font-size").value}&theme=${window.previewAppearance.getPreference()}&v=5`;
+  return `app.html?concept=${current.id}&scenario=${$("#scenario").value}&font=${$("#font-size").value}&theme=${window.previewAppearance.getPreference()}&v=6`;
 }
 function saved() {
   try {
@@ -80,11 +83,16 @@ function render(changeFrame = true) {
   $("#concept-desc").textContent = current.desc;
   $("#concept-benefit").textContent = current.benefit;
   $("#concept-tradeoff").textContent = current.tradeoff;
-  document
-    .querySelectorAll("[data-concept]")
-    .forEach((b) =>
-      b.setAttribute("aria-current", String(b.dataset.concept === current.id)),
+  document.querySelectorAll("[data-concept]").forEach((b) => {
+    const selected = b.dataset.concept === current.id;
+    b.setAttribute("aria-current", String(selected));
+    const c = concepts.find((item) => item.id === b.dataset.concept);
+    b.querySelector(".direction-icon").innerHTML = icon(
+      c.icon,
+      "",
+      selected ? "filled" : "outline",
     );
+  });
   document.querySelectorAll("[data-device]").forEach((b) => {
     if (b.tagName === "BUTTON")
       b.setAttribute("aria-pressed", String(b.dataset.device === device));
@@ -94,7 +102,9 @@ function render(changeFrame = true) {
   $("#preview").title = `Hermes-Connect ${current.name} 시안`;
   if (changeFrame) $("#preview").src = appUrl();
   const selected = saved() === current.id;
-  $("#choose").innerHTML = selected ? "선택한 시안 ✓" : "이 시안 선택";
+  $("#choose").innerHTML = selected
+    ? `선택한 시안 <span class="inline-icon">${icon("check")}</span>`
+    : "이 시안 선택";
   $("#selection-status").textContent = selected
     ? `선택한 시안: ${current.name}`
     : "이 브라우저에만 저장됩니다.";

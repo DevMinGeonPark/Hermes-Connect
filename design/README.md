@@ -1,8 +1,8 @@
 # Hermes-Connect UI study
 
-Five interactive Korean design proposals for the Android companion. Revision 3
-combines light/dark appearance, separate profile contexts, official Phosphor
-icons, and a Javis-style voice assistant. Conversation, task, file, and note
+Five interactive Korean design proposals for the Android companion. Revision 4
+combines light/dark appearance, separate profile contexts, official Ionicons
+with distinct outline/filled states, and a Javis-style voice assistant. Conversation, task, file, and note
 screens use system typography, grouped lists, and thin separators. Voice has a
 circular activity signal and a profile-specific transcript.
 
@@ -54,7 +54,7 @@ References: Apple's [layout](https://developer.apple.com/design/human-interface-
 [typography](https://developer.apple.com/design/human-interface-guidelines/typography),
 and [materials](https://developer.apple.com/design/human-interface-guidelines/materials)
 guidance. The prototype interprets these principles with original HTML/CSS and
-[Phosphor Icons](https://github.com/phosphor-icons/core) regular-weight assets; it is not a native Apple application.
+[Ionicons](https://github.com/ionic-team/ionicons) outline and filled assets; it is not a native Apple application.
 
 ## Profiles and appearance
 
@@ -124,12 +124,19 @@ Dark captures at 390 × 860 CSS pixels:
 
 ## Icon assets
 
-All UI icons use the official **Phosphor Icons Regular** pack, replacing the
-previous custom SVG paths. The vendored [asset manifest](uiux-preview/assets/phosphor/manifest.json)
+UI controls use the official **Ionicons** outline and filled variants. Selected
+navigation tabs use filled silhouettes, while inactive tabs use outlines.
+Main controls use 24 px icons and bottom tabs use 26 px icons within their
+existing touch targets. Profile identities use distinct colored circles and
+filled briefcase, person, and library symbols. More uses a simple ellipsis;
+settings rows use unboxed monochrome icons.
+
+The vendored [asset manifest](uiux-preview/assets/ionicons/manifest.json)
 pins an upstream commit and records SHA-256 hashes. Original SVGs and the
-[MIT license](uiux-preview/assets/phosphor/LICENSE) are included. The inline
-renderer changes neither paths nor stroke weight; color follows the selected
-appearance. No CDN, icon font, or third-party runtime request is used.
+[MIT license](uiux-preview/assets/ionicons/LICENSE) are included. The inline
+renderer changes black paint tokens to `currentColor` for both appearances;
+paths, proportions, and stroke geometry are preserved. No CDN, icon font,
+Ionic runtime, or third-party runtime request is used.
 
 ## Javis voice flow
 
