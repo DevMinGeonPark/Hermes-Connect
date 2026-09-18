@@ -312,7 +312,7 @@ object BrandPalettes {
         surfaceLow = Color(0xFFF2F2F7), navy = Color(0xFFF5F5F7),
         navy2 = Color(0xFFF0F0F3), navy3 = Color(0xFFE5E5EA),
         relay = Color(0xFF0066CC), purple = Color(0xFF0066CC),
-        electric = Color(0xFF0072EE), electricMuted = Color(0xFF0066CC),
+        electric = Color(0xFF0066CC), electricMuted = Color(0xFF0066CC),
         cyan = Color(0xFF006C82), green = Color(0xFF248A3D),
         amber = Color(0xFFA76500), danger = Color(0xFFC62A30),
         line = Color(0xFFE5E5EA), lineStrong = Color(0xFF929297),

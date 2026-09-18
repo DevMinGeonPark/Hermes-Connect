@@ -2019,7 +2019,7 @@ fun RelayApp() {
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(modifier = Modifier.fillMaxSize().then(
             if (showCandidateBanner) Modifier.windowInsetsPadding(WindowInsets.statusBars) else Modifier,
         )) {
