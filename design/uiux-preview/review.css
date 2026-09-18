@@ -150,11 +150,29 @@ p {
 .direction-icon {
   display: flex;
   align-items: center;
+  color: var(--muted);
+}
+.direction[aria-current="true"] .direction-icon {
   color: var(--accent);
 }
 .direction-icon svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+}
+.inline-icon svg {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+}
+#close-audit {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+#close-audit svg {
+  width: 24px;
+  height: 24px;
 }
 .direction > span:nth-child(2) {
   flex: 1;

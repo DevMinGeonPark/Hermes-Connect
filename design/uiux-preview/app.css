@@ -143,8 +143,8 @@ a {
   color: var(--accent);
 }
 svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
   vertical-align: middle;
 }
@@ -294,11 +294,11 @@ small {
   padding: 8px;
 }
 .header-actions .icon-btn:last-child svg {
-  width: 19px;
-  height: 19px;
-  border: 0;
-  border-radius: 50%;
-  padding: 0;
+  width: 24px;
+  height: 24px;
+}
+.header-actions .icon-btn:last-child {
+  color: var(--text);
 }
 .icon-btn:hover {
   background: var(--hover);
@@ -465,8 +465,8 @@ small {
   flex-shrink: 0;
 }
 .document-icon svg {
-  width: 29px;
-  height: 35px;
+  width: 32px;
+  height: 32px;
 }
 .document-icon.note {
   color: var(--note-accent);
@@ -558,8 +558,8 @@ small {
   align-self: flex-end;
 }
 .input-shell .icon-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 .send-button {
   display: grid;
@@ -573,8 +573,8 @@ small {
   align-self: flex-end;
 }
 .send-button svg {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 .composer-note {
   display: block;
@@ -598,11 +598,11 @@ small {
 .focus-approval > .approval-icon {
   width: 29px;
   flex-shrink: 0;
-  color: var(--accent);
+  color: var(--muted);
 }
 .approval-icon svg {
-  width: 20px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 .focus-approval > span:nth-child(2) {
   flex: 1;
@@ -706,8 +706,8 @@ small {
   font-weight: 500;
 }
 .bottom-nav > button > svg {
-  width: 23px;
-  height: 23px;
+  width: 26px;
+  height: 26px;
 }
 .nav-count {
   position: absolute;
@@ -973,15 +973,13 @@ small {
   place-items: center;
   width: 46px;
   height: 46px;
-  border-radius: 11px;
-  background: var(--accent-tint);
-  color: var(--accent);
+  color: var(--text);
   flex-shrink: 0;
   margin-right: 3px;
 }
 .computer-icon svg {
-  width: 27px;
-  height: 27px;
+  width: 32px;
+  height: 32px;
 }
 .settings-label {
   font-size: 0.8rem;
@@ -992,16 +990,14 @@ small {
 .setting-icon {
   display: grid;
   place-items: center;
-  background: var(--fill-accent);
-  color: var(--on-accent);
-  border-radius: 6px;
-  width: 27px;
-  height: 27px;
+  color: var(--text);
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
 }
 .setting-icon svg {
-  width: 17px;
-  height: 17px;
+  width: 24px;
+  height: 24px;
 }
 .group-caption {
   font-size: 0.75rem;
@@ -1539,8 +1535,8 @@ dialog::backdrop {
   padding: 9px;
 }
 .sheet-header .icon-btn svg {
-  width: 17px;
-  height: 17px;
+  width: 24px;
+  height: 24px;
 }
 .sheet-content {
   padding: 20px;
@@ -2156,16 +2152,25 @@ dialog::backdrop {
 .profile-avatar {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
-  border-radius: 11px;
-  background: var(--control-bg);
-  color: var(--accent);
+  border-radius: 50%;
+  background: var(--profile-color);
+  color: #fff;
+}
+.profile-work {
+  --profile-color: #366b9b;
+}
+.profile-personal {
+  --profile-color: #805c8b;
+}
+.profile-research {
+  --profile-color: #3c7463;
 }
 .profile-avatar svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 .profile-identity {
   min-width: 0;
@@ -2178,8 +2183,8 @@ dialog::backdrop {
   line-height: 1.5;
 }
 .profile-identity strong svg {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   color: var(--muted);
 }
 .profile-identity small {
@@ -2209,9 +2214,9 @@ dialog::backdrop {
   letter-spacing: -0.02em;
 }
 .chat-session-heading svg {
-  color: var(--accent);
-  width: 19px;
-  height: 19px;
+  color: var(--muted);
+  width: 24px;
+  height: 24px;
 }
 .profile-options {
   background: var(--surface);
@@ -2231,8 +2236,12 @@ dialog::backdrop {
   border-bottom: 0;
 }
 .profile-option > .profile-avatar {
-  width: 42px;
-  height: 42px;
+  width: 48px;
+  height: 48px;
+}
+.profile-option > .profile-avatar svg {
+  width: 28px;
+  height: 28px;
 }
 .profile-option > span:nth-child(2) {
   flex: 1;
@@ -2252,10 +2261,8 @@ dialog::backdrop {
 }
 .profile-option > svg {
   color: var(--accent);
-  width: 20px;
-}
-.profile-option[aria-pressed="true"] strong {
-  color: var(--accent);
+  width: 24px;
+  height: 24px;
 }
 .approval-profile {
   display: flex;
@@ -2266,8 +2273,8 @@ dialog::backdrop {
   margin-bottom: 16px;
 }
 .approval-profile svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 @media (max-width: 359px) {
   .app-header {
@@ -2519,8 +2526,8 @@ dialog::backdrop {
   padding: 4px;
 }
 .voice-secondary svg {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
 }
 .voice-secondary span {
   font-size: 0.66rem;
@@ -2540,8 +2547,8 @@ dialog::backdrop {
   background: var(--voice-halo);
 }
 .javis-talk svg {
-  width: 25px;
-  height: 25px;
+  width: 28px;
+  height: 28px;
   color: var(--voice-accent);
 }
 .javis-talk span {
@@ -2681,4 +2688,10 @@ dialog::backdrop {
   .javis-stage {
     padding-top: 18px;
   }
+}
+
+.text-link svg {
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
 }
