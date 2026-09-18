@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -1921,6 +1922,7 @@ fun RelayApp() {
         val showCandidateBanner = CandidateBuild.isCandidate &&
             !voiceUiState.voiceMode &&
             !showStartupSphere
+        var candidateBannerHeightPx by remember { mutableStateOf(0) }
         // Persistent Demo-mode strip — visible on every demo surface so the
         // user always knows the chat is sample data with no live server, and
         // can exit into the real Connect flow with one tap.
@@ -2018,7 +2020,14 @@ fun RelayApp() {
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize().then(
+            if (showCandidateBanner) Modifier.windowInsetsPadding(WindowInsets.statusBars) else Modifier,
+        )) {
+        // Review identity owns space and status insets, including above Demo.
+        // It must not float over an interactive banner or a screen's toolbar.
+        AnimatedVisibility(visible = showCandidateBanner) {
+            CandidateBuildBanner(Modifier.onSizeChanged { candidateBannerHeightPx = it.height })
+        }
         // The banner takes its own vertical space above the Scaffold so
         // no screen's content is covered by it (unlike floating overlays
         // that would need per-screen padding compensation). Use
@@ -2119,7 +2128,7 @@ fun RelayApp() {
                     // The connection-status toast is now a floating overlay and
                     // doesn't occupy space above the Scaffold, so it no longer
                     // participates in the top-inset accounting.
-                    if (showUnattendedBanner || showDemoBanner || showHostResourcePressure ||
+                    if (showCandidateBanner || showUnattendedBanner || showDemoBanner || showHostResourcePressure ||
                         connectionChipVisible ||
                         showMessageBanner || showActionMessage
                     ) {
@@ -3833,15 +3842,9 @@ fun RelayApp() {
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.statusBars),
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(top = if (showCandidateBanner) with(density) { candidateBannerHeightPx.toDp() } else 0.dp),
         ) {
-            AnimatedVisibility(
-                visible = showCandidateBanner,
-                enter = slideInVertically(tween(220)) { -it } + fadeIn(tween(180)),
-                exit = slideOutVertically(tween(200)) { -it } + fadeOut(tween(160)),
-            ) {
-                CandidateBuildBanner()
-            }
             AnimatedVisibility(
                 visible = availableUpdateStatus != null && !suppressGlobalChrome &&
                     !showStartupSphere && !voiceUiState.voiceMode,

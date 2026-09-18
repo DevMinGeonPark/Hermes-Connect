@@ -8,12 +8,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -42,13 +40,13 @@ fun CandidateBuildBanner(modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.tertiaryContainer,
-            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(30.dp)
+                    .heightIn(min = 48.dp)
                     .clickable { expanded = !expanded }
                     .semantics { role = Role.Button }
                     .padding(horizontal = 12.dp),
@@ -72,7 +70,7 @@ fun CandidateBuildBanner(modifier: Modifier = Modifier) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Icon(
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    imageVector = if (expanded) RelayIcons.ExpandLess else RelayIcons.ExpandMore,
                     contentDescription = if (expanded) stringResource(R.string.ko_candidate_hide) else stringResource(R.string.ko_candidate_show),
                     modifier = Modifier
                         .padding(start = 8.dp)
