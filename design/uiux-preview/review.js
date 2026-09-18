@@ -1,4 +1,4 @@
-import { icon } from "./icons.js?v=2";
+import { icon } from "./icons.js?v=5";
 const concepts = [
   {
     id: "focus",
@@ -41,19 +41,22 @@ const concepts = [
   {
     id: "pulse",
     icon: "mic",
-    name: "음성 메모",
-    short: "녹음과 짧은 요청",
-    desc: "음성 메모 목록과 하단 녹음 버튼으로 구성합니다.",
-    benefit: "짧은 요청을 남기고 지난 메모를 찾기 쉽습니다.",
+    name: "Javis 음성",
+    short: "실시간 음성 비서",
+    desc: "음성 상태와 현재 프로필의 작업을 함께 확인합니다.",
+    benefit:
+      "대기·듣기·확인·응답을 구분합니다. 넓은 화면에서는 대화 기록을 함께 봅니다.",
     tradeoff:
-      "시안에서는 녹음하지 않습니다. 복잡한 변경은 검토 화면에서 확인합니다.",
+      "실제 녹음·음성 재생 없는 시안입니다. 승인은 검토 화면에서 직접 결정합니다.",
   },
 ];
 const query = new URLSearchParams(location.search);
 let current =
   concepts.find((c) => c.id === query.get("concept")) || concepts[0];
+const appearance = window.previewAppearance;
 let device = query.get("device") === "fold" ? "fold" : "phone";
 const $ = (s) => document.querySelector(s);
+$("#appearance").value = appearance.getPreference();
 $("#directions").innerHTML = concepts
   .map(
     (c, n) =>
@@ -61,7 +64,7 @@ $("#directions").innerHTML = concepts
   )
   .join("");
 function appUrl() {
-  return `app.html?concept=${current.id}&scenario=${$("#scenario").value}&font=${$("#font-size").value}&v=2`;
+  return `app.html?concept=${current.id}&scenario=${$("#scenario").value}&font=${$("#font-size").value}&theme=${window.previewAppearance.getPreference()}&v=5`;
 }
 function saved() {
   try {
@@ -95,7 +98,11 @@ function render(changeFrame = true) {
   $("#selection-status").textContent = selected
     ? `선택한 시안: ${current.name}`
     : "이 브라우저에만 저장됩니다.";
-  history.replaceState(null, "", `?concept=${current.id}&device=${device}`);
+  history.replaceState(
+    null,
+    "",
+    `?concept=${current.id}&device=${device}&theme=${appearance.getPreference()}`,
+  );
 }
 $("#directions").addEventListener("click", (e) => {
   const b = e.target.closest("[data-concept]");
@@ -122,6 +129,17 @@ for (const id of ["scenario", "font-size"])
     );
     $("#fullscreen").href = appUrl();
   });
+$("#appearance").addEventListener("change", () =>
+  appearance.setPreference($("#appearance").value),
+);
+window.addEventListener("appearance-change", () => {
+  $("#appearance").value = appearance.getPreference();
+  $("#preview").contentWindow.postMessage(
+    { type: "preview-appearance", preference: appearance.getPreference() },
+    location.origin,
+  );
+  render(false);
+});
 $("#choose").addEventListener("click", () => {
   try {
     localStorage.setItem("hermes-connect-design-choice-v2", current.id);
@@ -137,6 +155,8 @@ window.addEventListener("message", (event) => {
     event.source !== $("#preview").contentWindow
   )
     return;
+  if (event.data?.type === "preview-appearance")
+    appearance.setPreference(event.data.preference);
   if (event.data?.type === "preview-size")
     $("#viewport-label").textContent =
       `${event.data.width} × ${event.data.height} px`;

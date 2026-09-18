@@ -4,15 +4,16 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <title>Hermes Connect · 화면 디자인</title>
     <link rel="icon" href="assets/hermes.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="review.css?v=2" />
+    <script src="appearance.js?v=5"></script>
+    <link rel="stylesheet" href="review.css?v=5" />
   </head>
   <body>
     <header class="review-header">
       <a class="wordmark" href="./">Hermes Connect</a
-      ><span class="edition">화면 디자인 <b>02</b></span
+      ><span class="edition">화면 디자인 <b>03</b></span
       ><button class="quiet" id="audit-button">디자인 기준</button>
     </header>
     <main class="review-layout">
@@ -28,7 +29,9 @@
             메시지 + 파일<br /><span>접으면 대화, 펼치면 두 개의 패널.</span>
           </p>
         </div>
-        <p class="prototype-note">인터랙티브 시안<br />예시 데이터 사용</p>
+        <p class="prototype-note">
+          프로필 전환 · 라이트 / 다크<br />예시 데이터 사용
+        </p>
       </aside>
       <section class="workbench" aria-label="시안 미리보기">
         <div class="workbench-top">
@@ -44,6 +47,13 @@
         <p class="concept-desc" id="concept-desc"></p>
         <div class="preview-controls">
           <label
+            >화면
+            <select id="appearance" aria-label="화면 모드">
+              <option value="system">시스템</option>
+              <option value="light">라이트</option>
+              <option value="dark">다크</option>
+            </select></label
+          ><label
             >상태
             <select id="scenario">
               <option value="approval">승인 대기</option>
@@ -64,7 +74,7 @@
           <div class="device-frame">
             <iframe
               id="preview"
-              src="app.html?concept=focus"
+              src="about:blank"
               title="메시지형 시안"
             ></iframe>
           </div>
@@ -87,7 +97,7 @@
     </main>
     <dialog id="audit-dialog" aria-labelledby="audit-title">
       <div class="dialog-heading">
-        <span>수정안 02</span
+        <span>수정안 03</span
         ><button id="close-audit" aria-label="점검 내용 닫기">✕</button>
       </div>
       <h2 id="audit-title">내용이 먼저 보이는 화면</h2>
@@ -95,8 +105,8 @@
         <article>
           <b>색과 장식</b>
           <p>
-            흰색과 회색을 기본으로 사용합니다. 파란색은 선택과 동작, 빨간색은
-            녹음과 알림에 사용합니다.
+            밝은 화면과 어두운 화면 모두 무채색을 기본으로 사용합니다. 파란색은
+            선택과 동작, 빨간색은 녹음과 알림에 사용합니다.
           </p>
         </article>
         <article>
@@ -126,6 +136,6 @@
         >Apple Human Interface Guidelines: Layout ↗</a
       >
     </dialog>
-    <script type="module" src="review.js?v=2"></script>
+    <script type="module" src="review.js?v=5"></script>
   </body>
 </html>

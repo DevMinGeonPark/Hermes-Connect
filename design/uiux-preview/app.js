@@ -1,4 +1,5 @@
-import { icon as i } from "./icons.js?v=2";
+import { icon as i } from "./icons.js?v=5";
+const appearance = window.previewAppearance;
 const query = new URLSearchParams(location.search);
 const concepts = ["focus", "mission", "studio", "paper", "pulse"];
 const concept = concepts.includes(query.get("concept"))
@@ -18,12 +19,107 @@ const state = {
   approval: "pending",
   session: "한국어 UI 점검",
   artifact: "changes",
-  listening: false,
+  voicePhase: "idle",
+  voiceText: "",
+  voiceReply: "",
+  voiceHistory: [],
   connection: "내 Hermes",
   newChat: false,
   taskFilter: "all",
   pane: "chat",
 };
+const profiles = [
+  {
+    id: "work",
+    name: "업무",
+    icon: "briefcase",
+    sessions: ["한국어 UI 점검", "연결 안정성 개선", "주간 작업 요약"],
+    running: "재연결 시나리오 확인 중",
+    prompt: "한국어 문구와 버튼 배치를 확인해 줘.",
+    note: "UI 검토 노트",
+    summary: "화면 3개를 확인했습니다. 다음 변경을 제안합니다.",
+    findings: [
+      ["대화", "상단 연결 정보를 한 줄로 정리"],
+      ["관리", "승인 대기 항목을 목록 위에 표시"],
+      ["펼친 화면", "대화 옆에 변경 파일 표시"],
+    ],
+    files: [
+      ["ChatScreen.kt", "대화 화면 배치", "+2 −1"],
+      ["ConnectionHeader.kt", "연결 상태 요약", "+8 −12"],
+      ["ApprovalBar.kt", "승인 요청 표시", "+14"],
+    ],
+  },
+  {
+    id: "personal",
+    name: "개인",
+    icon: "person",
+    sessions: ["독서 기록 정리", "주말 일정", "읽을 책 목록"],
+    running: "토요일 일정 확인 중",
+    prompt: "이번 달 읽은 책과 메모를 정리해 줘.",
+    note: "독서 기록",
+    summary: "책 3권의 메모를 확인했습니다. 기록을 다음과 같이 정리합니다.",
+    findings: [
+      ["읽은 책", "제목과 읽은 날짜를 목록으로 정리"],
+      ["메모", "인상 깊었던 문장을 책별로 모으기"],
+      ["다음 책", "읽을 책 목록에 후보 추가"],
+    ],
+    files: [
+      ["ReadingNotes.md", "책별 메모", "+12"],
+      ["BookList.md", "읽을 책 목록", "+3"],
+      ["MonthlyReview.md", "이번 달 독서 요약", "+8"],
+    ],
+  },
+  {
+    id: "research",
+    name: "리서치",
+    icon: "book",
+    sessions: ["접근성 패턴 비교", "폴더블 레이아웃 조사", "참고 자료 정리"],
+    running: "분할 화면 패턴 확인 중",
+    prompt: "모바일 앱의 접근성 패턴을 비교해 줘.",
+    note: "접근성 조사 노트",
+    summary: "설계 패턴 3개를 비교했습니다. 검토할 항목을 정리합니다.",
+    findings: [
+      ["글자", "큰 글자에서 버튼과 목록의 줄바꿈 확인"],
+      ["대비", "밝은 화면과 어두운 화면의 글자 대비 확인"],
+      ["탐색", "키보드와 화면 읽기 도구의 탐색 순서 확인"],
+    ],
+    files: [
+      ["Accessibility.md", "접근성 비교", "+18"],
+      ["Contrast.md", "색상 대비 정리", "+7"],
+      ["References.md", "참고 자료", "+5"],
+    ],
+  },
+];
+let activeProfile = "work";
+try {
+  const saved = localStorage.getItem("hermes-connect-active-profile");
+  if (profiles.some((p) => p.id === saved)) activeProfile = saved;
+} catch {}
+const profile = () => profiles.find((p) => p.id === activeProfile);
+const profileStates = Object.fromEntries(
+  profiles.map((p) => [
+    p.id,
+    { ...structuredClone(state), session: p.sessions[0] },
+  ]),
+);
+Object.assign(state, profileStates[activeProfile]);
+function switchProfile(id) {
+  resetVoice();
+  if (!profiles.some((p) => p.id === id)) return;
+  profileStates[activeProfile] = structuredClone(state);
+  const shared = {
+    font: state.font,
+    scenario: state.scenario,
+    screen: state.screen,
+  };
+  activeProfile = id;
+  Object.assign(state, structuredClone(profileStates[id]), shared);
+  try {
+    localStorage.setItem("hermes-connect-active-profile", id);
+  } catch {}
+  $("#sheet").close();
+  render();
+}
 const $ = (s) => document.querySelector(s);
 const esc = (s) =>
   String(s).replace(
@@ -42,17 +138,21 @@ const pending = () =>
   state.scenario === "approval" && state.approval === "pending";
 const badge = (label, cls = "") => `<span class="badge ${cls}">${label}</span>`;
 const mark = () => `<span class="computer-icon">${i("computer")}</span>`;
+function profileButton(extra = "") {
+  return `<button class="profile-switch ${extra}" data-action="profiles" aria-label="프로필 전환: ${esc(profile().name)}"><span class="profile-avatar">${i(profile().icon)}</span><span class="profile-identity"><strong>${esc(profile().name)} ${i("down")}</strong><small><b class="status-dot ${online() ? "" : "disconnected"}"></b>${esc(state.connection)}${online() ? "" : " · 오프라인"}</small></span></button>`;
+}
 function header() {
-  const title =
-    state.screen === "chat"
-      ? state.session
-      : { tasks: "작업", connections: "연결", voice: "음성 메모" }[
-          state.screen
-        ];
-  return `<header class="app-header"><button class="nav-back" data-action="sessions" aria-label="대화 목록">${i("back")}<span>대화</span></button><button class="connection-title" data-action="connection"><strong>${esc(title)}</strong><small><b class="status-dot ${online() ? "" : "disconnected"}"></b>${esc(state.connection)}${online() ? "" : " · 오프라인"}</small></button><div class="header-actions">${ib("new-chat", "새 대화", "compose")}${ib("settings", "화면 설정", "dots")}</div></header>`;
+  return `<header class="app-header">${profileButton()}<div class="header-actions">${ib("new-chat", "새 대화", "compose")}${ib("settings", "화면 설정", "dots")}</div></header>`;
 }
 function side() {
-  return `<aside class="session-sidebar"><div class="sidebar-heading"><a href="index.html" target="_top">Hermes Connect</a>${ib("new-chat", "새 대화", "compose")}</div><button class="sidebar-search" data-action="sessions">${i("search")} 대화 검색</button><p class="sidebar-label">오늘</p>${["한국어 UI 점검", "연결 안정성 개선", "주간 작업 요약"].map((s, n) => `<button class="session-item ${state.session === s ? "active" : ""}" data-action="session:${n}"><span><strong>${s}</strong><small>${["파일 3개 · 승인 대기", "재연결 시나리오 확인 중", "작업 2개 완료"][n]}</small></span><time>${["10:43", "10:30", "09:15"][n]}</time></button>`).join("")}<div class="sidebar-bottom">${btn("screen:connections", "연결", "link")}<small>예시 데이터</small></div></aside>`;
+  return `<aside class="session-sidebar"><div class="sidebar-heading"><a href="index.html" target="_top">Hermes Connect</a>${ib("new-chat", "새 대화", "compose")}</div><button class="sidebar-search" data-action="sessions">${i("search")} 대화 검색</button><p class="sidebar-label">${esc(profile().name)} · 최근 대화</p>${profile()
+    .sessions.map(
+      (s, n) =>
+        `<button class="session-item ${state.session === s ? "active" : ""}" data-action="session:${n}"><span><strong>${s}</strong><small>${[pending() ? "파일 3개 · 승인 대기" : "검토 완료", profile().running, "완료"][n]}</small></span><time>${["10:43", "10:30", "09:15"][n]}</time></button>`,
+    )
+    .join(
+      "",
+    )}<div class="sidebar-bottom">${btn("screen:connections", "연결", "link")}<small>예시 데이터</small></div></aside>`;
 }
 function nav() {
   const items =
@@ -91,30 +191,39 @@ function composer() {
   return `<div class="composer-wrap">${concept === "focus" ? focusApproval() : ""}<form class="composer">${ib("attach", "파일 첨부", "plus")}<div class="input-shell"><label class="sr-only" for="message">메시지</label><textarea id="message" rows="1" placeholder="${concept === "paper" ? "후속 질문" : "메시지"}">${esc(state.draft)}</textarea>${ib("voice", "음성 입력 시안", "mic")}<button class="send-button" type="submit" aria-label="메시지 보내기" ${online() ? "" : "disabled"}>${i("send")}</button></div></form><small class="composer-note">${online() ? "시안 · 메시지가 실제로 전송되지 않습니다" : "다시 연결한 뒤 보낼 수 있습니다"}</small></div>`;
 }
 function reportContent() {
-  return `<p>화면 3개를 확인했습니다. 다음 변경을 제안합니다.</p><ul class="report-list"><li><strong>대화</strong><span>상단 연결 정보를 한 줄로 정리</span></li><li><strong>관리</strong><span>승인 대기 항목을 목록 위에 표시</span></li><li><strong>펼친 화면</strong><span>대화 옆에 변경 파일 표시</span></li></ul><p>아래 파일을 검토해 주세요.</p>`;
+  return `<p>${esc(profile().summary)}</p><ul class="report-list">${profile()
+    .findings.map(
+      ([title, detail]) =>
+        `<li><strong>${esc(title)}</strong><span>${esc(detail)}</span></li>`,
+    )
+    .join("")}</ul><p>아래 파일을 검토해 주세요.</p>`;
 }
 function chat() {
-  const empty = `<div class="empty-state"><h1>새 대화</h1><p>${esc(state.connection)}에 연결됨</p>${btn("seed-prompt", "한국어 화면 점검", "plus", "outlined")}</div>`;
-  const messageView = `<div class="conversation-date">오늘 오전 10:42</div><div class="user-message">한국어 문구와 버튼 배치를 확인해 줘.</div><div class="delivered">전달됨</div><article class="assistant-message"><div class="message-author">Hermes <time>10:43</time></div><div class="response-content">${reportContent()}</div><button class="artifact-card" data-action="open-result"><span class="document-icon">${i("file")}</span><span><strong>UI 검토 노트</strong><small>문서 · 변경 제안 3개</small></span>${i("chevron")}</button><div class="message-meta"><span>검토 완료</span>${ib("copy", "검토 요약 복사", "copy")}</div></article>`;
-  const noteView = `<article class="paper-document"><div class="note-date">오늘 오전 10:43</div><h1>한국어 UI 점검</h1><p class="note-lead">대화, 관리, 연결 화면 검토</p><h2>검토 내용</h2><p>상단의 연결 정보와 모델 선택이 대화 공간을 많이 차지합니다. 자주 쓰는 기능부터 보이도록 정리합니다.</p><h2>변경할 항목</h2><ul class="note-checklist"><li><span></span>연결 이름과 상태를 한 줄로 표시</li><li><span></span>승인 대기 항목을 입력창 위에 배치</li><li><span></span>펼친 화면에서 변경 파일 함께 표시</li></ul><h2>관련 파일</h2><button class="note-attachment" data-action="open-result">${i("file")}<span>UI 검토 노트<small>변경 제안 3개</small></span>${i("chevron")}</button><p class="note-caption">${pending() ? "변경 전 확인 필요" : "검토 완료"} · 파일 3개</p></article>${focusApproval()}`;
-  return `<section class="chat-panel"><div class="chat-scroll">${state.newChat ? empty : concept === "paper" ? noteView : messageView}${state.messages.map((m) => `<div class="${m.role === "user" ? "user-message" : "local-reply"}">${esc(m.text)}</div>`).join("")}</div>${composer()}</section>`;
+  const empty = `<div class="empty-state"><h1>새 대화</h1><p>${esc(state.connection)}에 연결됨</p>${btn("seed-prompt", "이 프로필에서 요청 시작", "plus", "outlined")}</div>`;
+  const messageView = `<div class="conversation-date">오늘 오전 10:42</div><div class="user-message">${esc(profile().prompt)}</div><div class="delivered">전달됨</div><article class="assistant-message"><div class="message-author">Hermes <time>10:43</time></div><div class="response-content">${reportContent()}</div><button class="artifact-card" data-action="open-result"><span class="document-icon">${i("file")}</span><span><strong>${esc(profile().note)}</strong><small>문서 · 변경 제안 3개</small></span>${i("chevron")}</button><div class="message-meta"><span>검토 완료</span>${ib("copy", "검토 요약 복사", "copy")}</div></article>`;
+  const noteView = `<article class="paper-document"><div class="note-date">오늘 오전 10:43</div><h1>${esc(profile().sessions[0])}</h1><p class="note-lead">${esc(profile().name)} · ${esc(profile().note)}</p><h2>검토 내용</h2><p>${esc(profile().summary)}</p><h2>변경할 항목</h2><ul class="note-checklist">${profile()
+    .findings.map(([, detail]) => `<li><span></span>${esc(detail)}</li>`)
+    .join(
+      "",
+    )}</ul><h2>관련 파일</h2><button class="note-attachment" data-action="open-result">${i("file")}<span>${esc(profile().note)}<small>변경 제안 3개</small></span>${i("chevron")}</button><p class="note-caption">${pending() ? "변경 전 확인 필요" : "검토 완료"} · 파일 3개</p></article>${focusApproval()}`;
+  return `<section class="chat-panel"><div class="chat-scroll"><button class="chat-session-heading" data-action="sessions"><strong>${esc(state.session)}</strong>${i("list")}</button>${state.newChat ? empty : concept === "paper" ? noteView : messageView}${state.messages.map((m) => `<div class="${m.role === "user" ? "user-message" : "local-reply"}">${esc(m.text)}</div>`).join("")}</div>${composer()}</section>`;
 }
 function tasks() {
   const rows = [
     {
-      title: "한국어 UI 점검",
+      title: profile().sessions[0],
       sub: pending() ? "파일 3개 변경 승인 필요" : "검토 완료",
       kind: pending() ? "approval" : "done",
       action: "review",
     },
     {
-      title: "연결 안정성 개선",
-      sub: "재연결 시나리오 확인 중",
+      title: profile().sessions[1],
+      sub: profile().running,
       kind: "running",
       action: "task-detail",
     },
     {
-      title: "주간 작업 요약",
+      title: profile().sessions[2],
       sub: "오늘 오전 9:15",
       kind: "done",
       action: "summary",
@@ -144,10 +253,10 @@ function tasks() {
     )}</div>${filtered.some((r) => r.kind !== "done") ? `<div class="section-heading"><h2>${state.taskFilter === "all" ? "진행 중" : "확인할 항목"}</h2><span>${filtered.filter((r) => r.kind !== "done").length}</span></div><div class="task-list">${list(filtered.filter((r) => r.kind !== "done"))}</div>` : ""}${filtered.some((r) => r.kind === "done") ? `<div class="section-heading"><h2>완료됨</h2><span>${filtered.filter((r) => r.kind === "done").length}</span></div><div class="task-list completed-list">${list(filtered.filter((r) => r.kind === "done"))}</div>` : ""}${!filtered.length ? '<p class="list-empty">해당하는 작업이 없습니다.</p>' : ""}<div class="list-footer">${btn("new-chat", "새 작업", "plus")}</div></section>`;
 }
 function timeline() {
-  return `<ol class="timeline"><li><span class="timeline-dot done"></span><div><strong>요청 수신</strong><small>10:42</small></div></li><li><span class="timeline-dot done"></span><div><strong>화면 3개 검토</strong><small>10:42</small></div></li><li><span class="timeline-dot ${pending() ? "waiting" : "done"}"></span><div><strong>${pending() ? "변경 승인 대기" : "검토 완료"}</strong><small>10:43</small></div></li></ol>`;
+  return `<ol class="timeline"><li><span class="timeline-dot done"></span><div><strong>요청 수신</strong><small>10:42</small></div></li><li><span class="timeline-dot done"></span><div><strong>자료 3개 검토</strong><small>10:42</small></div></li><li><span class="timeline-dot ${pending() ? "waiting" : "done"}"></span><div><strong>${pending() ? "변경 승인 대기" : "검토 완료"}</strong><small>10:43</small></div></li></ol>`;
 }
 function context() {
-  return `<aside class="context-rail"><h2>세부사항</h2><section class="context-task"><h3>한국어 UI 점검</h3><dl><dt>연결</dt><dd>${esc(state.connection)}</dd><dt>상태</dt><dd>${pending() ? "승인 대기" : "검토 완료"}</dd><dt>파일</dt><dd>3개</dd></dl></section><h3 class="small-heading">활동</h3>${timeline()}<h3 class="small-heading">첨부 파일</h3><button class="file-row" data-action="open-result">${i("file")}<span>UI 검토 노트<small>변경 제안 3개</small></span>${i("chevron")}</button></aside>`;
+  return `<aside class="context-rail"><h2>세부사항</h2><section class="context-task"><h3>${esc(profile().sessions[0])}</h3><dl><dt>연결</dt><dd>${esc(state.connection)}</dd><dt>상태</dt><dd>${pending() ? "승인 대기" : "검토 완료"}</dd><dt>파일</dt><dd>3개</dd></dl></section><h3 class="small-heading">활동</h3>${timeline()}<h3 class="small-heading">첨부 파일</h3><button class="file-row" data-action="open-result">${i("file")}<span>${esc(profile().note)}<small>변경 제안 3개</small></span>${i("chevron")}</button></aside>`;
 }
 function artifact() {
   const diff = state.artifact === "diff";
@@ -173,21 +282,17 @@ function artifact() {
 <span class="code-context">    MessageComposer()</span>
 <span class="code-context">  }</span></code></pre>`
       : state.artifact === "changes"
-        ? `<div class="file-breadcrumb">Hermes Connect ${i("chevron")} 한국어 UI 점검</div><h2 class="files-title">변경 파일</h2><div class="file-list">${[
-            ["ChatScreen.kt", "대화 화면 배치", "+2 −1"],
-            ["ConnectionHeader.kt", "연결 상태 요약", "+8 −12"],
-            ["ApprovalBar.kt", "승인 요청 표시", "+14"],
-          ]
-            .map(
+        ? `<div class="file-breadcrumb">${esc(profile().name)} ${i("chevron")} ${esc(profile().sessions[0])}</div><h2 class="files-title">변경 파일</h2><div class="file-list">${profile()
+            .files.map(
               ([name, detail, count]) =>
                 `<button class="file-item" data-action="file:${name}"><span class="document-icon">${i("file")}</span><span><strong>${name}</strong><small>${detail}</small></span><span class="file-count">${count}</span>${i("chevron")}</button>`,
             )
             .join(
               "",
-            )}</div><p class="file-summary">3개 파일 · ${pending() ? "승인 대기" : "검토 완료"}</p><h3 class="small-heading">문서</h3><button class="file-item" data-action="artifact:note"><span class="document-icon note">${i("file")}</span><span><strong>UI 검토 노트</strong><small>문서 · 오늘 오전 10:43</small></span>${i("chevron")}</button>`
+            )}</div><p class="file-summary">3개 파일 · ${pending() ? "승인 대기" : "검토 완료"}</p><h3 class="small-heading">문서</h3><button class="file-item" data-action="artifact:note"><span class="document-icon note">${i("file")}</span><span><strong>${esc(profile().note)}</strong><small>문서 · 오늘 오전 10:43</small></span>${i("chevron")}</button>`
         : state.artifact === "note"
-          ? `<article class="note-document"><div class="note-date">오늘 오전 10:43</div><h2>UI 검토 노트</h2>${reportContent()}</article>`
-          : `<div class="terminal"><p><time>10:42:01</time> 요청 수신</p><p><time>10:42:03</time> 화면 구성 확인</p><p><time>10:42:08</time> 한국어 문구 검토</p><p><time>10:42:19</time> 변경 제안 준비</p><p>${pending() ? "승인 대기" : "검토 완료"}</p></div>`
+          ? `<article class="note-document"><div class="note-date">오늘 오전 10:43</div><h2>${esc(profile().note)}</h2>${reportContent()}</article>`
+          : `<div class="terminal"><p><time>10:42:01</time> 요청 수신</p><p><time>10:42:03</time> 화면 구성 확인</p><p><time>10:42:08</time> ${esc(profile().note)} 검토</p><p><time>10:42:19</time> 변경 제안 준비</p><p>${pending() ? "승인 대기" : "검토 완료"}</p></div>`
   }</div><div class="artifact-approval">${focusApproval()}</div></aside>`;
 }
 function connections() {
@@ -204,12 +309,86 @@ function connections() {
       "",
     )}<button class="settings-row" data-action="relay"><span class="setting-icon">${i("terminal")}</span><span>Relay 확장</span><span class="row-value">설정</span>${i("chevron")}</button></div><p class="group-caption">터미널과 데스크톱 도구는 Relay 페어링 후 사용할 수 있습니다.</p><div class="settings-group">${btn("add-connection", "연결 추가", "plus", "wide")}</div><p class="group-caption">시안용 연결 정보입니다.</p></section>`;
 }
+function voiceTranscript(compact = false) {
+  const empty = !state.voiceText && !state.voiceReply;
+  return `<div class="voice-transcript ${compact ? "compact-transcript" : ""}" aria-live="polite">${empty ? '<p class="transcript-empty">음성 요청과 응답이 여기에 표시됩니다.</p>' : `${state.voiceText ? `<div class="voice-line"><span>나</span><p>${esc(state.voiceText)}</p></div>` : ""}${state.voiceReply ? `<div class="voice-line assistant-line"><span>JAVIS</span><p>${esc(state.voiceReply)}</p></div>` : state.voicePhase === "thinking" ? '<p class="transcript-processing">작업 상태 확인 중…</p>' : ""}`}</div>`;
+}
+function voiceContext() {
+  return `<aside class="context-rail voice-context"><div class="voice-context-title"><h2>대화 기록</h2>${ib("voice-history", "이전 음성 대화", "clock")}</div>${voiceTranscript()}<div class="voice-context-task"><span class="small-heading">현재 작업</span><button class="file-row" data-action="screen:tasks">${i("list")}<span>${esc(profile().sessions[0])}<small>${pending() ? "승인 대기" : "검토 완료"}</small></span>${i("chevron")}</button></div><p class="voice-context-note">${esc(profile().name)} 프로필의 예시 대화입니다.</p></aside>`;
+}
 function voice() {
-  const bars = [
-    8, 14, 24, 12, 20, 37, 54, 28, 45, 65, 42, 24, 51, 72, 46, 27, 36, 57, 35,
-    18, 31, 44, 26, 16, 34, 52, 28, 17, 24, 13, 20, 8,
-  ];
-  return `<section class="voice-panel"><div class="voice-content"><div class="page-heading"><h1>음성 메모</h1></div><p class="section-caption">오늘</p><div class="recording-list"><button class="recording-row" data-action="recording:한국어 UI 점검"><span><strong>한국어 UI 점검</strong><small>오전 10:42</small></span><time>0:18</time>${i("chevron")}</button><button class="recording-row" data-action="recording:오늘 할 일"><span><strong>오늘 할 일</strong><small>오전 9:15</small></span><time>0:32</time>${i("chevron")}</button></div>${pending() ? `<button class="voice-current" data-action="review">${i("shield")}<span>한국어 UI 점검<small>파일 변경 승인 필요</small></span>${i("chevron")}</button>` : ""}</div><div class="recorder ${state.listening ? "recording" : ""}"><div class="recorder-heading"><strong>${state.listening ? "녹음 화면 미리보기" : "새 음성 메모"}</strong><span>${state.listening ? "00:08" : "00:00"}</span></div><div class="waveform" aria-hidden="true">${bars.map((h) => `<span style="--bar-height:${state.listening ? h : Math.max(3, h / 4)}px"></span>`).join("")}<div class="playhead"></div></div><div class="record-control"><button class="record-button ${state.listening ? "recording" : ""}" data-action="listen" aria-label="${state.listening ? "녹음 시안 중지" : "녹음 시안 시작"}"><span></span></button></div><small class="composer-note">시안 · 마이크를 사용하지 않습니다</small></div></section>`;
+  const phase = state.voicePhase;
+  const label = !online()
+    ? "연결 끊김"
+    : {
+        idle: state.voiceReply ? "응답 완료" : "대기 중",
+        listening: "듣는 중",
+        thinking: "확인 중",
+        speaking: "응답 중",
+      }[phase];
+  const hint = !online()
+    ? "연결을 확인해 주세요"
+    : {
+        idle: "버튼을 눌러 대화를 시작하세요",
+        listening: "완료를 누르면 예시 요청을 처리합니다",
+        thinking: "현재 프로필의 작업을 살펴봅니다",
+        speaking: "예시 응답을 표시하고 있습니다",
+      }[phase];
+  const buttonLabel =
+    phase === "idle"
+      ? "대화 시작"
+      : phase === "listening"
+        ? "말하기 완료"
+        : "중지";
+  return `<section class="voice-panel javis-voice phase-${phase}"><div class="javis-stage"><div class="javis-top"><span class="javis-name">JAVIS</span><h1>${label}</h1><p>${hint}</p></div><div class="voice-visual" aria-hidden="true"><div class="voice-ticks"></div><div class="voice-orbit outer-orbit"></div><div class="voice-orbit inner-orbit"></div><div class="voice-core"><div class="voice-signal">${[12, 24, 40, 58, 36, 20, 10].map((height, n) => `<span style="--signal-height:${height}px;--signal-delay:${n * -0.12}s"></span>`).join("")}</div><span class="core-label">${phase === "idle" ? "READY" : phase === "listening" ? "LISTENING" : phase === "thinking" ? "PROCESSING" : "RESPONDING"}</span></div></div><div class="voice-inline-transcript">${voiceTranscript(true)}</div></div><div class="javis-bottom">${pending() ? `<button class="javis-task" data-action="review">${i("shield")}<span><strong>${esc(profile().sessions[0])}</strong><small>파일 3개 · 승인 대기</small></span>${i("chevron")}</button>` : ""}<div class="javis-controls"><button class="voice-secondary" data-action="voice-history">${i("clock")}<span>기록</span></button><button class="javis-talk" data-action="listen" aria-label="${buttonLabel}" ${online() ? "" : "disabled"}>${i(phase === "idle" ? "mic" : phase === "listening" ? "check" : "pause")}<span>${buttonLabel}</span></button><button class="voice-secondary" data-action="voice-text">${i("chat")}<span>텍스트</span></button></div><small class="composer-note">음성 시안 · 실제 녹음과 음성 재생 없음</small></div></section>`;
+}
+let voiceTimer;
+function resetVoice() {
+  clearTimeout(voiceTimer);
+  state.voicePhase = "idle";
+}
+function advanceVoice() {
+  if (!online()) return;
+  if (state.voicePhase === "idle") {
+    state.voicePhase = "listening";
+    state.voiceText = "";
+    state.voiceReply = "";
+    render();
+    return;
+  }
+  if (state.voicePhase === "listening") {
+    state.voiceText = `${profile().name}의 진행 중인 작업을 요약해 줘.`;
+    state.voicePhase = "thinking";
+    render();
+    const owner = activeProfile;
+    voiceTimer = setTimeout(() => {
+      if (activeProfile !== owner || state.voicePhase !== "thinking") return;
+      state.voiceReply = `${profile().name} 프로필에서 ‘${profile().sessions[1]}’ 작업이 진행 중입니다. ${pending() ? `‘${profile().sessions[0]}’의 파일 3개는 승인을 기다리고 있습니다.` : "현재 승인 대기 중인 요청은 없습니다."}`;
+      state.voicePhase = "speaking";
+      state.voiceHistory.push({
+        request: state.voiceText,
+        reply: state.voiceReply,
+      });
+      render();
+      voiceTimer = setTimeout(() => {
+        if (activeProfile === owner && state.voicePhase === "speaking") {
+          state.voicePhase = "idle";
+          render();
+        }
+      }, 4500);
+    }, 900);
+    return;
+  }
+  resetVoice();
+  render();
+}
+function voiceHistory() {
+  sheet(
+    "음성 대화 기록",
+    state.voiceHistory.length
+      ? `<div class="voice-history-list">${state.voiceHistory.map((item) => `<article><span>${esc(profile().name)}</span><h3>${esc(item.request)}</h3><p>${esc(item.reply)}</p></article>`).join("")}</div>`
+      : "<p>아직 대화가 없습니다. 대화 시작을 눌러 시안을 체험해 보세요.</p>",
+  );
 }
 function render() {
   document.body.className = `theme-${concept}`;
@@ -217,7 +396,7 @@ function render() {
   document.documentElement.style.setProperty("--font-scale", state.font);
   const chatView = state.screen === "chat";
   $("#app").innerHTML =
-    `<div class="app-shell ${concept}">${side()}<main class="app-main">${header()}${offline()}${concept === "studio" && chatView ? `<div class="studio-switch" role="tablist" aria-label="작업 패널"><button role="tab" aria-selected="${state.pane === "chat"}" data-action="studio-chat">대화</button><button role="tab" aria-selected="${state.pane === "result"}" data-action="studio-result">파일 <span>3</span></button></div>` : ""}<div class="workspace ${chatView ? "chat-workspace" : ""} ${state.pane === "result" ? "show-result" : ""}">${state.screen === "tasks" ? tasks() : state.screen === "connections" ? connections() : state.screen === "voice" ? voice() : chat()}${concept === "studio" && chatView ? artifact() : state.screen === "connections" ? "" : context()}</div>${nav()}</main></div>`;
+    `<div class="app-shell ${concept}">${side()}<main class="app-main">${header()}${offline()}${concept === "studio" && chatView ? `<div class="studio-switch" role="tablist" aria-label="작업 패널"><button role="tab" aria-selected="${state.pane === "chat"}" data-action="studio-chat">대화</button><button role="tab" aria-selected="${state.pane === "result"}" data-action="studio-result">파일 <span>3</span></button></div>` : ""}<div class="workspace ${chatView ? "chat-workspace" : ""} ${state.pane === "result" ? "show-result" : ""}">${state.screen === "tasks" ? tasks() : state.screen === "connections" ? connections() : state.screen === "voice" ? voice() : chat()}${concept === "studio" && chatView ? artifact() : state.screen === "connections" ? "" : state.screen === "voice" ? voiceContext() : context()}</div>${nav()}</main></div>`;
   const input = $("#message");
   if (input) {
     input.addEventListener("input", () => (state.draft = input.value));
@@ -263,19 +442,39 @@ function sheet(title, html) {
 function review() {
   sheet(
     "파일 변경 승인",
-    `<div class="sheet-callout">${i("shield")}<div><strong>한국어 UI 점검</strong><p>파일 3개 수정 · 이번 작업에만 적용</p></div></div><p>상단 연결 정보를 간결하게 정리하고 입력창 가까이에 승인 요청을 표시하는 예시입니다.</p><ul class="review-files"><li>ChatScreen.kt <span>대화 화면 배치</span></li><li>ConnectionHeader.kt <span>연결 상태 요약</span></li><li>ApprovalBar.kt <span>승인 대기 표시</span></li></ul><p class="muted-note">동작 확인용 시안입니다. 승인해도 실제 파일이나 권한은 변경되지 않습니다.</p>${pending() ? `<div class="sheet-actions">${btn("deny", "거절")}${online() ? btn("approve", "이번 변경 승인", "check", "primary") : btn("reconnect", "다시 연결", "link", "primary")}</div>` : '<p class="decision-receipt">현재 승인 대기 중인 요청이 없습니다.</p>'}`,
+    `<div class="approval-profile">${i(profile().icon)} ${esc(profile().name)}</div><div class="sheet-callout">${i("shield")}<div><strong>${esc(profile().sessions[0])}</strong><p>파일 3개 수정 · 이번 작업에만 적용</p></div></div><p>${esc(profile().summary)}</p><ul class="review-files">${profile()
+      .files.map(
+        ([name, detail]) => `<li>${esc(name)}<span>${esc(detail)}</span></li>`,
+      )
+      .join(
+        "",
+      )}</ul><p class="muted-note">시안입니다. 승인해도 실제 파일이나 권한은 변경되지 않습니다.</p>${pending() ? `<div class="sheet-actions">${btn("deny", "거절")}${online() ? btn("approve", "이번 변경 승인", "check", "primary") : btn("reconnect", "다시 연결", "link", "primary")}</div>` : '<p class="decision-receipt">현재 승인 대기 중인 요청이 없습니다.</p>'}`,
   );
 }
 function resultSheet() {
   sheet(
-    "모바일 UI 검토 노트",
-    `<div class="note-document"><h3>대화 화면</h3><p>상단에는 활성 연결과 상태만 남기고, 경로·모델 등 상세 정보는 필요할 때 펼칩니다.</p><h3>변경 전에 확인하기</h3><p>파일 3개의 변경 범위를 확인하고 이번 작업에만 승인합니다.</p><h3>펼친 화면 활용하기</h3><p>대화와 결과를 나란히 표시합니다. 화면 크기가 바뀌어도 작성 중인 메시지는 유지합니다.</p></div>${pending() ? btn("review", "파일 변경 확인", "shield", "primary wide") : ""}`,
+    profile().note,
+    `<div class="note-document"><div class="approval-profile">${i(profile().icon)} ${esc(profile().name)}</div>${reportContent()}</div>${pending() ? btn("review", "파일 변경 확인", "shield", "primary wide") : ""}`,
+  );
+}
+function profilesSheet() {
+  sheet(
+    "프로필",
+    `<div class="profile-options">${profiles.map((p) => `<button class="profile-option" data-action="profile:${p.id}" aria-pressed="${p.id === activeProfile}"><span class="profile-avatar">${i(p.icon)}</span><span><strong>${esc(p.name)}</strong><small>${esc(p.sessions[0])}</small><small>대화 3개 · Hermes</small></span>${p.id === activeProfile ? i("check") : ""}</button>`).join("")}</div><p class="muted-note">프로필마다 대화, 작성 중인 메시지, 승인 상태가 구분됩니다. 현재 페이지에서만 유지되는 예시 프로필입니다.</p>`,
   );
 }
 document.addEventListener("click", (e) => {
   const target = e.target.closest("[data-action]");
   if (!target) return;
   const action = target.dataset.action;
+  if (action.startsWith("profile:")) {
+    switchProfile(action.slice(8));
+    return;
+  }
+  if (action.startsWith("appearance:")) {
+    appearance.setPreference(action.split(":")[1]);
+    return;
+  }
   if (action.startsWith("filter:")) {
     state.taskFilter = action.split(":")[1];
     render();
@@ -288,7 +487,7 @@ document.addEventListener("click", (e) => {
     } else {
       sheet(
         action.slice(5),
-        '<p>연결 상태와 승인 요청의 표시를 정리하는 파일입니다.</p><p class="muted-note">시안용 파일 정보입니다. 실제 소스는 변경하지 않습니다.</p>',
+        `<p>${esc(profile().files.find(([name]) => name === action.slice(5))?.[1] || profile().note)}</p><p class="muted-note">시안용 파일 정보입니다. 실제 소스는 변경하지 않습니다.</p>`,
       );
     }
     return;
@@ -296,12 +495,13 @@ document.addEventListener("click", (e) => {
   if (action.startsWith("recording:")) {
     sheet(
       action.slice(10),
-      '<div class="note-document"><p>한국어 문구와 버튼 배치를 확인해 줘.</p><p class="muted-note">예시 음성 메모의 텍스트입니다. 재생할 녹음 파일은 없습니다.</p></div>',
+      `<div class="note-document"><p>${esc(profile().prompt)}</p><p class="muted-note">예시 음성 메모의 텍스트입니다. 재생할 녹음 파일은 없습니다.</p></div>`,
     );
     return;
   }
 
   if (action.startsWith("screen:")) {
+    resetVoice();
     state.screen = action.split(":")[1];
     render();
     return;
@@ -315,11 +515,9 @@ document.addEventListener("click", (e) => {
   }
   if (action.startsWith("session:")) {
     $("#sheet").close();
-    state.session = ["한국어 UI 점검", "연결 안정성 개선", "주간 작업 요약"][
-      Number(action.split(":")[1])
-    ];
+    state.session = profile().sessions[Number(action.split(":")[1])];
     state.screen = "chat";
-    state.newChat = state.session !== "한국어 UI 점검";
+    state.newChat = state.session !== profile().sessions[0];
     state.messages = [];
     render();
     return;
@@ -331,10 +529,17 @@ document.addEventListener("click", (e) => {
     return;
   }
   switch (action) {
+    case "profiles":
+      profilesSheet();
+      break;
     case "sessions":
       sheet(
         "대화",
-        `<div class="session-list">${["한국어 UI 점검", "연결 안정성 개선", "주간 작업 요약"].map((title, n) => btn("session:" + n, title, "chat", "wide")).join("")}</div>`,
+        `<div class="session-list">${profile()
+          .sessions.map((title, n) =>
+            btn("session:" + n, title, "chat", "wide"),
+          )
+          .join("")}</div>`,
       );
       break;
     case "close-sheet":
@@ -375,6 +580,7 @@ document.addEventListener("click", (e) => {
       toast("연결됨 상태로 전환했습니다.");
       break;
     case "new-chat":
+      resetVoice();
       state.screen = "chat";
       state.newChat = true;
       state.session = "새 대화";
@@ -383,7 +589,7 @@ document.addEventListener("click", (e) => {
       $("#message")?.focus();
       break;
     case "seed-prompt":
-      state.draft = "한국어 화면을 점검해 줘";
+      state.draft = profile().prompt;
       render();
       $("#message")?.focus();
       break;
@@ -402,8 +608,8 @@ document.addEventListener("click", (e) => {
       break;
     case "task-detail":
       sheet(
-        "연결 안정성 개선",
-        `<div class="sheet-callout">${i("activity")}<div><strong>재연결 시나리오 검증 중</strong><p>예시 진행률 68%</p></div></div><p>연결이 끊긴 동안 입력을 보존하고, 동일한 세션에서 작업을 이어가는 흐름입니다.</p>${timeline()}${btn("open-task", "대화로 이동", "chat", "primary wide")}`,
+        profile().sessions[1],
+        `<div class="sheet-callout">${i("activity")}<div><strong>${esc(profile().running)}</strong><p>예시 진행률 68%</p></div></div><p>${esc(profile().name)} 프로필의 작업입니다. 진행 상황과 결과는 이 프로필의 대화에 보관합니다.</p>${timeline()}${btn("open-task", "대화로 이동", "chat", "primary wide")}`,
       );
       break;
     case "open-task":
@@ -414,19 +620,19 @@ document.addEventListener("click", (e) => {
     case "summary":
       sheet(
         "오늘의 작업 기록",
-        '<div class="note-document"><h3>완료한 작업 2개</h3><p>한국어 문구 점검과 화면 구성 검토를 마쳤습니다. 다음으로 연결 상태와 승인 위치를 정리할 차례입니다.</p><p class="muted-note">시안용 예시 기록입니다.</p></div>',
+        `<div class="note-document"><h3>${esc(profile().sessions[2])}</h3><p>${esc(profile().summary)}</p><p class="muted-note">${esc(profile().name)} 프로필의 시안용 기록입니다.</p></div>`,
       );
       break;
     case "attach":
       sheet(
         "파일 첨부",
-        `<p>예시 문서를 대화에 첨부해 보세요.</p>${btn("attach-demo", "UI 검토 노트.md 첨부", "file", "outlined wide")}<p class="muted-note">실제 파일을 읽거나 업로드하지 않습니다.</p>`,
+        `<p>예시 문서를 대화에 첨부해 보세요.</p>${btn("attach-demo", `${esc(profile().note)}.md 첨부`, "file", "outlined wide")}<p class="muted-note">실제 파일을 읽거나 업로드하지 않습니다.</p>`,
       );
       break;
     case "attach-demo":
       state.draft =
         (state.draft ? state.draft + "\n" : "") +
-        "[첨부 예시: UI 검토 노트.md]";
+        `[첨부 예시: ${profile().note}.md]`;
       $("#sheet").close();
       render();
       break;
@@ -443,18 +649,28 @@ document.addEventListener("click", (e) => {
       );
       break;
     case "voice-demo":
-      state.draft = "지금 진행 중인 작업을 요약해 줘";
+      state.draft = `${profile().name}의 진행 중인 작업을 요약해 줘`;
       $("#sheet").close();
       render();
       break;
     case "listen":
-      state.listening = !state.listening;
+      advanceVoice();
+      break;
+    case "voice-history":
+      voiceHistory();
+      break;
+    case "voice-text":
+      resetVoice();
+      state.screen = "chat";
       render();
+      $("#message")?.focus();
       break;
     case "copy":
       navigator.clipboard
         ?.writeText(
-          "UI 검토: 연결 상태 요약, 명시적 승인, 대화와 결과의 분할 화면.",
+          `${profile().name} · ${profile().note}: ${profile()
+            .findings.map(([, detail]) => detail)
+            .join(", ")}`,
         )
         .then(() => toast("검토 요약을 복사했습니다."))
         .catch(() => toast("이 브라우저에서는 복사할 수 없습니다."));
@@ -462,7 +678,18 @@ document.addEventListener("click", (e) => {
     case "settings":
       sheet(
         "화면 설정",
-        `<p>큰 글자에서도 모든 내용을 읽고 조작할 수 있는지 확인하세요.</p><div class="font-options">${[1, 1.5, 2].map((n) => btn("font:" + n, `${n * 100}%`, n === state.font ? "check" : "", n === state.font ? "primary" : "outlined")).join("")}</div><p class="muted-note">현재 시안: ${concept.toUpperCase()} · 예시 데이터</p><a class="text-link" href="index.html?concept=${concept}" target="_top">다섯 가지 방향 비교하기 ↗</a>`,
+        `<h3 class="settings-section-label">화면 모드</h3><div class="appearance-options" role="group" aria-label="화면 모드">${[
+          ["system", "시스템"],
+          ["light", "라이트"],
+          ["dark", "다크"],
+        ]
+          .map(
+            ([value, label]) =>
+              `<button type="button" class="btn" data-action="appearance:${value}" aria-pressed="${appearance.getPreference() === value}">${label}</button>`,
+          )
+          .join(
+            "",
+          )}</div><h3 class="settings-section-label">글자 크기</h3><div class="font-options">${[1, 1.5, 2].map((n) => btn("font:" + n, `${n * 100}%`, n === state.font ? "check" : "", n === state.font ? "primary" : "outlined")).join("")}</div><p class="muted-note">현재 시안: ${concept.toUpperCase()} · 예시 데이터</p><a class="text-link" href="index.html?concept=${concept}&theme=${appearance.getPreference()}" target="_top">다섯 가지 방향 비교하기 ↗</a>`,
       );
       break;
     case "relay":
@@ -513,6 +740,34 @@ function reportSize() {
       location.origin,
     );
 }
+window.addEventListener("appearance-change", () => {
+  document
+    .querySelectorAll('[data-action^="appearance:"]')
+    .forEach((button) =>
+      button.setAttribute(
+        "aria-pressed",
+        String(
+          button.dataset.action === `appearance:${appearance.getPreference()}`,
+        ),
+      ),
+    );
+  const url = new URL(location.href);
+  url.searchParams.set("theme", appearance.getPreference());
+  history.replaceState(null, "", url);
+  if (parent !== window)
+    parent.postMessage(
+      { type: "preview-appearance", preference: appearance.getPreference() },
+      location.origin,
+    );
+});
+window.addEventListener("message", (event) => {
+  if (
+    event.origin === location.origin &&
+    event.source === parent &&
+    event.data?.type === "preview-appearance"
+  )
+    appearance.setPreference(event.data.preference);
+});
 window.addEventListener("resize", reportSize);
 window.addEventListener("message", (e) => {
   if (
@@ -526,6 +781,7 @@ window.addEventListener("message", (e) => {
     state.scenario !== e.data.scenario
   ) {
     state.scenario = e.data.scenario;
+    if (!online()) resetVoice();
     state.approval = "pending";
   }
   if ([1, 1.5, 2].includes(e.data.font)) state.font = e.data.font;
