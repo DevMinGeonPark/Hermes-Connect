@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.ui.screens
 
+import android.content.res.Resources
 import android.content.ClipData
 import android.content.Intent
 import android.content.ClipboardManager
@@ -51,7 +52,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.hermesandroid.relay.R
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.ImeAction
@@ -67,6 +71,7 @@ import com.hermesandroid.relay.data.SupervisedParentAuthStore
 import com.hermesandroid.relay.data.SupervisedParentAuthenticator
 import com.hermesandroid.relay.data.SupervisedParentCredentialType
 import com.hermesandroid.relay.data.SupervisedParentEnrollment
+import com.hermesandroid.relay.data.SupervisedParentSecretError
 import kotlinx.coroutines.launch
 
 @Composable
@@ -76,6 +81,7 @@ internal fun SupervisedParentVerifyDialog(
     onVerified: () -> Unit,
     onUseRecoveryCode: () -> Unit,
 ) {
+    val resources = LocalResources.current
     val storedType by store.credentialTypeFlow.collectAsState(initial = null)
     var selectedLegacyType by remember { mutableStateOf<SupervisedParentCredentialType?>(null) }
     val inputType = storedType?.takeUnless { it == SupervisedParentCredentialType.Legacy }
@@ -97,7 +103,7 @@ internal fun SupervisedParentVerifyDialog(
             busy = false
             when (result) {
                 SupervisedParentAuthResult.Success -> onVerified()
-                else -> error = result.toUserMessage()
+                else -> error = result.toUserMessage(resources)
             }
         }
     }
@@ -112,8 +118,8 @@ internal fun SupervisedParentVerifyDialog(
     ) {
         when (inputType) {
             SupervisedParentCredentialType.Pin -> PinEntryScreen(
-                title = "Parent PIN",
-                subtitle = "Enter your 6-digit PIN.",
+                title = stringResource(R.string.supervised_parent_pin),
+                subtitle = stringResource(R.string.supervised_enter_pin),
                 busy = busy,
                 error = error,
                 onComplete = ::verify,
@@ -126,8 +132,8 @@ internal fun SupervisedParentVerifyDialog(
                 onUseRecovery = onUseRecoveryCode,
             )
             else -> CredentialChoiceScreen(
-                title = "How do you enter your parent credential?",
-                subtitle = "This existing setup predates the PIN/password choice.",
+                title = stringResource(R.string.supervised_legacy_credential_choice),
+                subtitle = stringResource(R.string.supervised_legacy_credential_summary),
                 onSelected = { selectedLegacyType = it },
             )
         }
@@ -141,6 +147,7 @@ internal fun SupervisedParentSetupDialog(
     onDismiss: () -> Unit,
     onEnrolled: (SupervisedParentEnrollment) -> Unit,
 ) {
+    val resources = LocalResources.current
     val storedType by store.credentialTypeFlow.collectAsState(initial = null)
     var stage by remember(currentSecretRequired) {
         mutableStateOf(if (currentSecretRequired) SetupStage.VerifyCurrent else SetupStage.Choose)
@@ -166,7 +173,7 @@ internal fun SupervisedParentSetupDialog(
                 replacement.fill('\u0000')
             }
             busy = false
-            result.fold(onSuccess = onEnrolled, onFailure = { error = it.toUserMessage() })
+            result.fold(onSuccess = onEnrolled, onFailure = { error = it.toUserMessage(resources) })
         }
     }
 
@@ -181,7 +188,7 @@ internal fun SupervisedParentSetupDialog(
                 error = null
                 stage = SetupStage.Choose
             } else {
-                error = result.toUserMessage()
+                error = result.toUserMessage(resources)
             }
         }
     }
@@ -205,28 +212,28 @@ internal fun SupervisedParentSetupDialog(
                     ?: legacyInputType
                 when (inputType) {
                     SupervisedParentCredentialType.Pin -> PinEntryScreen(
-                        title = "Current parent PIN",
-                        subtitle = "Confirm before changing parent access.",
+                        title = stringResource(R.string.supervised_current_pin),
+                        subtitle = stringResource(R.string.supervised_confirm_before_change),
                         busy = busy,
                         error = error,
                         onComplete = ::verifyCurrent,
                     )
                     SupervisedParentCredentialType.Password -> PasswordVerifyScreen(
-                        title = "Current parent password",
+                        title = stringResource(R.string.supervised_current_password),
                         busy = busy,
                         error = error,
                         onSubmit = ::verifyCurrent,
                     )
                     else -> CredentialChoiceScreen(
-                        title = "How do you enter the current credential?",
-                        subtitle = "Choose the input that matches the existing setup.",
+                        title = stringResource(R.string.supervised_current_credential_choice),
+                        subtitle = stringResource(R.string.supervised_current_credential_summary),
                         onSelected = { legacyInputType = it },
                     )
                 }
             }
             SetupStage.Choose -> CredentialChoiceScreen(
-                title = if (currentSecretRequired) "Choose new parent access" else "Choose parent access",
-                subtitle = "Pick one way to unlock parent settings. You can change it later.",
+                title = if (currentSecretRequired) stringResource(R.string.supervised_choose_new_access) else stringResource(R.string.supervised_choose_access),
+                subtitle = stringResource(R.string.supervised_choose_access_summary),
                 onSelected = {
                     credentialType = it
                     stage = if (it == SupervisedParentCredentialType.Pin) SetupStage.Pin else SetupStage.Password
@@ -252,6 +259,7 @@ internal fun SupervisedParentRecoveryDialog(
     onDismiss: () -> Unit,
     onReset: (SupervisedParentEnrollment) -> Unit,
 ) {
+    val resources = LocalResources.current
     var stage by remember { mutableStateOf(RecoveryStage.Phrase) }
     var recoveryPhrase by remember { mutableStateOf("") }
     var credentialType by remember { mutableStateOf<SupervisedParentCredentialType?>(null) }
@@ -272,7 +280,7 @@ internal fun SupervisedParentRecoveryDialog(
                 replacement.fill('\u0000')
             }
             busy = false
-            result.fold(onSuccess = onReset, onFailure = { error = it.toUserMessage() })
+            result.fold(onSuccess = onReset, onFailure = { error = it.toUserMessage(resources) })
         }
     }
 
@@ -297,8 +305,8 @@ internal fun SupervisedParentRecoveryDialog(
                 onContinue = { stage = RecoveryStage.Choose },
             )
             RecoveryStage.Choose -> CredentialChoiceScreen(
-                title = "Choose new parent access",
-                subtitle = "Your recovery phrase will be replaced after reset.",
+                title = stringResource(R.string.supervised_choose_new_access),
+                subtitle = stringResource(R.string.supervised_recovery_replaced),
                 onSelected = {
                     credentialType = it
                     stage = if (it == SupervisedParentCredentialType.Pin) RecoveryStage.Pin
@@ -317,6 +325,7 @@ internal fun SupervisedParentRecoveryCodeDialog(
     onDone: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val clipboard = remember(context) {
         context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as ClipboardManager
     }
@@ -328,11 +337,11 @@ internal fun SupervisedParentRecoveryCodeDialog(
                     type = "text/plain"
                     putExtra(Intent.EXTRA_TEXT, enrollment.recoveryPhrase)
                 }
-                context.startActivity(Intent.createChooser(intent, "Share recovery phrase"))
+                context.startActivity(Intent.createChooser(intent, resources.getString(R.string.supervised_share_recovery)))
             },
             onCopy = {
                 clipboard.setPrimaryClip(
-                    ClipData.newPlainText("Parent recovery phrase", enrollment.recoveryPhrase),
+                    ClipData.newPlainText(resources.getString(R.string.supervised_recovery_clipboard), enrollment.recoveryPhrase),
                 )
             },
             onDone = onDone,
@@ -377,7 +386,7 @@ internal fun ParentAuthScreenSurface(
             ) {
                 if (onBack != null) {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.supervised_back))
                     }
                 } else {
                     Spacer(Modifier.size(48.dp))
@@ -401,7 +410,7 @@ internal fun ParentAuthScreenSurface(
                         }
                     }
                     Text(
-                        "$current of $total",
+                        stringResource(R.string.supervised_step, current, total),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -431,20 +440,20 @@ internal fun CredentialChoiceScreen(
         Spacer(Modifier.height(28.dp))
         CredentialChoiceRow(
             icon = { Icon(Icons.Filled.Dialpad, contentDescription = null) },
-            title = "Use a PIN",
-            subtitle = "Fast on this phone · 6 digits",
+            title = stringResource(R.string.supervised_use_pin),
+            subtitle = stringResource(R.string.supervised_pin_summary),
             onClick = { onSelected(SupervisedParentCredentialType.Pin) },
         )
         Spacer(Modifier.height(12.dp))
         CredentialChoiceRow(
             icon = { Icon(Icons.Filled.Lock, contentDescription = null) },
-            title = "Use a password",
-            subtitle = "Works with password managers · 8+ characters",
+            title = stringResource(R.string.supervised_use_password),
+            subtitle = stringResource(R.string.supervised_password_summary),
             onClick = { onSelected(SupervisedParentCredentialType.Password) },
         )
         Spacer(Modifier.height(16.dp))
         Text(
-            "PIN and password are separate choices.",
+            stringResource(R.string.supervised_distinct_choices),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -516,7 +525,7 @@ internal fun PinEntryScreen(
         )
         AuthError(error)
         onUseRecovery?.let {
-            TextButton(enabled = !busy, onClick = it) { Text("Use recovery phrase") }
+            TextButton(enabled = !busy, onClick = it) { Text(stringResource(R.string.supervised_use_recovery)) }
         }
     }
 }
@@ -527,6 +536,7 @@ internal fun PinSetupScreen(
     error: String?,
     onComplete: (String) -> Unit,
 ) {
+    val resources = LocalResources.current
     var firstPin by remember { mutableStateOf<String?>(null) }
     var pin by remember(firstPin) { mutableStateOf("") }
     var localError by remember { mutableStateOf<String?>(null) }
@@ -535,8 +545,8 @@ internal fun PinSetupScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AuthHeading(
-            if (firstPin == null) "Create a parent PIN" else "Confirm parent PIN",
-            if (firstPin == null) "Choose a 6-digit PIN." else "Enter the same 6 digits again.",
+            if (firstPin == null) stringResource(R.string.supervised_create_pin) else stringResource(R.string.supervised_confirm_pin),
+            if (firstPin == null) stringResource(R.string.supervised_choose_pin) else stringResource(R.string.supervised_repeat_pin),
         )
         Spacer(Modifier.height(28.dp))
         PinDots(pin.length)
@@ -553,7 +563,7 @@ internal fun PinSetupScreen(
                         } else if (firstPin == next) {
                             onComplete(next)
                         } else {
-                            localError = "The PINs do not match. Try again."
+                            localError = resources.getString(R.string.supervised_pin_mismatch)
                             firstPin = null
                         }
                     }
@@ -587,7 +597,7 @@ private fun NumericKeypad(
                 color = MaterialTheme.colorScheme.surfaceVariant,
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = "Delete digit")
+                    Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = stringResource(R.string.supervised_delete_digit))
                 }
             }
         }
@@ -633,6 +643,7 @@ internal fun PasswordSetupScreen(
     error: String?,
     onComplete: (String) -> Unit,
 ) {
+    val resources = LocalResources.current
     var password by remember { mutableStateOf("") }
     var confirmation by remember { mutableStateOf("") }
     var reveal by remember { mutableStateOf(false) }
@@ -641,11 +652,11 @@ internal fun PasswordSetupScreen(
         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AuthHeading("Create a parent password", "Use 8 or more characters.")
+        AuthHeading(stringResource(R.string.supervised_create_password), stringResource(R.string.supervised_password_length))
         Spacer(Modifier.height(28.dp))
-        PasswordField("Password", password, { password = it; localError = null }, reveal, { reveal = !reveal })
+        PasswordField(stringResource(R.string.supervised_password), password, { password = it; localError = null }, reveal, { reveal = !reveal })
         Spacer(Modifier.height(12.dp))
-        PasswordField("Confirm password", confirmation, { confirmation = it; localError = null }, reveal, { reveal = !reveal }, ImeAction.Done)
+        PasswordField(stringResource(R.string.supervised_confirm_password), confirmation, { confirmation = it; localError = null }, reveal, { reveal = !reveal }, ImeAction.Done)
         AuthError(localError ?: error)
         Spacer(Modifier.height(20.dp))
         Button(
@@ -653,21 +664,21 @@ internal fun PasswordSetupScreen(
             modifier = Modifier.fillMaxWidth().height(52.dp),
             onClick = {
                 when {
-                    password != confirmation -> localError = "The passwords do not match."
+                    password != confirmation -> localError = resources.getString(R.string.supervised_password_mismatch)
                     !SupervisedParentAuthStore.validateNewSecret(
                         password.toCharArray(),
                         SupervisedParentCredentialType.Password,
-                    ).valid -> localError = "Use a password with at least 8 characters."
+                    ).valid -> localError = resources.getString(R.string.supervised_password_minimum)
                     else -> onComplete(password)
                 }
             },
-        ) { Text(if (busy) "Saving…" else "Continue") }
+        ) { Text(if (busy) stringResource(R.string.supervised_saving) else stringResource(R.string.supervised_continue)) }
     }
 }
 
 @Composable
 internal fun PasswordVerifyScreen(
-    title: String = "Parent password",
+    title: String = stringResource(R.string.supervised_parent_password),
     busy: Boolean,
     error: String?,
     onSubmit: (String) -> Unit,
@@ -679,18 +690,18 @@ internal fun PasswordVerifyScreen(
         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AuthHeading(title, "Enter your password.")
+        AuthHeading(title, stringResource(R.string.supervised_enter_password))
         Spacer(Modifier.height(28.dp))
-        PasswordField("Password", password, { password = it }, reveal, { reveal = !reveal }, ImeAction.Done)
+        PasswordField(stringResource(R.string.supervised_password), password, { password = it }, reveal, { reveal = !reveal }, ImeAction.Done)
         AuthError(error)
         Spacer(Modifier.height(20.dp))
         Button(
             enabled = !busy && password.isNotEmpty(),
             modifier = Modifier.fillMaxWidth().height(52.dp),
             onClick = { onSubmit(password) },
-        ) { Text(if (busy) "Checking…" else "Unlock") }
+        ) { Text(if (busy) stringResource(R.string.supervised_checking) else stringResource(R.string.supervised_unlock)) }
         onUseRecovery?.let {
-            TextButton(enabled = !busy, onClick = it) { Text("Use recovery phrase") }
+            TextButton(enabled = !busy, onClick = it) { Text(stringResource(R.string.supervised_use_recovery)) }
         }
     }
 }
@@ -715,7 +726,7 @@ private fun PasswordField(
             IconButton(onClick = onReveal) {
                 Icon(
                     if (reveal) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                    contentDescription = if (reveal) "Hide password" else "Show password",
+                    contentDescription = if (reveal) stringResource(R.string.supervised_hide_password) else stringResource(R.string.supervised_show_password),
                 )
             }
         },
@@ -734,13 +745,13 @@ private fun RecoveryPhraseInputScreen(
         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AuthHeading("Enter recovery phrase", "Paste or type the six words.")
+        AuthHeading(stringResource(R.string.supervised_enter_recovery), stringResource(R.string.supervised_recovery_six_words))
         Spacer(Modifier.height(28.dp))
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Recovery phrase") },
+            label = { Text(stringResource(R.string.supervised_recovery_phrase)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii, imeAction = ImeAction.Done),
             minLines = 2,
         )
@@ -750,7 +761,7 @@ private fun RecoveryPhraseInputScreen(
             enabled = value.isNotBlank(),
             modifier = Modifier.fillMaxWidth().height(52.dp),
             onClick = onContinue,
-        ) { Text("Continue") }
+        ) { Text(stringResource(R.string.supervised_continue)) }
     }
 }
 
@@ -772,8 +783,8 @@ internal fun SupervisedParentRecoveryCodeContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         AuthHeading(
-            "Save your recovery phrase",
-            "This is the only way to reset parent access if you forget it.",
+            stringResource(R.string.supervised_save_recovery),
+            stringResource(R.string.supervised_recovery_only_way),
         )
         Spacer(Modifier.height(28.dp))
         Surface(
@@ -795,7 +806,7 @@ internal fun SupervisedParentRecoveryCodeContent(
         }
         Spacer(Modifier.height(18.dp))
         Text(
-            "Send it somewhere parent-only, then delete the message or saved copy from this phone.",
+            stringResource(R.string.supervised_recovery_cleanup),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -806,14 +817,14 @@ internal fun SupervisedParentRecoveryCodeContent(
         ) {
             Icon(Icons.Filled.Share, contentDescription = null)
             Spacer(Modifier.size(8.dp))
-            Text("Share")
+            Text(stringResource(R.string.supervised_share))
         }
         Spacer(Modifier.height(10.dp))
         OutlinedButton(
             modifier = Modifier.fillMaxWidth().height(52.dp),
             onClick = onCopy,
-        ) { Text("Copy phrase") }
-        TextButton(onClick = onDone) { Text("Done") }
+        ) { Text(stringResource(R.string.supervised_copy_phrase)) }
+        TextButton(onClick = onDone) { Text(stringResource(R.string.supervised_done)) }
     }
 }
 
@@ -838,25 +849,33 @@ private fun AuthError(error: String?) {
     }
 }
 
-private fun SupervisedParentAuthResult.toUserMessage(): String = when (this) {
+private fun SupervisedParentAuthResult.toUserMessage(resources: Resources): String = when (this) {
     SupervisedParentAuthResult.Success -> ""
     is SupervisedParentAuthResult.Invalid -> if (attemptsBeforeDelay > 0) {
-        "Incorrect parent credential. $attemptsBeforeDelay attempts remain before a delay."
+        resources.getString(R.string.supervised_credential_attempts, attemptsBeforeDelay)
     } else {
-        "Incorrect parent credential."
+        resources.getString(R.string.supervised_credential_incorrect)
     }
     is SupervisedParentAuthResult.Throttled -> {
         val seconds = ((retryAfterMillis + 999L) / 1_000L).coerceAtLeast(1)
-        "Too many attempts. Try again in $seconds seconds."
+        resources.getString(R.string.supervised_too_many_attempts, seconds)
     }
-    SupervisedParentAuthResult.Missing -> "Parent access has not been set up."
-    SupervisedParentAuthResult.Corrupt -> "Parent access data is unavailable. Supervised Mode remains locked."
+    SupervisedParentAuthResult.Missing -> resources.getString(R.string.supervised_access_missing)
+    SupervisedParentAuthResult.Corrupt -> resources.getString(R.string.supervised_parent_data_locked)
 }
 
-private fun Throwable.toUserMessage(): String = when (this) {
-    is IllegalArgumentException -> message ?: "The new parent credential is not valid."
-    is SupervisedParentAuthStore.ParentAuthenticationException -> authResult.toUserMessage()
-    else -> "Parent access could not be updated. Try again."
+private fun Throwable.toUserMessage(resources: Resources): String = when (this) {
+    is SupervisedParentAuthStore.ParentSecretValidationException -> resources.getString(
+        when (validation.error) {
+            SupervisedParentSecretError.TooLong -> R.string.supervised_maximum_length
+            SupervisedParentSecretError.InvalidPin -> R.string.supervised_exact_pin
+            SupervisedParentSecretError.InvalidPassword -> R.string.supervised_password_minimum
+            null -> R.string.supervised_new_credential_invalid
+        },
+    )
+    is IllegalArgumentException -> resources.getString(R.string.supervised_new_credential_invalid)
+    is SupervisedParentAuthStore.ParentAuthenticationException -> authResult.toUserMessage(resources)
+    else -> resources.getString(R.string.supervised_update_failed)
 }
 
 private enum class SetupStage { VerifyCurrent, Choose, Pin, Password }

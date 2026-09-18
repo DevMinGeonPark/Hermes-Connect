@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.ui.components
 
+import com.hermesandroid.relay.R
+import androidx.compose.ui.res.stringResource
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
@@ -53,20 +55,25 @@ fun CandidateBuildBanner(modifier: Modifier = Modifier) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = CandidateBuild.heading,
+                    text = stringResource(when (CandidateBuild.kind.lowercase()) {
+                        "rc", "release-candidate" -> R.string.ui_label_release_candidate
+                        else -> R.string.ui_label_review_candidate
+                    }),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = CandidateBuild.label,
+                    text = if (com.hermesandroid.relay.BuildConfig.CANDIDATE_LABEL.isBlank()) {
+                        stringResource(R.string.ui_label_local_review)
+                    } else CandidateBuild.label,
                     style = MaterialTheme.typography.labelMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = if (expanded) "Hide candidate details" else "Show candidate details",
+                    contentDescription = if (expanded) stringResource(R.string.ko_candidate_hide) else stringResource(R.string.ko_candidate_show),
                     modifier = Modifier
                         .padding(start = 8.dp)
                         .size(18.dp),
@@ -83,8 +90,8 @@ fun CandidateBuildBanner(modifier: Modifier = Modifier) {
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    CandidateDetailRow(label = "Commit", value = CandidateBuild.shortSha)
-                    CandidateDetailRow(label = "Install", value = "Candidate slot · stable untouched")
+                    CandidateDetailRow(label = stringResource(R.string.git_state_commit), value = CandidateBuild.shortSha)
+                    CandidateDetailRow(label = stringResource(R.string.ko_candidate_install), value = stringResource(R.string.ko_candidate_slot))
                 }
             }
         }

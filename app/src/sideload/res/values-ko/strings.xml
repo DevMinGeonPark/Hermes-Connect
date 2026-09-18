@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Hermes-Connect Dev</string>
+    <string name="a11y_service_label">Hermes-Bridge Dev</string>
+    <string name="notification_companion_label">Hermes-Connect Dev 알림 연동</string>
+    <string name="a11y_description_sideload">Hermes Bridge는 음성과 화면 인식을 통한 핸즈프리 제어를 위해 에이전트에 휴대전화의 모든 읽기/쓰기 권한을 부여합니다. 모든 작업은 활동 기록에 남으며, 파괴적 작업에는 사용자의 확인이 필요합니다.</string>
+</resources>

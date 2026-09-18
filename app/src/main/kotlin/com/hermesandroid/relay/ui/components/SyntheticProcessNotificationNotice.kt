@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.ui.components
 
+import com.hermesandroid.relay.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -60,6 +62,8 @@ fun SyntheticProcessNotificationNotice(
         mutableStateOf(false)
     }
 
+    val noticeLabel = stringResource(R.string.ko_process_notice)
+    val outputState = stringResource(if (expanded) R.string.ko_output_expanded else R.string.ko_output_collapsed)
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -75,18 +79,18 @@ fun SyntheticProcessNotificationNotice(
                     .heightIn(min = 48.dp)
                     .clickable(
                         enabled = hasDetail,
-                        onClickLabel = if (expanded) "Collapse process output" else "Expand process output",
+                        onClickLabel = if (expanded) stringResource(R.string.ko_process_collapse) else stringResource(R.string.ko_process_expand),
                     ) { expanded = !expanded }
                     .semantics {
                         contentDescription = buildString {
-                            append("Background process notice. ")
+                            append(noticeLabel).append(" ")
                             append(notification.headline)
                             if (hasDetail) {
-                                append(if (expanded) ". Output expanded" else ". Output collapsed")
+                                append(". ").append(outputState)
                             }
                         }
                         if (hasDetail) {
-                            stateDescription = if (expanded) "Output expanded" else "Output collapsed"
+                            stateDescription = outputState
                         }
                     }
                     .padding(vertical = 4.dp),
@@ -108,7 +112,7 @@ fun SyntheticProcessNotificationNotice(
                 if (hasDetail) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "output",
+                        text = stringResource(R.string.ko_output),
                         style = relayMetadataStyle(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.58f),
                     )

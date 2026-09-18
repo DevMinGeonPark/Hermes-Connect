@@ -425,6 +425,7 @@ fun AppearanceSettingsScreen(
                         AppLanguage.GERMAN to stringResource(R.string.appearance_language_german),
                         AppLanguage.BRAZILIAN_PORTUGUESE to stringResource(R.string.appearance_language_brazilian_portuguese),
                         AppLanguage.JAPANESE to stringResource(R.string.appearance_language_japanese),
+                        AppLanguage.KOREAN to stringResource(R.string.appearance_language_korean),
                         AppLanguage.SIMPLIFIED_CHINESE to stringResource(R.string.appearance_language_simplified_chinese),
                         AppLanguage.SPANISH to stringResource(R.string.appearance_language_spanish),
                         AppLanguage.RUSSIAN to stringResource(R.string.appearance_language_russian),
@@ -1684,7 +1685,7 @@ private fun AppearanceLivePreviewContent(restricted: Boolean) {
                     if (!restricted) {
                         Text("gpt-5.6-sol", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
                         Icon(Icons.Filled.KeyboardArrowDown, null, Modifier.size(14.dp))
-                        Text("High", style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
+                        Text(stringResource(R.string.chat_reasoning_high), style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp))
                         Icon(Icons.Filled.KeyboardArrowDown, null, Modifier.size(14.dp))
                     }
                     Text(

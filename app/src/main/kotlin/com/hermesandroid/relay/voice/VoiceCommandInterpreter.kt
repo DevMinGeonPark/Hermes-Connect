@@ -48,34 +48,50 @@ internal object VoiceCommandInterpreter {
         "stop talking",
         "stop the response",
         "stop your response",
+        "말하기 중지",
+        "응답 중지",
+        "그만 말해",
     )
     private val cancelBackgroundTaskPhrases = setOf(
         "cancel the background task",
         "cancel my background task",
         "cancel that background task",
         "cancel the running background task",
+        "백그라운드 작업 취소",
+        "백그라운드 작업 취소해",
+        "백그라운드 작업을 취소해",
     )
     private val pauseContinuousPhrases = setOf(
         "pause",
         "pause continuous listening",
         "pause hands free listening",
+        "일시 중지",
+        "계속 듣기 일시 중지",
     )
     private val resumeContinuousPhrases = setOf(
         "resume",
         "resume continuous listening",
         "resume hands free listening",
+        "재개",
+        "계속 듣기 재개",
     )
     private val repeatBackgroundAnswerPhrases = setOf(
         "repeat that",
         "repeat the background answer",
         "repeat the last background answer",
         "repeat that background answer",
+        "다시 말해",
+        "다시 말해 줘",
+        "마지막 백그라운드 답변 다시 말해",
     )
     private val newChatPhrases = setOf(
         "new chat",
         "start a new chat",
         "open a new chat",
         "create a new chat",
+        "새 대화",
+        "새 대화 시작",
+        "새 대화 시작해",
     )
 
     fun interpretFinalTranscript(

@@ -58,7 +58,15 @@ data class SupervisedParentEnrollment(val recoveryPhrase: String)
 data class SupervisedParentSecretValidation(
     val valid: Boolean,
     val message: String? = null,
+    val error: SupervisedParentSecretError? = null,
 )
+
+/** Stable validation reasons for localized UI messages; never contain credential data. */
+enum class SupervisedParentSecretError {
+    TooLong,
+    InvalidPin,
+    InvalidPassword,
+}
 
 /** Narrow authentication surface consumed by Compose dialogs and test fakes. */
 interface SupervisedParentAuthenticator {
@@ -117,7 +125,7 @@ class SupervisedParentAuthStore private constructor(
     ): Result<SupervisedParentEnrollment> = processMutex.withLock {
         val validation = validateNewSecret(newSecret, credentialType)
         if (!validation.valid) {
-            return Result.failure(IllegalArgumentException(validation.message))
+            return Result.failure(ParentSecretValidationException(validation))
         }
         if (decode(dataStore.data.first()[KEY_RECORD]).status != SupervisedParentAuthStatus.Missing) {
             return Result.failure(IllegalStateException("Parent access is already configured or unavailable."))
@@ -136,7 +144,7 @@ class SupervisedParentAuthStore private constructor(
     ): Result<SupervisedParentEnrollment> = processMutex.withLock {
         val validation = validateNewSecret(newSecret, credentialType)
         if (!validation.valid) {
-            return Result.failure(IllegalArgumentException(validation.message))
+            return Result.failure(ParentSecretValidationException(validation))
         }
         when (val verified = verifyLocked(currentSecret, AuthTarget.ParentSecret)) {
             SupervisedParentAuthResult.Success -> runCatching { enrollLocked(newSecret, credentialType) }
@@ -151,7 +159,7 @@ class SupervisedParentAuthStore private constructor(
     ): Result<SupervisedParentEnrollment> = processMutex.withLock {
         val validation = validateNewSecret(newSecret, credentialType)
         if (!validation.valid) {
-            return Result.failure(IllegalArgumentException(validation.message))
+            return Result.failure(ParentSecretValidationException(validation))
         }
         val record = decode(dataStore.data.first()[KEY_RECORD]).record
             ?: return Result.failure(ParentAuthenticationException(SupervisedParentAuthResult.Missing))
@@ -365,6 +373,10 @@ class SupervisedParentAuthStore private constructor(
         val authResult: SupervisedParentAuthResult,
     ) : IllegalStateException("Parent authentication failed: $authResult")
 
+    class ParentSecretValidationException(
+        val validation: SupervisedParentSecretValidation,
+    ) : IllegalArgumentException(validation.message)
+
     companion object {
         private const val TAG = "SupervisedParentAuth"
         private const val RECORD_VERSION = 1
@@ -386,13 +398,17 @@ class SupervisedParentAuthStore private constructor(
             credentialType: SupervisedParentCredentialType,
         ): SupervisedParentSecretValidation {
             if (secret.size > 64) {
-                return SupervisedParentSecretValidation(false, "Use at most 64 characters.")
+                return SupervisedParentSecretValidation(
+                    false, "Use at most 64 characters.", SupervisedParentSecretError.TooLong,
+                )
             }
             if (credentialType == SupervisedParentCredentialType.Pin) {
                 return if (secret.size == 6 && secret.all(Char::isDigit)) {
                     SupervisedParentSecretValidation(true)
                 } else {
-                    SupervisedParentSecretValidation(false, "Use exactly 6 digits.")
+                    SupervisedParentSecretValidation(
+                        false, "Use exactly 6 digits.", SupervisedParentSecretError.InvalidPin,
+                    )
                 }
             }
             return if (
@@ -401,7 +417,9 @@ class SupervisedParentAuthStore private constructor(
             ) {
                 SupervisedParentSecretValidation(true)
             } else {
-                SupervisedParentSecretValidation(false, "Use a password with at least 8 characters.")
+                SupervisedParentSecretValidation(
+                    false, "Use a password with at least 8 characters.", SupervisedParentSecretError.InvalidPassword,
+                )
             }
         }
 

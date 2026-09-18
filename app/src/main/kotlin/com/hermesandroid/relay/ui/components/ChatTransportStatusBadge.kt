@@ -1,5 +1,8 @@
 package com.hermesandroid.relay.ui.components
 
+import androidx.compose.ui.res.stringResource
+import com.hermesandroid.relay.R
+
 import com.hermesandroid.relay.ui.UiMessageBus
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -141,11 +144,24 @@ fun ChatTransportStatusBadge(
 ) {
     val textColor = status.textColor()
     val background = status.backgroundColor()
+    val label = status.tier.localizedLabel()
+    val reason = localizedTransportReason(status.reason)
+    val detail = when {
+        status.tier == ChatTransportTier.Offline -> stringResource(R.string.ui_label_transport_offline_detail)
+        status.tone == ChatTransportTone.Unavailable -> stringResource(R.string.ui_label_transport_unavailable_detail, label)
+        else -> stringResource(when (status.tier) {
+            ChatTransportTier.Gateway -> R.string.ui_label_transport_gateway_detail
+            ChatTransportTier.Sessions -> R.string.ui_label_transport_sessions_detail
+            ChatTransportTier.Completions -> R.string.ui_label_transport_completions_detail
+            ChatTransportTier.Runs -> R.string.ui_label_transport_runs_detail
+            ChatTransportTier.Offline -> R.string.ui_label_transport_offline_detail
+        })
+    }
     Surface(
         modifier = modifier.combinedClickable(
             onClick = { onClick?.invoke() },
             onLongClick = {
-                UiMessageBus.info("${status.reason}: ${status.detail}")
+                UiMessageBus.info("$reason: $detail")
             },
         ),
         shape = RoundedCornerShape(999.dp),
@@ -153,13 +169,34 @@ fun ChatTransportStatusBadge(
         contentColor = textColor,
     ) {
         Text(
-            text = status.tier.label,
+            text = label,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.ExtraBold),
             color = textColor,
             maxLines = 1,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
         )
     }
+}
+
+@Composable
+private fun ChatTransportTier.localizedLabel(): String = when (this) {
+    ChatTransportTier.Gateway -> label
+    ChatTransportTier.Offline -> stringResource(R.string.active_section_offline)
+    else -> stringResource(R.string.api_fallback_title)
+}
+
+@Composable
+private fun localizedTransportReason(reason: String): String = when (reason) {
+    "Gateway connected" -> stringResource(R.string.ui_label_gateway_connected)
+    "Gateway sign-in required" -> stringResource(R.string.ui_label_gateway_sign_in)
+    "Gateway unavailable" -> stringResource(R.string.ui_label_gateway_unavailable)
+    "Gateway unsupported" -> stringResource(R.string.ui_label_gateway_unsupported)
+    "Checking Gateway" -> stringResource(R.string.ui_label_gateway_checking)
+    "Gateway ready" -> stringResource(R.string.ui_label_gateway_ready)
+    "Direct API selected" -> stringResource(R.string.ui_label_direct_selected)
+    "Direct API unavailable" -> stringResource(R.string.ui_label_direct_unavailable)
+    "offline" -> stringResource(R.string.active_section_offline)
+    else -> reason
 }
 
 @Composable

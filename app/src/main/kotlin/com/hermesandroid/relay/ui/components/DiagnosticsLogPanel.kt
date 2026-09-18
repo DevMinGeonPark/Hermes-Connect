@@ -171,7 +171,7 @@ private fun DiagnosticLogRow(
             ) {
                 Text(
                     text = if (showCategory) {
-                        "${entry.category.label} - ${entry.title}"
+                        "${diagnosticCategoryName(entry.category)} - ${entry.title}"
                     } else {
                         entry.title
                     },

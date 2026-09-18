@@ -566,7 +566,7 @@ private fun ProviderUsageWindowRow(window: ProviderUsageWindow) {
                 trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             )
         }
-        formatReset(window.resetAt, now)?.let { reset ->
+        formatReset(window.resetAt, now, androidx.compose.ui.platform.LocalContext.current)?.let { reset ->
             Text(
                 text = stringResource(R.string.provider_usage_resets, reset),
                 style = MaterialTheme.typography.labelSmall,
@@ -671,17 +671,17 @@ private fun providerUnavailableText(provider: ProviderUsageProvider): String =
         stringResource(R.string.provider_usage_provider_unavailable)
     }
 
-private fun formatReset(raw: String?, now: Instant): String? = runCatching {
+private fun formatReset(raw: String?, now: Instant, context: android.content.Context): String? = runCatching {
     val reset = Instant.parse(raw ?: return null)
     val duration = Duration.between(now, reset)
-    if (duration.isNegative || duration.isZero) return "now"
+    if (duration.isNegative || duration.isZero) return context.getString(R.string.ui_label_reset_now)
     val days = duration.toDays()
     val hours = duration.toHours() % 24
     val minutes = duration.toMinutes() % 60
     when {
-        days > 0 -> "${days}d ${hours}h"
-        hours > 0 -> "${hours}h ${minutes}m"
-        else -> "${minutes}m"
+        days > 0 -> context.getString(R.string.ui_label_reset_days, days, hours)
+        hours > 0 -> context.getString(R.string.ui_label_reset_hours, hours, minutes)
+        else -> context.getString(R.string.ui_label_reset_minutes, minutes)
     }
 }.getOrNull()
 

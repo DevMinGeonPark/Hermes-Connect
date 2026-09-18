@@ -329,7 +329,7 @@ private fun connSecAppearance(security: ConnectionSecurity): ConnSecAppearance {
             fg = green,
         )
         ConnectionSecurityLevel.Overlay -> ConnSecAppearance(
-            label = stringResource(R.string.transport_badge_encrypted_mech_format, security.mechanism),
+            label = stringResource(R.string.transport_badge_encrypted_mech_format, connectionDisplayLabel(security.mechanism)),
             icon = Icons.Filled.Shield,
             bg = green.copy(alpha = 0.14f),
             fg = green,
@@ -342,7 +342,7 @@ private fun connSecAppearance(security: ConnectionSecurity): ConnSecAppearance {
         )
         ConnectionSecurityLevel.Plain -> ConnSecAppearance(
             label = if (security.mechanism.isNotBlank() && security.mechanism != "Plain") {
-                stringResource(R.string.transport_badge_not_encrypted_mech_format, security.mechanism)
+                stringResource(R.string.transport_badge_not_encrypted_mech_format, connectionDisplayLabel(security.mechanism))
             } else {
                 stringResource(R.string.transport_badge_not_encrypted)
             },

@@ -1,5 +1,8 @@
 package com.hermesandroid.relay.viewmodel.connection
 
+import com.hermesandroid.relay.util.localizedString
+import android.content.Context
+import com.hermesandroid.relay.R
 import com.hermesandroid.relay.data.BotChatTarget
 import com.hermesandroid.relay.data.BotGatewayRosterStatus
 import com.hermesandroid.relay.data.BotGatewayRoute
@@ -40,6 +43,7 @@ internal data class BotModeGatewaySnapshot(
 )
 
 class BotModeController(
+    private val context: Context? = null,
     private val scope: CoroutineScope,
     private val connections: StateFlow<List<Connection>>,
     private val activeConnectionId: StateFlow<String?>,
@@ -74,7 +78,7 @@ class BotModeController(
                 loading = fleet.isNotEmpty(),
             )
             if (fleet.isEmpty()) {
-                _state.value = BotModeState(error = "Connect to Hermes to use Bot Mode")
+                _state.value = BotModeState(error = (context?.localizedString(R.string.runtime_connect_to_hermes_to_use_bot_mode) ?: "Connect to Hermes to use Bot Mode"))
                 return
             }
 
@@ -107,14 +111,14 @@ class BotModeController(
             return prior?.copy(
                 connection = connection,
                 stale = true,
-                error = "Gateway is not configured",
+                error = (context?.localizedString(R.string.runtime_gateway_is_not_configured) ?: "Gateway is not configured"),
             ) ?: BotModeGatewaySnapshot(
                 connection = connection,
                 dashboardUrl = dashboardUrl,
                 installId = null,
                 roster = BotModeRoster(),
                 stale = true,
-                error = "Gateway is not configured",
+                error = (context?.localizedString(R.string.runtime_gateway_is_not_configured) ?: "Gateway is not configured"),
             )
         }
         val statusClient = dashboardClientFactory(connection.id, dashboardUrl)
@@ -143,14 +147,14 @@ class BotModeController(
                     dashboardUrl = dashboardUrl,
                     installId = installId ?: prior.installId,
                     stale = true,
-                    error = error.message ?: "Gateway unavailable",
+                    error = error.message ?: (context?.localizedString(R.string.gateway_status_unavailable) ?: "Gateway unavailable"),
                 ) ?: BotModeGatewaySnapshot(
                     connection = connection,
                     dashboardUrl = dashboardUrl,
                     installId = installId,
                     roster = BotModeRoster(),
                     stale = true,
-                    error = error.message ?: "Gateway unavailable",
+                    error = error.message ?: (context?.localizedString(R.string.gateway_status_unavailable) ?: "Gateway unavailable"),
                 )
             },
         )
@@ -158,35 +162,35 @@ class BotModeController(
 
     suspend fun ensureCanonicalBotChat(route: BotGatewayRoute): Result<BotChatTarget> {
         val connection = connectionFor(route)
-            ?: return Result.failure(IllegalStateException("The Bot's gateway was removed"))
+            ?: return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_bot_s_gateway_was_removed) ?: "The Bot's gateway was removed")))
         val dashboardUrl = dashboardUrlProvider(connection).trim()
         if (dashboardUrl.isBlank()) {
-            return Result.failure(IllegalStateException("The Bot's gateway is not configured"))
+            return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_bot_s_gateway_is_not_configured) ?: "The Bot's gateway is not configured")))
         }
         return gatewayLeaseFactory(connection.id, dashboardUrl, route.profileName, false).use { lease ->
             lease.client.ensureCanonicalBotChat(route.profileName)
         }.mapCatching { target ->
-                check(connectionFor(route) != null) { "The Bot's gateway was removed while opening Bot Chat" }
+                check(connectionFor(route) != null) { (context?.localizedString(R.string.runtime_the_bot_s_gateway_was_removed_while_opening_bot_chat) ?: "The Bot's gateway was removed while opening Bot Chat") }
                 target
             }
     }
 
     fun acquireGateway(route: BotGatewayRoute): Result<UpstreamTransportController.RouteGatewayLease> {
         val connection = connectionFor(route)
-            ?: return Result.failure(IllegalStateException("The Bot's gateway was removed"))
+            ?: return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_bot_s_gateway_was_removed) ?: "The Bot's gateway was removed")))
         val dashboardUrl = dashboardUrlProvider(connection).trim()
         if (dashboardUrl.isBlank()) {
-            return Result.failure(IllegalStateException("The Bot's gateway is not configured"))
+            return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_bot_s_gateway_is_not_configured) ?: "The Bot's gateway is not configured")))
         }
         return Result.success(gatewayLeaseFactory(connection.id, dashboardUrl, route.profileName, true))
     }
 
     fun dashboardClient(route: BotGatewayRoute): Result<DashboardApiClient> {
         val connection = connectionFor(route)
-            ?: return Result.failure(IllegalStateException("The Bot's gateway was removed"))
+            ?: return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_bot_s_gateway_was_removed) ?: "The Bot's gateway was removed")))
         val dashboardUrl = dashboardUrlProvider(connection).trim()
         if (dashboardUrl.isBlank()) {
-            return Result.failure(IllegalStateException("The Bot's gateway is not configured"))
+            return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_bot_s_gateway_is_not_configured) ?: "The Bot's gateway is not configured")))
         }
         return Result.success(dashboardClientFactory(connection.id, dashboardUrl))
     }
@@ -198,10 +202,10 @@ class BotModeController(
         description: String,
     ): Result<String> {
         val connection = connections.value.firstOrNull { it.id == connectionId }
-            ?: return Result.failure(IllegalStateException("The target gateway was removed"))
+            ?: return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_target_gateway_was_removed) ?: "The target gateway was removed")))
         val dashboardUrl = dashboardUrlProvider(connection).trim()
         if (dashboardUrl.isBlank()) {
-            return Result.failure(IllegalStateException("The target gateway is not configured"))
+            return Result.failure(IllegalStateException((context?.localizedString(R.string.runtime_the_target_gateway_is_not_configured) ?: "The target gateway is not configured")))
         }
         val lease = gatewayLeaseFactory(connection.id, dashboardUrl, "default", false)
         val client = lease.client
@@ -216,7 +220,7 @@ class BotModeController(
             ),
             ).mapCatching { created ->
             check(connections.value.any { it.id == connectionId }) {
-                "The target gateway was removed while creating the Bot"
+                (context?.localizedString(R.string.runtime_the_target_gateway_was_removed_while_creating_the_bot) ?: "The target gateway was removed while creating the Bot")
             }
             val configured = client.configureProfile(
                 created.name,
@@ -230,7 +234,7 @@ class BotModeController(
                 ),
             ).getOrThrow()
             check(GatewayProfileSection.UiMeta in configured.applied) {
-                "The profile was created, but Bot Mode metadata was not saved"
+                (context?.localizedString(R.string.runtime_the_profile_was_created_but_bot_mode_metadata_was_not_saved) ?: "The profile was created, but Bot Mode metadata was not saved")
             }
                 created.name
             }

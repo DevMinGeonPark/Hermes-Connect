@@ -462,10 +462,10 @@ fun SettingsScreen(
             if (supervisedPolicy?.enabled == true && parentAccessUnlocked) {
                 SettingsCategoryRow(
                     icon = Icons.Filled.Security,
-                    title = "Supervised mode",
-                    subtitle = "On · ${supervisedPolicy.pinnedProfileName.orEmpty()}",
+                    title = stringResource(R.string.settings_supervised_mode),
+                    subtitle = stringResource(R.string.settings_supervised_on_profile, supervisedPolicy.pinnedProfileName.orEmpty()),
                     badge = SettingsStatusPillModel(
-                        label = "On",
+                        label = stringResource(R.string.settings_supervised_on),
                         tone = SettingsStatusTone.Good,
                     ),
                     onClick = onNavigateToSupervisedControls,

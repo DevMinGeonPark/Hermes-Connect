@@ -171,7 +171,7 @@ fun SubagentLane(
 
                 if (anyRunning && steerableId != null && onSteer != null) {
                     TextButton(onClick = { showSteerDialog = true }) {
-                        Text("Redirect")
+                        Text(stringResource(R.string.ko_redirect))
                     }
                 }
 
@@ -219,12 +219,12 @@ fun SubagentLane(
     if (showSteerDialog && steerableId != null && onSteer != null) {
         AlertDialog(
             onDismissRequest = { showSteerDialog = false },
-            title = { Text("Redirect subagent") },
+            title = { Text(stringResource(R.string.ko_redirect_subagent)) },
             text = {
                 OutlinedTextField(
                     value = steerText,
                     onValueChange = { steerText = it },
-                    label = { Text("New instruction") },
+                    label = { Text(stringResource(R.string.ko_new_instruction)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
             },
@@ -237,10 +237,10 @@ fun SubagentLane(
                         onSteer(steerableId, instruction)
                     },
                     enabled = steerText.isNotBlank(),
-                ) { Text("Redirect") }
+                ) { Text(stringResource(R.string.ko_redirect)) }
             },
             dismissButton = {
-                TextButton(onClick = { showSteerDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showSteerDialog = false }) { Text(stringResource(R.string.common_cancel)) }
             },
         )
     }

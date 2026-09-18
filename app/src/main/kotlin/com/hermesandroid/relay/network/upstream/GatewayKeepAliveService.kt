@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.network.upstream
 
+import com.hermesandroid.relay.util.localizedString
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -63,7 +64,6 @@ class GatewayKeepAliveService : Service() {
     companion object {
         private const val TAG = "GatewayKeepAliveSvc"
         const val CHANNEL_ID = "gateway_keepalive"
-        private const val CHANNEL_NAME = "Persistent connection"
         const val NOTIFICATION_ID = 4713
         const val ACTION_STOP = "com.hermesandroid.relay.gateway.KEEPALIVE_STOP"
         private const val ACTION_REFRESH = "com.hermesandroid.relay.gateway.KEEPALIVE_REFRESH"
@@ -213,26 +213,26 @@ class GatewayKeepAliveService : Service() {
         val (title, body) = when {
             waitingSessions > 0 -> {
                 val title = if (waitingSessions == 1) {
-                    "Hermes is waiting for input"
+                    localizedString(R.string.runtime_keepalive_waiting)
                 } else {
-                    "$waitingSessions Hermes sessions need input"
+                    localizedString(R.string.runtime_keepalive_waiting_sessions, waitingSessions)
                 }
                 title to if (activeTurns > waitingSessions) {
-                    "$waitingSessions waiting · ${activeTurns - waitingSessions} still working"
+                    localizedString(R.string.runtime_keepalive_counts, waitingSessions, activeTurns - waitingSessions)
                 } else {
-                    "Open the requested session to review and continue."
+                    localizedString(R.string.runtime_keepalive_open_session)
                 }
             }
             activeTurns > 0 -> {
                 val title = if (activeTurns == 1) {
-                    "Hermes is finishing a turn"
+                    localizedString(R.string.runtime_keepalive_finishing)
                 } else {
-                    "Hermes is finishing $activeTurns turns"
+                    localizedString(R.string.runtime_keepalive_working_turns, activeTurns)
                 }
-                title to "The connection stays active until this work completes."
+                title to localizedString(R.string.runtime_keepalive_working_body)
             }
-            else -> getString(R.string.gateway_keepalive_title) to
-                getString(R.string.gateway_keepalive_body)
+            else -> localizedString(R.string.gateway_keepalive_title) to
+                localizedString(R.string.gateway_keepalive_body)
         }
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -244,18 +244,17 @@ class GatewayKeepAliveService : Service() {
             .setOnlyAlertOnce(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
-        if (persistent) builder.addAction(0, "Turn off always-on", stopPending)
+        if (persistent) builder.addAction(0, localizedString(R.string.runtime_keepalive_stop), stopPending)
         return builder.build()
     }
 
     private fun ensureChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = getSystemService(NotificationManager::class.java) ?: return
-        if (nm.getNotificationChannel(CHANNEL_ID) != null) return
         nm.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW).apply {
+            NotificationChannel(CHANNEL_ID, localizedString(R.string.runtime_keepalive_channel), NotificationManager.IMPORTANCE_LOW).apply {
                 description =
-                    "Shows while Hermes keeps its connection open in the background so messages and live features stay responsive."
+                    localizedString(R.string.runtime_keepalive_channel_desc)
                 setShowBadge(false)
             },
         )

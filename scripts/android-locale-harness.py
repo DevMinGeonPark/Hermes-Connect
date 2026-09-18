@@ -4,9 +4,8 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
+import importlib.util
 import json
-import re
 import shutil
 import sys
 import xml.etree.ElementTree as ET
@@ -15,8 +14,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 APP_SRC = ROOT / "app" / "src"
 STATUS = ROOT / "docs" / "localization-status.json"
-PRINTF = re.compile(r"%(?:(\d+)\$)?[-#+ 0,(<]*\d*(?:\.\d+)?([A-Za-z%])")
-SOURCE_SETS = ("main", "sideload")
+_checker_spec = importlib.util.spec_from_file_location(
+    "android_locale_checker", ROOT / "scripts" / "check-android-locales.py"
+)
+checker = importlib.util.module_from_spec(_checker_spec)
+sys.modules[_checker_spec.name] = checker
+_checker_spec.loader.exec_module(checker)
 
 
 def qualifier(tag: str) -> str:
@@ -24,69 +27,55 @@ def qualifier(tag: str) -> str:
     return f"values-{tag}" if len(parts) == 1 else "values-b+" + "+".join(parts)
 
 
-def digest(path: Path) -> str:
-    normalized = path.read_text(encoding="utf-8").replace("\r\n", "\n")
-    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
-
-
-def placeholders(value: str) -> list[tuple[int, str]]:
-    result: list[tuple[int, str]] = []
-    implicit = 1
-    for match in PRINTF.finditer(value):
-        if match.group(2) == "%":
+def canonical_files() -> tuple[dict[str, list[Path]], dict[str, str]]:
+    errors: list[str] = []
+    files = {}
+    for source_set in sorted(APP_SRC.iterdir()):
+        if not source_set.is_dir():
             continue
-        index = int(match.group(1)) if match.group(1) else implicit
-        if match.group(1) is None:
-            implicit += 1
-        result.append((index, match.group(2).lower()))
-    return sorted(result)
-
-
-def catalog(path: Path) -> dict[tuple[str, str], list[list[tuple[int, str]]]]:
-    root = ET.parse(path).getroot()
-    result: dict[tuple[str, str], list[list[tuple[int, str]]]] = {}
-    for node in root:
-        name = node.attrib.get("name")
-        if not name or node.tag not in {"string", "plurals", "string-array"}:
-            continue
-        if node.attrib.get("translatable", "true").lower() == "false":
-            continue
-        variants = node.findall("item") if node.tag != "string" else [node]
-        result[(node.tag, name)] = [placeholders("".join(item.itertext())) for item in variants]
-    return result
+        _, origins = checker.load_resource_directory(source_set / "res" / "values", errors)
+        if origins:
+            files[source_set.name] = sorted(set(origins.values()))
+    hashes = checker.source_catalog_hashes(errors, APP_SRC)
+    if errors:
+        raise ValueError("invalid canonical catalogs: " + "; ".join(errors))
+    if not files:
+        raise ValueError("no canonical Android catalogs found")
+    return files, hashes
 
 
 def validate_pair(source: Path, translated: Path) -> None:
-    canonical = catalog(source)
-    candidate = catalog(translated)
+    """Validate a full source-set directory, independent of resource filenames."""
+    errors: list[str] = []
+    canonical, _ = checker.load_resource_directory(source, errors)
+    candidate, _ = checker.load_resource_directory(translated, errors)
     if canonical.keys() != candidate.keys():
         missing = sorted(canonical.keys() - candidate.keys())
         extra = sorted(candidate.keys() - canonical.keys())
         raise ValueError(f"catalog keys differ; missing={missing[:5]} extra={extra[:5]}")
     for key, expected in canonical.items():
-        actual = candidate[key]
-        if expected != actual:
-            raise ValueError(f"{key}: placeholder variants {actual} != {expected}")
+        checker.compare_entry(str(source), str(translated), expected, candidate[key], errors)
+    if errors:
+        raise ValueError("; ".join(errors))
 
 
 def prepare(args: argparse.Namespace) -> None:
+    files, hashes = canonical_files()
     target = ROOT / "build" / "i18n" / args.tag
     if target.exists() and not args.force:
         raise FileExistsError(f"draft already exists: {target}")
     target.mkdir(parents=True, exist_ok=True)
-    sources: dict[str, str] = {}
-    for source_set in SOURCE_SETS:
-        source = APP_SRC / source_set / "res" / "values" / "strings.xml"
-        destination = target / source_set / "strings.xml"
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, destination)
-        sources[source_set] = digest(source)
+    for source_set, paths in files.items():
+        for source in paths:
+            destination = target / source_set / source.name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "tag": args.tag,
         "native_name": args.native_name,
         "verification": "ai-translated",
-        "canonical_sha256": sources,
+        "canonical_sha256": hashes,
     }
     (target / "manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
@@ -99,27 +88,31 @@ def install(args: argparse.Namespace) -> None:
     manifest = json.loads((draft / "manifest.json").read_text(encoding="utf-8"))
     if manifest.get("tag") != args.tag:
         raise ValueError("draft manifest tag mismatch")
-    for source_set in SOURCE_SETS:
-        source = APP_SRC / source_set / "res" / "values" / "strings.xml"
-        if manifest["canonical_sha256"].get(source_set) != digest(source):
-            raise ValueError(f"English {source_set} catalog changed; regenerate the draft")
-        validate_pair(source, draft / source_set / "strings.xml")
+    if manifest.get("schema_version") != 2:
+        raise ValueError("draft predates complete catalog coverage; regenerate the draft")
+    files, hashes = canonical_files()
+    if manifest.get("canonical_sha256") != hashes:
+        raise ValueError("English catalogs changed; regenerate the draft")
+    for source_set in files:
+        validate_pair(APP_SRC / source_set / "res" / "values", draft / source_set)
     destination_name = qualifier(args.tag)
-    for source_set in SOURCE_SETS:
-        destination = APP_SRC / source_set / "res" / destination_name / "strings.xml"
+    copies = [
+        (source, APP_SRC / source_set / "res" / destination_name / source.name)
+        for source_set in files
+        for source in sorted((draft / source_set).glob("*.xml"))
+    ]
+    for _, destination in copies:
         if destination.exists() and not args.force:
             raise FileExistsError(f"locale already installed: {destination}")
+    for source, destination in copies:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(draft / source_set / "strings.xml", destination)
+        shutil.copy2(source, destination)
     status = json.loads(STATUS.read_text(encoding="utf-8"))
     status["locales"][args.tag] = {
         "native_name": manifest["native_name"],
         "verification": "ai-translated",
         "review_refs": [],
-        "source_sha256": {
-            source_set: digest(APP_SRC / source_set / "res" / "values" / "strings.xml")
-            for source_set in SOURCE_SETS
-        },
+        "source_sha256": hashes,
         "surfaces": {
             "android": "complete",
             "readme": "english-fallback",

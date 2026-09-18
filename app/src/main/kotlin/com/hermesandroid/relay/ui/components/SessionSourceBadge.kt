@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.ui.components
 
+import com.hermesandroid.relay.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,7 +64,7 @@ fun SourceChip(badge: SourceBadge, modifier: Modifier = Modifier) {
 @Composable
 fun BetaChip(modifier: Modifier = Modifier) {
     Text(
-        text = "Beta",
+        text = stringResource(R.string.ko_beta),
         style = relayMetadataStyle(),
         color = RelayRefresh.Amber,
         modifier = modifier

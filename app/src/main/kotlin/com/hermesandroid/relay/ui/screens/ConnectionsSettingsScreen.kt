@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.ui.screens
 
+import com.hermesandroid.relay.ui.components.connectionDisplayLabel
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -477,7 +478,7 @@ private fun ConnectionListCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = listOfNotNull(presentation.routeName, presentation.transport)
+                    text = listOfNotNull(presentation.routeName?.let { connectionDisplayLabel(it) }, presentation.transport)
                         .joinToString(" · ")
                         .ifBlank { stringResource(R.string.gateway_route_not_configured) },
                     style = MaterialTheme.typography.bodySmall,
@@ -764,7 +765,7 @@ internal fun ConnectionClaritySummary(
     val authText = when (clarity.dashboardAuth) {
         DashboardAuthPresentation.SignedIn -> listOfNotNull(
             stringResource(R.string.active_section_signed_in),
-            clarity.dashboardAuthProvider,
+            clarity.dashboardAuthProvider?.let { connectionDisplayLabel(it) },
         ).joinToString(" · ")
         DashboardAuthPresentation.SignInRequired -> stringResource(R.string.active_section_sign_in_required)
         DashboardAuthPresentation.NoSignInRequired -> stringResource(R.string.active_section_no_sign_in_required)
@@ -789,7 +790,7 @@ internal fun ConnectionClaritySummary(
         else -> stringResource(R.string.relay_state_unavailable)
     }
     val configuredLabel = stringResource(R.string.active_section_configured)
-    val fallbackValues = clarity.configuredFallbacks.map { "$it · $configuredLabel" }
+    val fallbackValues = clarity.configuredFallbacks.map { "${connectionDisplayLabel(it)} · $configuredLabel" }
     Surface(
         color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
         shape = appearanceRoundedCornerShape(10.dp),
@@ -806,7 +807,7 @@ internal fun ConnectionClaritySummary(
             )
             ConnectionClarityRow(
                 label = stringResource(R.string.active_section_using_now),
-                value = listOfNotNull(surfaceText, clarity.currentPath).joinToString(" · "),
+                value = listOfNotNull(surfaceText, clarity.currentPath?.let { connectionDisplayLabel(it) }).joinToString(" · "),
             )
             ConnectionClarityRow(
                 label = stringResource(R.string.active_section_fallbacks),
@@ -820,7 +821,7 @@ internal fun ConnectionClaritySummary(
             )
             ConnectionClarityRow(
                 label = stringResource(R.string.active_section_relay_connected_features),
-                value = listOfNotNull(relayText, clarity.relayPath).joinToString(" · "),
+                value = listOfNotNull(relayText, clarity.relayPath?.let { connectionDisplayLabel(it) }).joinToString(" · "),
                 detail = stringResource(R.string.active_section_relay_ownership),
             )
         }

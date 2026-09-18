@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.notifications
 
+import com.hermesandroid.relay.util.localizedString
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -40,7 +41,6 @@ object ProactiveMessageNotifier {
 
     private const val TAG = "ProactiveNotifier"
     private const val CHANNEL_ID = "hermes_proactive"
-    private const val CHANNEL_NAME = "Threads"
 
     /** Base for derived notification ids — keeps us clear of other slots. */
     private const val ID_BASE = 0x48524D00 // "HRM" + 00
@@ -133,7 +133,7 @@ object ProactiveMessageNotifier {
         chatId: String?,
     ): NotificationCompat.Action {
         val remoteInput = RemoteInput.Builder(ProactiveReplyReceiver.KEY_REPLY_TEXT)
-            .setLabel("Reply to Hermes")
+            .setLabel(context.localizedString(R.string.runtime_reply_to_hermes))
             .build()
 
         val replyIntent = Intent(context, ProactiveReplyReceiver::class.java).apply {
@@ -160,7 +160,7 @@ object ProactiveMessageNotifier {
 
         return NotificationCompat.Action.Builder(
             android.R.drawable.ic_menu_send,
-            "Reply",
+            context.localizedString(R.string.runtime_reply),
             replyPending,
         )
             .addRemoteInput(remoteInput)
@@ -190,9 +190,9 @@ object ProactiveMessageNotifier {
 
         val resolvedTitle = title?.takeIf { it.isNotBlank() } ?: "Hermes"
         val line = if (delivered) {
-            "You: ${replyText.take(1000)}"
+            context.localizedString(R.string.runtime_reply_confirmation, replyText.take(1000))
         } else {
-            "Reply not sent — open the app and try again."
+            context.localizedString(R.string.runtime_reply_failed)
         }
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -226,13 +226,12 @@ object ProactiveMessageNotifier {
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
-        if (nm.getNotificationChannel(CHANNEL_ID) != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            context.localizedString(R.string.proactive_title),
             NotificationManager.IMPORTANCE_HIGH,
         ).apply {
-            description = "Messages your Hermes agent sends to you on its own."
+            description = context.localizedString(R.string.runtime_proactive_channel_desc)
             setShowBadge(true)
         }
         nm.createNotificationChannel(channel)

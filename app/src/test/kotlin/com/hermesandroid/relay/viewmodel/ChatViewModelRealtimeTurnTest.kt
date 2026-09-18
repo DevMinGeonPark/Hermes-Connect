@@ -82,6 +82,19 @@ class ChatViewModelRealtimeTurnTest {
     }
 
     @Test
+    fun actualTranscriptMatchingTheOldPlaceholderIsPreserved() {
+        val assistantId = viewModel.startRealtimeAgentTurn(userText = "", chatSessionId = "session-1")
+        viewModel.applyRealtimeAgentEvent(
+            assistantMessageId = assistantId,
+            event = RealtimeVoiceEvent(type = "voice.input_transcript.final", text = "Listening...", raw = "{}"),
+        )
+
+        viewModel.cancelRealtimeAgentTurnLocally(assistantId)
+
+        assertTrue(handler.messages.value.any { it.content == "Listening..." })
+    }
+
+    @Test
     fun localVoiceCommandRemovesItsSyntheticChatTurn() {
         val assistantId = viewModel.startRealtimeAgentTurn(userText = "", chatSessionId = "session-1")
         viewModel.applyRealtimeAgentEvent(

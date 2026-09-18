@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.viewmodel.connection
 
+import com.hermesandroid.relay.util.localizedString
+import com.hermesandroid.relay.R
 import android.content.Context
 import com.hermesandroid.relay.auth.PairedDeviceInfo
 import com.hermesandroid.relay.data.PairingPreferences
@@ -67,7 +69,7 @@ class PairingController(
             result.fold(
                 onSuccess = { list -> _pairedDevices.value = list },
                 onFailure = { e ->
-                    _pairedDevicesError.value = e.message ?: "Unknown error"
+                    _pairedDevicesError.value = e.message ?: context.localizedString(R.string.runtime_profile_unknown)
                 }
             )
             _pairedDevicesLoading.value = false
@@ -159,7 +161,7 @@ class PairingController(
         val device = _pairedDevices.value
             .firstOrNull { it.tokenPrefix == tokenPrefix }
             ?: return run {
-                _pairedDevicesError.value = "Device not in cache — refresh and retry"
+                _pairedDevicesError.value = context.localizedString(R.string.runtime_device_not_in_cache_refresh_and_retry)
                 false
             }
 
@@ -182,7 +184,7 @@ class PairingController(
             }
         }
         if (rebuilt.isEmpty()) {
-            _pairedDevicesError.value = "Device has no grants to revoke"
+            _pairedDevicesError.value = context.localizedString(R.string.runtime_device_has_no_grants_to_revoke)
             return false
         }
         if (channel !in rebuilt) {

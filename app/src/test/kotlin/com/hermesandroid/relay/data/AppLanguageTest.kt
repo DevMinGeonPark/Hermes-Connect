@@ -40,12 +40,20 @@ class AppLanguageTest {
         assertEquals(AppLanguage.RUSSIAN, AppLanguage.fromLanguageTags("ru-UA"))
     }
     @Test
+    fun koreanRegionsResolveToKorean() {
+        assertEquals(AppLanguage.KOREAN, AppLanguage.fromLanguageTags("ko"))
+        assertEquals(AppLanguage.KOREAN, AppLanguage.fromLanguageTags("ko-KR"))
+        assertEquals(AppLanguage.KOREAN, AppLanguage.fromLanguageTags("ko-KP,en-US"))
+    }
+
+    @Test
     fun languageOptionsProduceExpectedLocaleLists() {
         assertTrue(AppLanguage.SYSTEM_DEFAULT.toLocaleList().isEmpty)
         assertEquals("en", AppLanguage.ENGLISH.toLocaleList().toLanguageTags())
         assertEquals("de", AppLanguage.GERMAN.toLocaleList().toLanguageTags())
         assertEquals("pt-BR", AppLanguage.BRAZILIAN_PORTUGUESE.toLocaleList().toLanguageTags())
         assertEquals("ja", AppLanguage.JAPANESE.toLocaleList().toLanguageTags())
+        assertEquals("ko", AppLanguage.KOREAN.toLocaleList().toLanguageTags())
         assertEquals("zh-Hans", AppLanguage.SIMPLIFIED_CHINESE.languageTag)
         assertEquals("es", AppLanguage.SPANISH.toLocaleList().toLanguageTags())
         assertEquals("ru", AppLanguage.RUSSIAN.toLocaleList().toLanguageTags())

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pet_preview_idle">대기</string>
+    <string name="pet_preview_walk_left">왼쪽으로 걷기</string>
+    <string name="pet_preview_walk_right">오른쪽으로 걷기</string>
+    <string name="pet_preview_jump">점프</string>
+    <string name="pet_preview_fall">떨어지기</string>
+    <string name="pet_preview_held">잡힌 상태</string>
+    <string name="pet_preview_wave">손 흔들기</string>
+    <string name="pet_preview_working">작업 중</string>
+    <string name="pet_preview_review">검토</string>
+    <string name="pet_preview_waiting">기다리는 중</string>
+    <string name="pet_preview_error">오류</string>
+    <string name="pet_preview_uses_clip">%1$s 사용</string>
+    <string name="pet_preview_mirrors_clip">%1$s 좌우 반전</string>
+    <string name="pet_preview_falls_back">%1$s(으)로 대체</string>
+    <string name="pet_preview_mirrors_fallback">대체 항목 %1$s 좌우 반전</string>
+</resources>

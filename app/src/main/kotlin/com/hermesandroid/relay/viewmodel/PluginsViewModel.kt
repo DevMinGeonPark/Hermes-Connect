@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.viewmodel
 
+import com.hermesandroid.relay.util.localizedString
+import com.hermesandroid.relay.R
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -227,7 +229,7 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
                     )
                 },
                 onFailure = { error ->
-                    val message = error.message ?: "Plugin discovery failed"
+                    val message = error.message ?: getApplication<Application>().localizedString(R.string.runtime_plugin_discovery)
                     previous?.copy(refreshing = false, refreshError = message)
                         ?: PluginsHubState.Error(message)
                 },
@@ -246,7 +248,7 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
             if (!enabled && (pageState.value as? PluginPageState.Ready)?.plugin?.catalog?.id == pluginId) {
                 pageRefreshJob?.cancel()
                 pageRefreshJob = null
-                _pageState.value = PluginPageState.Error("This plugin is disabled")
+                _pageState.value = PluginPageState.Error(getApplication<Application>().localizedString(R.string.runtime_plugin_disabled))
             }
         }
     }
@@ -273,17 +275,17 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
         val plugin = (_hubState.value as? PluginsHubState.Ready)
             ?.plugins?.firstOrNull { it.catalog.id == pluginId }
             ?: run {
-                _pageState.value = PluginPageState.Error("Plugin not found")
+                _pageState.value = PluginPageState.Error(getApplication<Application>().localizedString(R.string.runtime_plugin_missing))
                 return
             }
         if (!plugin.preferences.enabled) {
-            _pageState.value = PluginPageState.Error("This plugin is disabled")
+            _pageState.value = PluginPageState.Error(getApplication<Application>().localizedString(R.string.runtime_plugin_disabled))
             return
         }
         val contribution = plugin.manifest.contributions.firstOrNull {
             it.id == pageId && it.surface == "page" && it.document.method.equals("GET", true)
         } ?: run {
-            _pageState.value = PluginPageState.Error("Plugin page not found")
+            _pageState.value = PluginPageState.Error(getApplication<Application>().localizedString(R.string.runtime_plugin_page_missing))
             return
         }
         val client = dashboard ?: return
@@ -308,7 +310,7 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
             _pageState.value = result.fold(
                 onSuccess = { document ->
                     val context = lifecycleTracker.snapshot.context
-                        ?: return@fold PluginPageState.Error("Plugin connection unavailable")
+                        ?: return@fold PluginPageState.Error(getApplication<Application>().localizedString(R.string.runtime_plugin_connection))
                     PluginPageState.Ready(
                         plugin,
                         contribution,
@@ -330,7 +332,7 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
                     )
                 },
                 onFailure = { error ->
-                    val message = error.message ?: "Plugin page failed to load"
+                    val message = error.message ?: getApplication<Application>().localizedString(R.string.runtime_plugin_load)
                     previous?.copy(refreshing = false, refreshError = message)
                         ?: PluginPageState.Error(message)
                 },
@@ -350,7 +352,7 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
         val client = dashboard ?: return
         val method = request.method.uppercase()
         if (method != "GET" && PLUGIN_API_WRITE_CAPABILITY !in ready.plugin.preferences.grants) {
-            _pageState.value = PluginPageState.Error("Allow plugin changes before using this action")
+            _pageState.value = PluginPageState.Error(getApplication<Application>().localizedString(R.string.runtime_plugin_permission))
             return
         }
         val pluginId = ready.plugin.catalog.id
@@ -373,7 +375,7 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
             if (hostKey != expectedKey) return@launch
             result.fold(
                 onSuccess = { loadPage(pluginId, pageId) },
-                onFailure = { _pageState.value = PluginPageState.Error(it.message ?: "Plugin action failed") },
+                onFailure = { _pageState.value = PluginPageState.Error(it.message ?: getApplication<Application>().localizedString(R.string.runtime_plugin_action)) },
             )
         }
     }
@@ -423,7 +425,7 @@ class PluginsViewModel(application: Application) : AndroidViewModel(application)
                     val current = _hubState.value as? PluginsHubState.Ready ?: return@fold
                     _hubState.value = current.copy(
                         refreshing = false,
-                        refreshError = error.message ?: "Plugin update failed",
+                        refreshError = error.message ?: getApplication<Application>().localizedString(R.string.runtime_plugin_update),
                     )
                 },
             )

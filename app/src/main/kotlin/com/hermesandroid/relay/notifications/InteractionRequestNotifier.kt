@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.notifications
 
+import com.hermesandroid.relay.util.localizedString
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -32,7 +33,6 @@ object InteractionRequestNotifier {
 
     private const val TAG = "InteractionNotifier"
     internal const val CHANNEL_ID = "chat_interactions"
-    private const val CHANNEL_NAME = "Hermes needs input"
     private const val GROUP_KEY = "gateway-interactions"
     internal const val NOTIFICATION_ID = 3823
     internal const val DEFAULT_PROFILE_ROUTE_VALUE = "__server_default__"
@@ -57,45 +57,46 @@ object InteractionRequestNotifier {
     internal fun chatRoute(sessionId: String, profile: String? = null): String =
         "chat?sessionId=${Uri.encode(sessionId)}&profile=${Uri.encode(profile ?: DEFAULT_PROFILE_ROUTE_VALUE)}"
 
-    internal fun safeTitle(ask: GatewayAsk): String = when (ask.kind) {
-        GatewayAsk.Kind.APPROVAL -> "Hermes needs approval"
-        GatewayAsk.Kind.CLARIFY -> "Hermes has a question"
+    internal fun safeTitle(context: Context, ask: GatewayAsk): String = when (ask.kind) {
+        GatewayAsk.Kind.APPROVAL -> context.localizedString(R.string.runtime_interaction_approval_title)
+        GatewayAsk.Kind.CLARIFY -> context.localizedString(R.string.runtime_interaction_clarify_title)
         GatewayAsk.Kind.SUDO,
         GatewayAsk.Kind.SECRET,
-        -> "Hermes needs sensitive input"
+        -> context.localizedString(R.string.runtime_interaction_secret_title)
     }
 
-    internal fun safeBody(ask: GatewayAsk): String = when (ask.kind) {
-        GatewayAsk.Kind.APPROVAL -> "Open Hermes to review the requested action."
-        GatewayAsk.Kind.CLARIFY -> "Open Hermes to answer and continue this turn."
+    internal fun safeBody(context: Context, ask: GatewayAsk): String = when (ask.kind) {
+        GatewayAsk.Kind.APPROVAL -> context.localizedString(R.string.runtime_interaction_approval_body)
+        GatewayAsk.Kind.CLARIFY -> context.localizedString(R.string.runtime_interaction_clarify_body)
         GatewayAsk.Kind.SUDO,
         GatewayAsk.Kind.SECRET,
-        -> "Open Hermes to respond securely."
+        -> context.localizedString(R.string.runtime_interaction_secret_body)
     }
 
     internal fun safeExpandedBody(
+        context: Context,
         sessionId: String,
         ask: GatewayAsk,
         profile: String? = null,
     ): String {
         val action = when (ask.kind) {
             GatewayAsk.Kind.APPROVAL ->
-                "Review the requested action. Nothing is approved from the notification."
-            GatewayAsk.Kind.CLARIFY -> "Open this conversation to answer Hermes' question."
-            GatewayAsk.Kind.SUDO -> "Open this conversation to respond securely or deny."
-            GatewayAsk.Kind.SECRET -> "Open this conversation to respond securely or skip."
+                context.localizedString(R.string.runtime_interaction_approval_detail)
+            GatewayAsk.Kind.CLARIFY -> context.localizedString(R.string.runtime_interaction_clarify_detail)
+            GatewayAsk.Kind.SUDO -> context.localizedString(R.string.runtime_interaction_sudo_detail)
+            GatewayAsk.Kind.SECRET -> context.localizedString(R.string.runtime_interaction_secret_detail)
         }
-        val profileLabel = profile?.takeIf { it.isNotBlank() } ?: "Server default"
+        val profileLabel = profile?.takeIf { it.isNotBlank() } ?: context.localizedString(R.string.runtime_interaction_server_default)
         val sessionLabel = sessionId.takeLast(12)
-        return "$action\nProfile: $profileLabel\nSession: …$sessionLabel"
+        return context.localizedString(R.string.runtime_interaction_detail, action, profileLabel, sessionLabel)
     }
 
-    internal fun actionLabel(ask: GatewayAsk): String = when (ask.kind) {
-        GatewayAsk.Kind.APPROVAL -> "Review approval"
-        GatewayAsk.Kind.CLARIFY -> "Answer"
+    internal fun actionLabel(context: Context, ask: GatewayAsk): String = when (ask.kind) {
+        GatewayAsk.Kind.APPROVAL -> context.localizedString(R.string.runtime_interaction_approval_action)
+        GatewayAsk.Kind.CLARIFY -> context.localizedString(R.string.runtime_interaction_clarify_action)
         GatewayAsk.Kind.SUDO,
         GatewayAsk.Kind.SECRET,
-        -> "Respond securely"
+        -> context.localizedString(R.string.runtime_interaction_secret_action)
     }
 
     @SuppressLint("MissingPermission", "NotificationPermission")
@@ -130,13 +131,13 @@ object InteractionRequestNotifier {
             tapIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val title = safeTitle(ask)
-        val body = safeBody(ask)
-        val expandedBody = safeExpandedBody(sessionId, ask, profile)
+        val title = safeTitle(context, ask)
+        val body = safeBody(context, ask)
+        val expandedBody = safeExpandedBody(context, sessionId, ask, profile)
         val publicVersion = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle("Hermes needs your input")
-            .setContentText("Open Hermes to continue.")
+            .setContentTitle(context.localizedString(R.string.runtime_interaction_public_title))
+            .setContentText(context.localizedString(R.string.runtime_interaction_public_body))
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .build()
 
@@ -153,7 +154,7 @@ object InteractionRequestNotifier {
             .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
             .setPublicVersion(publicVersion)
             .setGroup(GROUP_KEY)
-            .addAction(0, actionLabel(ask), tapPending)
+            .addAction(0, actionLabel(context, ask), tapPending)
             .build()
 
         return runCatching {
@@ -192,14 +193,13 @@ object InteractionRequestNotifier {
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
-        if (manager.getNotificationChannel(CHANNEL_ID) != null) return
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ID,
-                CHANNEL_NAME,
+                context.localizedString(R.string.runtime_interaction_channel),
                 NotificationManager.IMPORTANCE_HIGH,
             ).apply {
-                description = "Alerts when a Hermes turn is waiting for your response."
+                description = context.localizedString(R.string.runtime_interaction_channel_desc)
                 lockscreenVisibility = Notification.VISIBILITY_PRIVATE
                 setShowBadge(true)
             },

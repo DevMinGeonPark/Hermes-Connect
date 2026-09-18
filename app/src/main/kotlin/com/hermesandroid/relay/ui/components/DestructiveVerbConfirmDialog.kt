@@ -1,5 +1,8 @@
 package com.hermesandroid.relay.ui.components
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -76,6 +79,7 @@ fun DestructiveVerbConfirmDialog(
     // /send_sms come through with verb="" and must always prompt — there's
     // nothing to trust.
     val canTrust = verb.isNotBlank()
+    val stackButtons = LocalDensity.current.fontScale >= 1.5f
     // Root-fills-overlay-with-center-alignment. The overlay already applies
     // FLAG_DIM_BEHIND so we only need to draw the card itself.
     Box(
@@ -99,110 +103,125 @@ fun DestructiveVerbConfirmDialog(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                Column(
+                    modifier = Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Warning,
-                        contentDescription = null,
-                        tint = Color(0xFFFFA726),
-                    )
-                    Text(
-                        text = stringResource(R.string.destructive_confirm_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
-                }
-
-                Text(
-                    text = "The Hermes agent is about to ${verbPhrase(method, verb)}.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            MaterialTheme.colorScheme.surfaceVariant,
-                            appearanceRoundedCornerShape(10.dp)
-                        )
-                        .padding(12.dp)
-                ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(
-                            text = labelFor(method),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Warning,
+                            contentDescription = null,
+                            tint = Color(0xFFFFA726),
                         )
                         Text(
-                            text = fullText.ifBlank { stringResource(R.string.destructive_no_text) },
-                            style = MaterialTheme.typography.bodyMedium,
+                            text = stringResource(R.string.destructive_confirm_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
-                }
 
-                Text(
-                    text = stringResource(R.string.destructive_confirm_warning),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                    Text(
+                        text = stringResource(R.string.ko_destructive_agent_action, verbPhrase(method, verb)),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
 
-                if (canTrust) {
-                    // "Don't ask again" row — whole row is clickable so the
-                    // label is a tappable target (accessibility + fat-fingers).
-                    // Off by default on every open; see the @Composable KDoc.
-                    Row(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { trustVerb = !trustVerb }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            .background(
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                appearanceRoundedCornerShape(10.dp)
+                            )
+                            .padding(12.dp)
                     ) {
-                        Checkbox(
-                            checked = trustVerb,
-                            onCheckedChange = { trustVerb = it },
-                        )
-                        Text(
-                            text = "Don't ask again for \"$verb\"",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = labelFor(method),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Text(
+                                text = fullText.ifBlank { stringResource(R.string.destructive_no_text) },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = stringResource(R.string.destructive_confirm_warning),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (canTrust) {
+                        // "Don't ask again" row — whole row is clickable so the
+                        // label is a tappable target (accessibility + fat-fingers).
+                        // Off by default on every open; see the @Composable KDoc.
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { trustVerb = !trustVerb }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Checkbox(
+                                checked = trustVerb,
+                                onCheckedChange = { trustVerb = it },
+                            )
+                            Text(
+                                text = stringResource(R.string.destructive_confirm_dont_ask, verb),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    // Deny is the dominant, safe default. Denying never writes
-                    // trust — even if the user ticked the checkbox first.
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        onClick = onDeny,
-                    ) {
-                        Text(stringResource(R.string.destructive_confirm_deny))
-                    }
-                    // Allow is intentionally lower-emphasis (amber caution, not a
-                    // loud red CTA) so proceeding with a risky action never reads
-                    // as the default tap. Weight comes from the wording.
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        onClick = { onAllow(trustVerb && canTrust) },
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFFE65100),
-                        ),
-                    ) {
-                        Text(stringResource(R.string.destructive_confirm_allow))
-                    }
-                }
+                DestructiveActionButtons(
+                    stacked = stackButtons,
+                    onDeny = onDeny,
+                    onAllow = { onAllow(trustVerb && canTrust) },
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun DestructiveActionButtons(stacked: Boolean, onDeny: () -> Unit, onAllow: () -> Unit) {
+    // Denial remains the prominent safe default at every font size.
+    val deny: @Composable (Modifier) -> Unit = { modifier ->
+        Button(modifier = modifier, onClick = onDeny) {
+            Text(stringResource(R.string.destructive_confirm_deny))
+        }
+    }
+    val allow: @Composable (Modifier) -> Unit = { modifier ->
+        OutlinedButton(
+            modifier = modifier,
+            onClick = onAllow,
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFE65100)),
+        ) {
+            Text(stringResource(R.string.destructive_confirm_allow))
+        }
+    }
+    if (stacked) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            deny(Modifier.fillMaxWidth())
+            allow(Modifier.fillMaxWidth())
+        }
+    } else {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            deny(Modifier.weight(1f))
+            allow(Modifier.weight(1f))
         }
     }
 }
@@ -217,11 +236,13 @@ private fun labelFor(method: String): String = when (method) {
 @Composable
 private fun verbPhrase(method: String, verb: String): String {
     val action = when (method) {
-        "/tap_text" -> "tap a button containing"
-        "/type" -> "type text containing"
-        else -> "perform an action with"
+        "/tap_text" -> stringResource(R.string.destructive_phrase_tap)
+        "/type" -> stringResource(R.string.destructive_phrase_type)
+        else -> stringResource(R.string.destructive_phrase_action)
     }
-    return if (verb.isBlank()) "$action a destructive keyword" else "$action the word \"$verb\""
+    val keyword = if (verb.isBlank()) stringResource(R.string.destructive_phrase_keyword)
+        else stringResource(R.string.destructive_phrase_word, verb)
+    return stringResource(R.string.destructive_body_format, action, keyword)
 }
 
 /**

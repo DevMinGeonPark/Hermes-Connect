@@ -3932,12 +3932,14 @@ app which enrolled fingerprint or face authenticated. Biometric convenience may
 be considered only as an explicit second layer over this app credential, never
 as proof of a distinct parent.
 
-**Localization decision.** Until physical certification and fluent security-copy
-review, the Supervised Mode and parent-authentication surface remains canonical
-English in every app locale. It intentionally falls back to English and must not
-be described as localized. Security-critical setup, recovery, migration, and
-lockout wording will move into the translated catalogs together after review;
-machine-translating only part of this boundary is not accepted.
+**Localization decision.** Supervised Mode and parent authentication use a
+dedicated resource catalog covering setup, recovery, migration, and lockout
+wording together. Korean includes that complete catalog; other languages retain
+the canonical English fallback. Validation reasons are mapped to localized UI
+messages without changing authentication rules or the recovery-phrase vocabulary.
+The Korean catalog is AI-translated and independently checked for meaning and
+formatting. This does not constitute fluent community review or physical-device
+certification; the separate verification gates below still apply.
 
 **Verification gate.** Implementation requires policy, authentication,
 navigation, KDF-record validation, persisted throttling, change/recovery

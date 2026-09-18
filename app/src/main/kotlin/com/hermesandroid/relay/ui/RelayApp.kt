@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.ui
 
+import com.hermesandroid.relay.ui.components.connectionDisplayLabel
+import com.hermesandroid.relay.util.localizedResources
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -700,7 +702,7 @@ private fun SupervisedStartupLoadingScreen() {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = "Loading protected settings…",
+                text = stringResource(R.string.ko_loading_secure_settings),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1677,34 +1679,34 @@ fun RelayApp() {
         } else {
             listOf(
                 if (appReady) {
-                    StartupCheck(StartupCheckState.Done, "state restored")
+                    StartupCheck(StartupCheckState.Done, stringResource(R.string.startup_state_restored))
                 } else {
-                    StartupCheck(StartupCheckState.Active, "restoring state")
+                    StartupCheck(StartupCheckState.Active, stringResource(R.string.startup_state_restoring))
                 },
                 when {
                     startupEndpoint != null -> StartupCheck(
                         StartupCheckState.Done,
-                        "route · ${startupEndpoint.displayLabel()}",
+                        stringResource(R.string.startup_route_value, connectionDisplayLabel(startupEndpoint.displayLabel())),
                     )
                     startupChatUp ->
-                        StartupCheck(StartupCheckState.Done, "route · direct")
+                        StartupCheck(StartupCheckState.Done, stringResource(R.string.startup_route_value, stringResource(R.string.startup_direct)))
                     appReady ->
-                        StartupCheck(StartupCheckState.Active, "resolving route")
-                    else -> StartupCheck(StartupCheckState.Pending, "route")
+                        StartupCheck(StartupCheckState.Active, stringResource(R.string.startup_route_resolving))
+                    else -> StartupCheck(StartupCheckState.Pending, stringResource(R.string.startup_route))
                 },
                 when {
                     startupChatUp ->
-                        StartupCheck(StartupCheckState.Done, "hermes online")
+                        StartupCheck(StartupCheckState.Done, stringResource(R.string.startup_online, "Hermes"))
                     startupUnreachableConfirmed ->
-                        StartupCheck(StartupCheckState.Failed, "hermes unreachable")
+                        StartupCheck(StartupCheckState.Failed, stringResource(R.string.startup_unreachable))
                     appChatRuntimeStatus is ChatRuntimeStatus.Unavailable && startupEndpoint != null ->
-                        StartupCheck(StartupCheckState.Active, "gateway retrying")
+                        StartupCheck(StartupCheckState.Active, stringResource(R.string.startup_retrying))
                     startupEndpoint != null -> StartupCheck(
                         StartupCheckState.Active,
-                        "waking ${effectiveDisplayProfile?.name?.replaceFirstChar { it.uppercase() } ?: "Hermes"}",
+                        stringResource(R.string.startup_waking, effectiveDisplayProfile?.name?.replaceFirstChar { it.uppercase() } ?: "Hermes"),
                     )
                     appReady ->
-                        StartupCheck(StartupCheckState.Active, "contacting hermes")
+                        StartupCheck(StartupCheckState.Active, stringResource(R.string.startup_contacting))
                     else -> StartupCheck(StartupCheckState.Pending, "hermes")
                 },
                 // Done is keyed on chatReady — the signal ChatScreen itself
@@ -1712,12 +1714,12 @@ fun RelayApp() {
                 // surface would still show its connect CTA.
                 when {
                     initialChatSettled && !startupSessionsLoading ->
-                        StartupCheck(StartupCheckState.Done, "sessions ready")
+                        StartupCheck(StartupCheckState.Done, stringResource(R.string.startup_sessions_ready))
                     startupSessionsLoading ->
-                        StartupCheck(StartupCheckState.Active, "loading sessions")
+                        StartupCheck(StartupCheckState.Active, stringResource(R.string.startup_sessions_loading))
                     startupChatUp ->
-                        StartupCheck(StartupCheckState.Active, "restoring conversation")
-                    else -> StartupCheck(StartupCheckState.Pending, "conversation")
+                        StartupCheck(StartupCheckState.Active, stringResource(R.string.startup_conversation_restoring))
+                    else -> StartupCheck(StartupCheckState.Pending, stringResource(R.string.startup_conversation))
                 },
             )
         }
@@ -2161,7 +2163,7 @@ fun RelayApp() {
                     )
                     val transportRouteLabel = if (
                         transportStatus.tier == ChatTransportTier.Offline
-                    ) "" else routeLabel
+                    ) "" else connectionDisplayLabel(routeLabel)
                     val profileLabel = AgentDisplay.profileDisplayName(effectiveDisplayProfile)
                         ?: stringResource(R.string.status_profile_default)
                     val displayProfile = effectiveDisplayProfile
@@ -3711,6 +3713,7 @@ fun RelayApp() {
                                     ),
                                     gatewayClient = inspectorGatewayClient,
                                     savedStateHandle = ssh,
+                                    resourcesProvider = { applicationContext.localizedResources() },
                                 ) as T
                             }
                         },
@@ -3909,7 +3912,7 @@ fun RelayApp() {
                 // their real verdict, the stage row spins (unless it already
                 // failed), rows below sit dimmed with their short labels.
                 if (startupCheckTargets.isNotEmpty()) {
-                    val pendingLabels = listOf("state", "route", "hermes", "conversation")
+                    val pendingLabels = listOf(stringResource(R.string.startup_state), stringResource(R.string.startup_route), "Hermes", stringResource(R.string.startup_conversation))
                     val displayedChecks = startupCheckTargets.mapIndexed { index, check ->
                         when {
                             index < startupNarrationStage -> check

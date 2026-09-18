@@ -193,7 +193,7 @@ fun GitStateScreen(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                 )
-                                if (repos.isNotEmpty()) Icon(Icons.Filled.ExpandMore, "Choose repository", Modifier.size(20.dp))
+                                if (repos.isNotEmpty()) Icon(Icons.Filled.ExpandMore, stringResource(R.string.ko_git_choose_repo), Modifier.size(20.dp))
                             }
                             selectedRepo?.let {
                                 Text(branchSummary(it, currentBranch), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -203,12 +203,12 @@ fun GitStateScreen(
                 },
                 actions = {
                     IconButton(onClick = { selectedRepo?.let { viewModel.selectRepo(it.id) } ?: viewModel.loadRepos() }) {
-                        Icon(Icons.Filled.Refresh, "Refresh Git workspace")
+                        Icon(Icons.Filled.Refresh, stringResource(R.string.ko_git_refresh))
                     }
                     Box {
-                        IconButton(onClick = { showOverflow = true }) { Icon(Icons.Filled.MoreVert, "More Git actions") }
+                        IconButton(onClick = { showOverflow = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.ko_git_more)) }
                         DropdownMenu(expanded = showOverflow, onDismissRequest = { showOverflow = false }) {
-                            DropdownMenuItem(text = { Text("Choose repository") }, onClick = { showOverflow = false; showRepos = true })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.ko_git_choose_repo)) }, onClick = { showOverflow = false; showRepos = true })
                             DropdownMenuItem(text = { Text(stringResource(R.string.git_state_branches)) }, enabled = detail != null, onClick = { showOverflow = false; showBranches = true })
                         }
                     }
@@ -247,11 +247,11 @@ fun GitStateScreen(
                 onEnabledChange = onScanningEnabledChange,
             )
             when (val state = reposState) {
-                GitStateUiState.Loading -> FullState(Modifier.weight(1f), true, "Finding repositories")
+                GitStateUiState.Loading -> FullState(Modifier.weight(1f), true, stringResource(R.string.ko_git_finding))
                 is GitStateUiState.Unavailable -> UnavailableState(Modifier.weight(1f), state.message, viewModel::loadRepos)
                 is GitStateUiState.Error -> UnavailableState(Modifier.weight(1f), state.message, viewModel::loadRepos)
                 is GitStateUiState.Ready -> when {
-                    state.repos.isEmpty() -> FullState(Modifier.weight(1f), false, "No current-session Git repository", "Open a Hermes coding session with repository context, or enable host repository discovery above.")
+                    state.repos.isEmpty() -> FullState(Modifier.weight(1f), false, stringResource(R.string.ko_git_no_current), stringResource(R.string.ko_git_open_session))
                     selectedRepo == null -> RepositoryPrompt(Modifier.weight(1f), state.repos, viewModel::selectRepo)
                     else -> WorkspaceBody(
                             modifier = Modifier.weight(1f),
@@ -406,7 +406,7 @@ private fun WorkspaceBody(
     onRetry: () -> Unit,
 ) {
     when (detailState) {
-        GitRepoDetailState.Idle, GitRepoDetailState.Loading -> FullState(modifier, true, "Loading workspace")
+        GitRepoDetailState.Idle, GitRepoDetailState.Loading -> FullState(modifier, true, stringResource(R.string.ko_git_loading))
         is GitRepoDetailState.Error -> UnavailableState(modifier, detailState.message, onRetry)
         is GitRepoDetailState.Ready -> {
             val status = detailState.status
@@ -433,7 +433,7 @@ private fun WorkspaceBody(
                 FileFilter.entries.filter { it != FileFilter.All }.forEach { group ->
                     val files = visible.filter { it.filter == group }
                     if (files.isNotEmpty()) {
-                        item { GroupHeader(group.name, files.size) }
+                        item { GroupHeader(fileFilterLabel(group), files.size) }
                         items(files, key = { "${group.name}:${it.path}" }) { file ->
                             FileRow(
                                 file = file,
@@ -463,7 +463,7 @@ private fun SummaryRail(repo: GitRepo, detail: GitRepoDetailState.Ready) {
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("$count changes", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Text(stringResource(R.string.ko_git_change_count, count), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             VerticalDivider()
             Text("+${detail.status.counts.additions}", color = Color(0xFF2E7D32), style = MaterialTheme.typography.labelLarge)
             VerticalDivider()
@@ -476,7 +476,7 @@ private fun SummaryRail(repo: GitRepo, detail: GitRepoDetailState.Ready) {
             ) {
                 Row(Modifier.padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.AccountTree, null, Modifier.size(16.dp)); Spacer(Modifier.width(5.dp))
-                    Text(current?.name ?: repo.currentBranch ?: "Detached", style = MaterialTheme.typography.labelLarge, maxLines = 1)
+                    Text(current?.name ?: repo.currentBranch ?: stringResource(R.string.ko_git_detached), style = MaterialTheme.typography.labelLarge, maxLines = 1)
                     if (repo.dirty || count > 0) { Spacer(Modifier.width(7.dp)); Box(Modifier.size(7.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape)) }
                 }
             }
@@ -535,7 +535,7 @@ private fun FilterRow(selected: FileFilter, status: GitStatus, onSelect: (FileFi
             ) {
                 Box(Modifier.padding(horizontal = 3.dp, vertical = 9.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        "${item.name} ${counts.getValue(item)}",
+                        stringResource(R.string.ko_git_filter_count, fileFilterLabel(item), counts.getValue(item)),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1,
                     )
@@ -562,6 +562,7 @@ private fun FileRow(
     onToggleSelected: () -> Unit,
     onOpen: (ContentMode) -> Unit,
 ) {
+    val selectDescription = stringResource(R.string.ko_git_select_file, file.path)
     Column(Modifier.fillMaxWidth()) {
         Row(
             Modifier.fillMaxWidth()
@@ -576,7 +577,7 @@ private fun FileRow(
                 checked = selected,
                 onCheckedChange = if (selectionEnabled) ({ _ -> onToggleSelected() }) else null,
                 modifier = Modifier.semantics {
-                    contentDescription = "Select ${file.path}"
+                    contentDescription = selectDescription
                 },
             )
             Column(Modifier.weight(1f)) {
@@ -585,7 +586,7 @@ private fun FileRow(
                     Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 if (file.filter == FileFilter.Untracked) {
-                    Text("Preview unavailable until staged", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.ko_git_preview_unstaged), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             file.additions?.let { additions ->
@@ -598,14 +599,14 @@ private fun FileRow(
             }
             StatusBadge(file.filter)
             if (file.filter != FileFilter.Untracked) {
-                Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, if (expanded) "Collapse" else "Expand")
+                Icon(if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, if (expanded) stringResource(R.string.stats_collapse) else stringResource(R.string.stats_expand))
             }
         }
         if (expanded && file.filter != FileFilter.Untracked) {
             Row(Modifier.padding(start = 56.dp, end = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (file.filter != FileFilter.Untracked) FilterChip(mode == ContentMode.Diff, { onOpen(ContentMode.Diff) }, label = { Text("Diff") })
+                if (file.filter != FileFilter.Untracked) FilterChip(mode == ContentMode.Diff, { onOpen(ContentMode.Diff) }, label = { Text(stringResource(R.string.ko_git_diff)) })
                 if (selectionEnabled) {
-                    FilterChip(mode == ContentMode.File, { onOpen(ContentMode.File) }, label = { Text("File") })
+                    FilterChip(mode == ContentMode.File, { onOpen(ContentMode.File) }, label = { Text(stringResource(R.string.attachment_type_file)) })
                 }
             }
             InlineContent(contentState, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp))
@@ -654,10 +655,10 @@ private fun SelectionRail(count: Int, canWrite: Boolean, allStaged: Boolean, onS
         shadowElevation = 6.dp,
     ) {
         Row(Modifier.padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("$count selected", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.ko_git_selection_count, count), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
             TextButton(onClick = onStage, enabled = canWrite) {
                 Text(
-                    if (allStaged) "Unstage" else "Stage",
+                    if (allStaged) stringResource(R.string.git_state_unstage) else stringResource(R.string.git_state_stage),
                     color = if (canWrite) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -674,8 +675,8 @@ private fun SelectionRail(count: Int, canWrite: Boolean, allStaged: Boolean, onS
 @Composable
 private fun RepositoryPrompt(modifier: Modifier, repos: List<GitRepo>, onSelect: (String) -> Unit) {
     Column(modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Choose a repository", style = MaterialTheme.typography.headlineSmall)
-        Text("Git actions stay scoped to the repository you select.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.ko_git_choose_a_repo), style = MaterialTheme.typography.headlineSmall)
+        Text(stringResource(R.string.ko_git_scope), color = MaterialTheme.colorScheme.onSurfaceVariant)
         repos.forEach { repo -> RepositoryRow(repo, false) { onSelect(repo.id) } }
     }
 }
@@ -685,7 +686,7 @@ private fun RepositoryPrompt(modifier: Modifier, repos: List<GitRepo>, onSelect:
 private fun RepositorySheet(repos: List<GitRepo>, selectedId: String?, onDismiss: () -> Unit, onSelect: (String) -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Repositories", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(8.dp))
+            Text(stringResource(R.string.ko_git_repositories), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(8.dp))
             repos.forEach { repo -> RepositoryRow(repo, repo.id == selectedId) { onSelect(repo.id) } }
         }
     }
@@ -701,7 +702,7 @@ private fun RepositoryRow(repo: GitRepo, selected: Boolean, onClick: () -> Unit)
                 Text(repo.currentBranch ?: repo.root, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             if (repo.dirty) Box(Modifier.size(8.dp).background(MaterialTheme.colorScheme.tertiary, CircleShape))
-            if (selected) { Spacer(Modifier.width(8.dp)); Icon(Icons.Filled.Check, "Selected") }
+            if (selected) { Spacer(Modifier.width(8.dp)); Icon(Icons.Filled.Check, stringResource(R.string.ko_git_selected)) }
         }
     }
 }
@@ -727,7 +728,7 @@ private fun BranchSheet(
                     Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(branch.name, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodyMedium)
-                            branch.upstream?.let { Text("$it · ahead ${branch.ahead} · behind ${branch.behind}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                            branch.upstream?.let { Text(stringResource(R.string.ko_git_tracking, it, branch.ahead, branch.behind), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         }
                         if (branch.isCurrent) Text(stringResource(R.string.git_state_current), color = MaterialTheme.colorScheme.primary)
                         else {
@@ -737,7 +738,7 @@ private fun BranchSheet(
                     }
                 }
             }
-            HorizontalDivider(); Text("Create branch", style = MaterialTheme.typography.titleMedium)
+            HorizontalDivider(); Text(stringResource(R.string.git_state_create_branch), style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(newBranch, { newBranch = it }, Modifier.fillMaxWidth(), label = { Text(stringResource(R.string.git_state_new_branch_hint)) }, singleLine = true)
             Row(verticalAlignment = Alignment.CenterVertically) { Checkbox(track, { track = it }, enabled = hasGrant); Text(stringResource(R.string.git_state_track_remote)) }
             Button(onClick = { onCreate(newBranch.trim(), track) }, enabled = hasGrant && newBranch.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.git_state_create_branch)) }
@@ -829,20 +830,20 @@ private fun ConfirmationDialog(
 private fun MutationBanner(mutation: GitMutationState, onClear: () -> Unit) {
     when (mutation) {
         GitMutationState.Idle -> Unit
-        is GitMutationState.InProgress -> NoticeCard("${mutation.label} in progress…", loading = true)
-        is GitMutationState.Success -> NoticeCard("${displayLabel(mutation.label)} completed · ${mutation.head.take(8)}")
+        is GitMutationState.InProgress -> NoticeCard(stringResource(R.string.git_state_mutation_in_progress, displayLabel(mutation.label)), loading = true)
+        is GitMutationState.Success -> NoticeCard(stringResource(R.string.ko_git_completed, displayLabel(mutation.label), mutation.head.take(8)))
         is GitMutationState.Error -> Card(
             Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
         ) {
             Row(Modifier.padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "${displayLabel(mutation.label)} failed: ${mutation.message}",
+                    stringResource(R.string.git_state_mutation_failed, displayLabel(mutation.label), mutation.message),
                     modifier = Modifier.weight(1f),
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     style = MaterialTheme.typography.bodySmall,
                 )
-                IconButton(onClick = onClear) { Icon(Icons.Filled.Close, "Dismiss error") }
+                IconButton(onClick = onClear) { Icon(Icons.Filled.Close, stringResource(R.string.ko_git_dismiss_error)) }
             }
         }
     }
@@ -874,7 +875,7 @@ private fun GroupHeader(label: String, count: Int) {
 @Composable
 private fun EmptyFilterState(filter: FileFilter) {
     Box(Modifier.fillMaxWidth().padding(48.dp), contentAlignment = Alignment.Center) {
-        Text(if (filter == FileFilter.All) "Working tree clean" else "No ${filter.name.lowercase()} files", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(if (filter == FileFilter.All) stringResource(R.string.ko_git_clean) else stringResource(R.string.ko_git_no_files, fileFilterLabel(filter)), color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -894,24 +895,46 @@ private fun UnavailableState(modifier: Modifier, message: String, onRetry: () ->
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(Modifier.padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Icon(Icons.Filled.Close, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(32.dp))
-            Text(if (missingRoute) "Git isn't available on this host yet" else "Git workspace unavailable", style = MaterialTheme.typography.titleMedium)
+            Text(if (missingRoute) stringResource(R.string.ko_git_host_unavailable) else stringResource(R.string.ko_git_unavailable), style = MaterialTheme.typography.titleMedium)
             Text(
-                if (missingRoute) "The host advertised Git, but its API route is not currently reachable. Restart or update the Dashboard, then retry." else message.ifBlank { "The Git service did not return a usable response." },
+                if (missingRoute) stringResource(R.string.ko_git_route_unavailable) else message.ifBlank { stringResource(R.string.ko_git_no_response) },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
             )
-            Button(onClick = onRetry) { Icon(Icons.Filled.Refresh, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Retry") }
+            Button(onClick = onRetry) { Icon(Icons.Filled.Refresh, null, Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.dashboard_retry)) }
         }
     }
 }
 
+@Composable
 private fun branchSummary(repo: GitRepo, branch: GitBranch?): String {
-    val name = branch?.name ?: repo.currentBranch ?: "Detached HEAD"
+    val name = branch?.name ?: repo.currentBranch ?: stringResource(R.string.ko_git_detached_head)
+    val ahead = stringResource(R.string.ko_git_ahead, branch?.ahead ?: 0)
+    val behind = stringResource(R.string.ko_git_behind, branch?.behind ?: 0)
     val tracking = buildList {
-        if ((branch?.ahead ?: 0) > 0) add("ahead ${branch?.ahead}")
-        if ((branch?.behind ?: 0) > 0) add("behind ${branch?.behind}")
+        if ((branch?.ahead ?: 0) > 0) add(ahead)
+        if ((branch?.behind ?: 0) > 0) add(behind)
     }
     return if (tracking.isEmpty()) name else "$name · ${tracking.joinToString(" · ")}"
 }
 
-private fun displayLabel(label: String): String = label.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+@Composable
+private fun fileFilterLabel(filter: FileFilter): String = stringResource(when (filter) {
+    FileFilter.All -> R.string.command_palette_filter_all
+    FileFilter.Staged -> R.string.git_state_staged
+    FileFilter.Modified -> R.string.git_state_modified
+    FileFilter.Untracked -> R.string.git_state_untracked
+})
+
+@Composable
+private fun displayLabel(label: String): String = when (label.lowercase()) {
+    "stage" -> stringResource(R.string.git_state_stage)
+    "unstage" -> stringResource(R.string.git_state_unstage)
+    "discard" -> stringResource(R.string.git_state_discard)
+    "commit" -> stringResource(R.string.git_state_commit)
+    "fetch" -> stringResource(R.string.git_state_fetch)
+    "pull" -> stringResource(R.string.git_state_pull)
+    "push" -> stringResource(R.string.git_state_push)
+    "checkout" -> stringResource(R.string.git_state_switch)
+    else -> label.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+}

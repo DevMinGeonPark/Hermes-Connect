@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.ui.components
 
+import com.hermesandroid.relay.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -251,7 +253,7 @@ fun ConnectionStatusRow(
         if (onTest != null) {
             Spacer(modifier = Modifier.width(4.dp))
             OutlinedButton(onClick = onTest) {
-                Text("Test")
+                Text(stringResource(R.string.bpc_test))
             }
         }
 

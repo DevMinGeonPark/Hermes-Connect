@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.viewmodel
 
+import com.hermesandroid.relay.util.localizedString
+import com.hermesandroid.relay.R
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -184,7 +186,7 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
 
     fun loadRepos() {
         val client = api ?: run {
-            _repos.value = GitStateUiState.Error("Dashboard connection unavailable")
+            _repos.value = GitStateUiState.Error(getApplication<Application>().localizedString(R.string.runtime_git_connection))
             return
         }
         val expectedScope = scopeKey
@@ -208,10 +210,10 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
                             message.contains("No such API endpoint", ignoreCase = true)
                         ) {
                             GitStateUiState.Unavailable(
-                                "Git isn't available on this Hermes host yet.",
+                                getApplication<Application>().localizedString(R.string.runtime_git_unavailable),
                             )
                         } else {
-                            GitStateUiState.Error(message.ifBlank { "Failed to load repositories" })
+                            GitStateUiState.Error(message.ifBlank { getApplication<Application>().localizedString(R.string.runtime_git_load_repos) })
                         }
                     }
                 },
@@ -250,7 +252,7 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
             if (currentTarget() != target) return@launch
             if (statusResult.isFailure) {
                 _detail.value = GitRepoDetailState.Error(
-                    statusResult.exceptionOrNull()?.message ?: "Failed to load status",
+                    statusResult.exceptionOrNull()?.message ?: getApplication<Application>().localizedString(R.string.runtime_git_load_status),
                 )
                 return@launch
             }
@@ -268,26 +270,26 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
         block: suspend (GitStateApiClient, String) -> Result<GitMutationState>,
     ) {
         val client = api ?: run {
-            _mutation.value = GitMutationState.Error(label, "Dashboard connection unavailable")
+            _mutation.value = GitMutationState.Error(label, getApplication<Application>().localizedString(R.string.runtime_git_connection))
             return
         }
         val target = currentTarget() ?: run {
-            _mutation.value = GitMutationState.Error(label, "No repository selected")
+            _mutation.value = GitMutationState.Error(label, getApplication<Application>().localizedString(R.string.runtime_git_no_repo))
             return
         }
         if (expectedTarget != null && expectedTarget != target) {
-            _mutation.value = GitMutationState.Error(label, "Repository context changed; review the action again.")
+            _mutation.value = GitMutationState.Error(label, getApplication<Application>().localizedString(R.string.runtime_git_changed))
             return
         }
         if (!_writeGrant.value) {
             _mutation.value = GitMutationState.Error(
                 label,
-                "Allow plugin changes (plugin.api.write) before using this action.",
+                getApplication<Application>().localizedString(R.string.runtime_git_permission),
             )
             return
         }
         if (mutationJob?.isActive == true) {
-            _mutation.value = GitMutationState.Error(label, "Another Git action is still in progress.")
+            _mutation.value = GitMutationState.Error(label, getApplication<Application>().localizedString(R.string.runtime_git_busy))
             return
         }
         detailJob?.cancel()
@@ -306,7 +308,7 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
                     if (currentTarget() == target) {
                         _mutation.value = GitMutationState.Error(
                             label,
-                            error.message ?: "Git action failed",
+                            error.message ?: getApplication<Application>().localizedString(R.string.runtime_git_failed),
                         )
                     }
                 },
@@ -342,7 +344,7 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
                 onFailure = { error ->
                     if (currentTarget() == target) {
                         _content.value = GitContentViewState.Error(
-                            error.message ?: "Failed to load diff",
+                            error.message ?: getApplication<Application>().localizedString(R.string.runtime_git_load_diff),
                         )
                     }
                 },
@@ -365,7 +367,7 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
                 onFailure = { error ->
                     if (currentTarget() == target) {
                         _content.value = GitContentViewState.Error(
-                            error.message ?: "Failed to load file",
+                            error.message ?: getApplication<Application>().localizedString(R.string.runtime_git_load_file),
                         )
                     }
                 },
@@ -451,17 +453,17 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
     fun generateCommitMessage(paths: List<String>? = null) {
         val client = api ?: run {
             _messageGeneration.value =
-                GitMessageGenerationState.Ready("", "Dashboard connection unavailable")
+                GitMessageGenerationState.Ready("", getApplication<Application>().localizedString(R.string.runtime_git_connection))
             return
         }
         val target = currentTarget() ?: run {
-            _messageGeneration.value = GitMessageGenerationState.Ready("", "No repository selected")
+            _messageGeneration.value = GitMessageGenerationState.Ready("", getApplication<Application>().localizedString(R.string.runtime_git_no_repo))
             return
         }
         if (!_writeGrant.value) {
             _messageGeneration.value = GitMessageGenerationState.Ready(
                 "",
-                "Allow plugin changes (plugin.api.write) before using this action.",
+                getApplication<Application>().localizedString(R.string.runtime_git_permission),
             )
             return
         }
@@ -481,7 +483,7 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
                 onFailure = { error ->
                     _messageGeneration.value = GitMessageGenerationState.Ready(
                         "",
-                        error.message ?: "Could not generate a commit message.",
+                        error.message ?: getApplication<Application>().localizedString(R.string.runtime_git_message_failed),
                     )
                 },
             )
@@ -494,38 +496,38 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
      */
     fun stashCheckout(ref: String, newBranch: String = "", track: Boolean = false) {
         val client = api ?: run {
-            _mutation.value = GitMutationState.Error("Stash Checkout", "Dashboard connection unavailable")
+            _mutation.value = GitMutationState.Error(getApplication<Application>().localizedString(R.string.runtime_git_stash_checkout), getApplication<Application>().localizedString(R.string.runtime_git_connection))
             return
         }
         val target = currentTarget() ?: run {
-            _mutation.value = GitMutationState.Error("Stash Checkout", "No repository selected")
+            _mutation.value = GitMutationState.Error(getApplication<Application>().localizedString(R.string.runtime_git_stash_checkout), getApplication<Application>().localizedString(R.string.runtime_git_no_repo))
             return
         }
         if (!_writeGrant.value) {
             _mutation.value = GitMutationState.Error(
-                "Stash Checkout",
-                "Allow plugin changes (plugin.api.write) before using this action.",
+                getApplication<Application>().localizedString(R.string.runtime_git_stash_checkout),
+                getApplication<Application>().localizedString(R.string.runtime_git_permission),
             )
             return
         }
         _stashNotice.value = null
         if (mutationJob?.isActive == true) {
             _mutation.value = GitMutationState.Error(
-                "Stash Checkout",
-                "Another Git action is still in progress.",
+                getApplication<Application>().localizedString(R.string.runtime_git_stash_checkout),
+                getApplication<Application>().localizedString(R.string.runtime_git_busy),
             )
             return
         }
         detailJob?.cancel()
         contentJob?.cancel()
         mutationJob = viewModelScope.launch {
-            _mutation.value = GitMutationState.InProgress("Stash Checkout")
+            _mutation.value = GitMutationState.InProgress(getApplication<Application>().localizedString(R.string.runtime_git_stash_checkout))
             client.stashCheckout(target.repoId, ref, newBranch, track).fold(
                 onSuccess = { result ->
                     if (currentTarget() != target) return@fold
                     if (result.stashed) {
                         _stashNotice.value =
-                            "Stashed changes on $ref as \"${result.stashMessage}\". Use \"git stash pop\" to restore them."
+                            getApplication<Application>().localizedString(R.string.runtime_git_stashed, ref, result.stashMessage)
                     }
                     _mutation.value = GitMutationState.Success("stash-checkout", result.head)
                     _content.value = GitContentViewState.Idle
@@ -534,8 +536,8 @@ class GitStateViewModel(application: Application) : AndroidViewModel(application
                 onFailure = { error ->
                     if (currentTarget() == target) {
                         _mutation.value = GitMutationState.Error(
-                            "Stash Checkout",
-                            error.message ?: "Git action failed",
+                            getApplication<Application>().localizedString(R.string.runtime_git_stash_checkout),
+                            error.message ?: getApplication<Application>().localizedString(R.string.runtime_git_failed),
                         )
                     }
                 },

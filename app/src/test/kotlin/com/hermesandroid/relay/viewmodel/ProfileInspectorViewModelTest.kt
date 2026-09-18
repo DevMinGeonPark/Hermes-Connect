@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.viewmodel
 
+import android.content.res.Resources
+import io.mockk.mockk
 import androidx.lifecycle.SavedStateHandle
 import com.hermesandroid.relay.data.GatewayProfileConfigureResult
 import com.hermesandroid.relay.data.GatewayProfileDescription
@@ -117,6 +119,7 @@ class ProfileInspectorViewModelTest {
         legacyClient = legacy,
         gatewayClient = gateway,
         savedStateHandle = SavedStateHandle(mapOf(ProfileInspectorViewModel.ARG_PROFILE_NAME to "operator")),
+        resourcesProvider = { mockk<Resources>(relaxed = true) },
     )
 
     private fun description(description: String, model: String) = GatewayProfileDescription(

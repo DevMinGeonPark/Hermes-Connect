@@ -91,4 +91,41 @@ class SupervisedParentAuthDialogsTest {
             assertEquals(1, copies)
         }
     }
+
+    @Test
+    @Config(qualifiers = "ko-rKR-w400dp-h900dp-432dpi")
+    fun `Korean PIN setup localizes validation without changing the six digit flow`() {
+        var submitted: String? = null
+        compose.setContent {
+            HermesRelayTheme { PinSetupScreen(false, null, { submitted = it }) }
+        }
+
+        compose.onNodeWithText("보호자 PIN 만들기").assertIsDisplayed()
+        (1..6).forEach { compose.onNodeWithText(it.toString()).performClick() }
+        compose.onNodeWithText("보호자 PIN 확인").assertIsDisplayed()
+        (1..5).forEach { compose.onNodeWithText(it.toString()).performClick() }
+        compose.onNodeWithText("7").performClick()
+        compose.onNodeWithText("PIN이 일치하지 않습니다. 다시 시도하세요.").assertIsDisplayed()
+        compose.runOnIdle { assertEquals(null, submitted) }
+    }
+
+    @Test
+    @Config(qualifiers = "ko-rKR-w400dp-h900dp-432dpi")
+    fun `Korean recovery handoff preserves the secret and cleanup warning`() {
+        compose.setContent {
+            HermesRelayTheme {
+                SupervisedParentRecoveryCodeContent(
+                    SupervisedParentEnrollment("maple-river-lantern-copper-sparrow-moon"),
+                )
+            }
+        }
+
+        compose.onNodeWithText("복구 문구를 보관하세요").assertIsDisplayed()
+        compose.onNodeWithText("maple-river-lantern", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("copper-sparrow-moon", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("이 휴대전화에서 메시지나 저장된 사본을 삭제하세요.", substring = true)
+            .assertIsDisplayed()
+        compose.onNodeWithText("공유").assertIsDisplayed()
+        compose.onNodeWithText("문구 복사").assertIsDisplayed()
+    }
 }

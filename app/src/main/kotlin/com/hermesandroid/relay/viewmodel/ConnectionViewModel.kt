@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.viewmodel
 
+import com.hermesandroid.relay.util.localizedString
 import com.hermesandroid.relay.data.BusyMessageAction
 import android.app.Application
 import android.os.Build
@@ -582,12 +583,14 @@ internal fun publicDashboardAddressRequiresHttps(
 internal fun standardApiDashboardSecurityError(
     normalizedApiUrl: String,
     normalizedDashboardUrl: String,
+    context: Context? = null,
 ): String? {
     val effectiveDashboardUrl = normalizedDashboardUrl
         .takeIf { it.isNotBlank() }
         ?: Connection.deriveDefaultDashboardUrl(normalizedApiUrl)
         ?: return null
-    return "Public Gateway addresses require HTTPS"
+    return (context?.localizedString(R.string.runtime_public_gateway_addresses_require_https)
+        ?: "Public Gateway addresses require HTTPS")
         .takeIf { publicDashboardAddressRequiresHttps(null, effectiveDashboardUrl) }
 }
 
@@ -1363,6 +1366,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
     )
 
     private val botModeController = BotModeController(
+        context = ctx,
         scope = viewModelScope,
         connections = connectionStore.connections,
         activeConnectionId = connectionStore.activeConnectionId,
@@ -3713,13 +3717,13 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
 
         if (!hasConfiguredHermesConnection(activeConnection)) {
             return ConnectionStatusSnapshot(
-                title = ctx.getString(R.string.conn_status_no_hermes),
-                actionLabel = ctx.getString(R.string.conn_label_connect),
+                title = ctx.localizedString(R.string.conn_status_no_hermes),
+                actionLabel = ctx.localizedString(R.string.conn_label_connect),
                 tone = ConnectionStatusTone.Warning,
                 entries = listOf(
                     ConnectionHandoffTraceEntry(
-                        label = ctx.getString(R.string.conn_label_setup),
-                        detail = ctx.getString(R.string.conn_detail_add_connection),
+                        label = ctx.localizedString(R.string.conn_label_setup),
+                        detail = ctx.localizedString(R.string.conn_detail_add_connection),
                     ),
                 ),
             )
@@ -3729,13 +3733,13 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             network is ConnectivityObserver.Status.Unavailable
         ) {
             return ConnectionStatusSnapshot(
-                title = ctx.getString(R.string.conn_status_no_internet),
-                actionLabel = ctx.getString(R.string.conn_label_connections),
+                title = ctx.localizedString(R.string.conn_status_no_internet),
+                actionLabel = ctx.localizedString(R.string.conn_label_connections),
                 tone = ConnectionStatusTone.Warning,
                 entries = listOf(
                     ConnectionHandoffTraceEntry(
-                        label = ctx.getString(R.string.conn_label_network),
-                        detail = ctx.getString(R.string.conn_detail_waiting_network),
+                        label = ctx.localizedString(R.string.conn_label_network),
+                        detail = ctx.localizedString(R.string.conn_detail_waiting_network),
                     ),
                 ),
             )
@@ -3765,13 +3769,13 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             gatewayAvailability == GatewayAvailability.SignInRequired
         ) {
             return ConnectionStatusSnapshot(
-                title = ctx.getString(R.string.cw_dashboard_sign_in_required),
-                actionLabel = ctx.getString(R.string.conn_label_connections),
+                title = ctx.localizedString(R.string.cw_dashboard_sign_in_required),
+                actionLabel = ctx.localizedString(R.string.conn_label_connections),
                 tone = ConnectionStatusTone.Warning,
                 entries = listOf(
                     ConnectionHandoffTraceEntry(
-                        label = ctx.getString(R.string.cw_dashboard),
-                        detail = ctx.getString(R.string.cw_sign_in_hint),
+                        label = ctx.localizedString(R.string.cw_dashboard),
+                        detail = ctx.localizedString(R.string.cw_sign_in_hint),
                     ),
                 ),
             )
@@ -3783,13 +3787,13 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             gatewayAvailability == GatewayAvailability.Unreachable
         ) {
             return ConnectionStatusSnapshot(
-                title = ctx.getString(R.string.cw_dashboard_not_reachable),
-                actionLabel = ctx.getString(R.string.conn_label_connections),
+                title = ctx.localizedString(R.string.cw_dashboard_not_reachable),
+                actionLabel = ctx.localizedString(R.string.conn_label_connections),
                 tone = ConnectionStatusTone.Warning,
                 entries = listOf(
                     ConnectionHandoffTraceEntry(
-                        label = ctx.getString(R.string.cw_dashboard),
-                        detail = ctx.getString(R.string.conn_detail_chat_unavailable),
+                        label = ctx.localizedString(R.string.cw_dashboard),
+                        detail = ctx.localizedString(R.string.conn_detail_chat_unavailable),
                     ),
                 ),
             )
@@ -3808,31 +3812,28 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 val routeCount = activeConnection?.routeCandidates.orEmpty().size
                 val routesEntry = if (routeCount <= 1) {
                     ConnectionHandoffTraceEntry(
-                        label = ctx.getString(R.string.conn_label_routes),
+                        label = ctx.localizedString(R.string.conn_label_routes),
                         detail = if (tailscaleDetector.isTailscaleDetected.value) {
-                            "Phone is on Tailscale — add your server's Tailscale " +
-                                "URL under Gateways → Routes"
+                            ctx.localizedString(R.string.runtime_routes_tailscale)
                         } else {
-                            "Away from the server's network? Add a Tailscale or " +
-                                "public route under Gateways → Routes"
+                            ctx.localizedString(R.string.runtime_routes_away)
                         },
                     )
                 } else {
                     ConnectionHandoffTraceEntry(
-                        label = ctx.getString(R.string.conn_label_routes),
-                        detail = "None of the $routeCount configured routes " +
-                            "responded — fallbacks are retried automatically",
+                        label = ctx.localizedString(R.string.conn_label_routes),
+                        detail = ctx.localizedString(R.string.runtime_routes_no_response, routeCount),
                     )
                 }
                 ConnectionStatusSnapshot(
-                    title = ctx.getString(R.string.conn_status_api_unreachable),
+                    title = ctx.localizedString(R.string.conn_status_api_unreachable),
                     route = route,
-                    actionLabel = ctx.getString(R.string.conn_label_connections),
+                    actionLabel = ctx.localizedString(R.string.conn_label_connections),
                     tone = ConnectionStatusTone.Warning,
                     entries = listOf(
                         ConnectionHandoffTraceEntry(
-                            label = ctx.getString(R.string.conn_label_api),
-                            detail = ctx.getString(R.string.conn_detail_chat_unavailable),
+                            label = ctx.localizedString(R.string.conn_label_api),
+                            detail = ctx.localizedString(R.string.conn_detail_chat_unavailable),
                         ),
                         routesEntry,
                     ),
@@ -3841,9 +3842,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
 
             relayRow.phase == RelayUiState.Connecting &&
                 apiHealth != HealthStatus.Reachable -> ConnectionStatusSnapshot(
-                title = ctx.getString(R.string.conn_status_connecting),
+                title = ctx.localizedString(R.string.conn_status_connecting),
                 route = route,
-                actionLabel = ctx.getString(R.string.conn_label_connections),
+                actionLabel = ctx.localizedString(R.string.conn_label_connections),
                 active = true,
                 tone = ConnectionStatusTone.Info,
                 entries = probeEntries,
@@ -3853,9 +3854,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 (relayHealth == HealthStatus.Probing &&
                     apiHealth != HealthStatus.Reachable) ->
                 ConnectionStatusSnapshot(
-                    title = ctx.getString(R.string.conn_status_checking),
+                    title = ctx.localizedString(R.string.conn_status_checking),
                     route = route,
-                    actionLabel = ctx.getString(R.string.conn_label_connections),
+                    actionLabel = ctx.localizedString(R.string.conn_label_connections),
                     active = true,
                     tone = ConnectionStatusTone.Info,
                     entries = probeEntries,
@@ -3865,20 +3866,20 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 (relayRow.phase == RelayUiState.Stale ||
                 (relayHealth == HealthStatus.Unreachable &&
                     relayRow.phase != RelayUiState.Connected)) -> ConnectionStatusSnapshot(
-                    title = ctx.getString(R.string.conn_status_relay_unreachable),
+                    title = ctx.localizedString(R.string.conn_status_relay_unreachable),
                     route = route,
-                    actionLabel = ctx.getString(R.string.conn_label_connections),
+                    actionLabel = ctx.localizedString(R.string.conn_label_connections),
                     tone = ConnectionStatusTone.Warning,
                     entries = listOfNotNull(
                         route?.let {
                             ConnectionHandoffTraceEntry(
-                                label = ctx.getString(R.string.conn_label_route),
-                                detail = "Last route: $it",
+                                label = ctx.localizedString(R.string.conn_label_route),
+                                detail = ctx.localizedString(R.string.runtime_fmt_last_route_1_s, it),
                             )
                         },
                         ConnectionHandoffTraceEntry(
-                                                label = ctx.getString(R.string.conn_label_status),
-                            detail = "Waiting for reconnect or a network change",
+                                                label = ctx.localizedString(R.string.conn_label_status),
+                            detail = ctx.localizedString(R.string.runtime_waiting_for_reconnect_or_a_network_change),
                         ),
                     ),
                 )
@@ -3896,7 +3897,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         route?.let {
             add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_route),
+                    label = ctx.localizedString(R.string.conn_label_route),
                     detail = it,
                     state = ConnectionStepState.Done,
                 )
@@ -3905,22 +3906,22 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         when (apiHealth) {
             HealthStatus.Probing -> add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_api),
-                    detail = "Checking Hermes health",
+                    label = ctx.localizedString(R.string.conn_label_api),
+                    detail = ctx.localizedString(R.string.conn_detail_checking_health),
                     state = ConnectionStepState.Active,
                 )
             )
             HealthStatus.Unreachable -> add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_api),
-                    detail = ctx.getString(R.string.conn_detail_health_check_failed),
+                    label = ctx.localizedString(R.string.conn_label_api),
+                    detail = ctx.localizedString(R.string.conn_detail_health_check_failed),
                     state = ConnectionStepState.Failed,
                 )
             )
             HealthStatus.Reachable -> add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_api),
-                    detail = ctx.getString(R.string.conn_detail_ready),
+                    label = ctx.localizedString(R.string.conn_label_api),
+                    detail = ctx.localizedString(R.string.conn_detail_ready),
                     state = ConnectionStepState.Done,
                 )
             )
@@ -3929,22 +3930,22 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         when (relayHealth) {
             HealthStatus.Probing -> add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_relay),
-                    detail = ctx.getString(R.string.conn_detail_checking_relay),
+                    label = ctx.localizedString(R.string.conn_label_relay),
+                    detail = ctx.localizedString(R.string.conn_detail_checking_relay),
                     state = ConnectionStepState.Active,
                 )
             )
             HealthStatus.Unreachable -> add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_relay),
-                    detail = ctx.getString(R.string.conn_detail_health_check_failed),
+                    label = ctx.localizedString(R.string.conn_label_relay),
+                    detail = ctx.localizedString(R.string.conn_detail_health_check_failed),
                     state = ConnectionStepState.Failed,
                 )
             )
             HealthStatus.Reachable -> add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_relay),
-                    detail = ctx.getString(R.string.conn_detail_ready),
+                    label = ctx.localizedString(R.string.conn_label_relay),
+                    detail = ctx.localizedString(R.string.conn_detail_ready),
                     state = ConnectionStepState.Done,
                 )
             )
@@ -3953,8 +3954,8 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         if (relayRow.phase == RelayUiState.Connecting) {
             add(
                 ConnectionHandoffTraceEntry(
-                    label = ctx.getString(R.string.conn_label_session),
-                    detail = ctx.getString(R.string.conn_detail_opening_socket),
+                    label = ctx.localizedString(R.string.conn_label_session),
+                    detail = ctx.localizedString(R.string.conn_detail_opening_socket),
                     state = ConnectionStepState.Active,
                 )
             )
@@ -4643,8 +4644,8 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                                 DiagnosticsLog.record(
                                     category = DiagnosticCategory.Relay,
                                     severity = DiagnosticSeverity.Warning,
-                                    title = ctx.getString(R.string.conn_status_relay_stale),
-                                    detail = "Paired session is present, but the live relay socket did not connect",
+                                    title = ctx.localizedString(R.string.conn_status_relay_stale),
+                                    detail = ctx.localizedString(R.string.runtime_paired_session_is_present_but_the_live_relay_socket_did_not_connect),
                                     url = inputs.url,
                                 )
                             }
@@ -4716,9 +4717,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                             // route switch is handled by its own branch below).
                             val reconnectHandoff = {
                                 recordConnectionHandoff(
-                                    title = ctx.getString(R.string.conn_status_reconnecting),
+                                    title = ctx.localizedString(R.string.conn_status_reconnecting),
                                     route = displayEndpointRole(role ?: priorRole),
-                                    detail = "Re-establishing the relay socket",
+                                    detail = ctx.localizedString(R.string.runtime_re_establishing_the_relay_socket),
                                     active = true,
                                     success = false,
                                 )
@@ -4769,7 +4770,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                                     val from = displayEndpointRole(fromRole)
                                     val to = displayEndpointRole(role)
                                     recordConnectionHandoff(
-                                        title = ctx.getString(R.string.conn_status_connection_changed),
+                                        title = ctx.localizedString(R.string.conn_status_connection_changed),
                                         route = listOfNotNull(from, to).joinToString(" → "),
                                         detail = null,
                                         active = false,
@@ -4777,9 +4778,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                                     )
                                 } else {
                                     recordConnectionHandoff(
-                                        title = ctx.getString(R.string.conn_status_connected),
+                                        title = ctx.localizedString(R.string.conn_status_connected),
                                         route = displayEndpointRole(role),
-                                        detail = ctx.getString(R.string.conn_detail_relay_path_ready),
+                                        detail = ctx.localizedString(R.string.conn_detail_relay_path_ready),
                                         active = false,
                                         success = true,
                                     )
@@ -4790,9 +4791,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                         state == ConnectionState.Disconnected &&
                             priorState == ConnectionState.Connected -> {
                             recordConnectionHandoff(
-                                title = ctx.getString(R.string.conn_status_interrupted),
+                                title = ctx.localizedString(R.string.conn_status_interrupted),
                                 route = displayEndpointRole(priorRole),
-                                detail = ctx.getString(R.string.conn_detail_looking_for_route),
+                                detail = ctx.localizedString(R.string.conn_detail_looking_for_route),
                                 active = true,
                                 success = false,
                             )
@@ -5698,7 +5699,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Voice,
                     severity = DiagnosticSeverity.Warning,
-                    title = ctx.getString(R.string.conn_status_voice_signin),
+                    title = ctx.localizedString(R.string.conn_status_voice_signin),
                     detail = "The encrypted dashboard session could not be reused on this " +
                         "trusted route; open Manage to refresh the session",
                     url = dashboardUrl,
@@ -5764,7 +5765,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         _hostResourcePressure.value = HostResourcePressureStatus()
         _serverChatDisplaySettings.value = null
         updateGatewayAvailability(GatewayAvailability.SignInRequired)
-        val message = ctx.getString(R.string.dashboard_signin_provider_unavailable_choose)
+        val message = ctx.localizedString(R.string.dashboard_signin_provider_unavailable_choose)
         val previous = connectionStore.connections.value
             .firstOrNull { it.id == connectionId }
             ?.dashboardLastStatus
@@ -5911,10 +5912,10 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Warning,
-                title = ctx.getString(R.string.conn_status_voice_blocked),
-                detail = "Relay is not configured for this connection",
+                title = ctx.localizedString(R.string.conn_status_voice_blocked),
+                detail = ctx.localizedString(R.string.runtime_relay_is_not_configured_for_this_connection),
             )
-            return Result.failure(IllegalStateException("Relay is not configured for this connection"))
+            return Result.failure(IllegalStateException(ctx.localizedString(R.string.runtime_relay_is_not_configured_for_this_connection)))
         }
         val url = effectiveRelayUrlSnapshot()
         if (url.isBlank()) {
@@ -5922,17 +5923,17 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Error,
-                title = ctx.getString(R.string.conn_status_voice_blocked),
-                detail = "Relay URL is not configured",
+                title = ctx.localizedString(R.string.conn_status_voice_blocked),
+                detail = ctx.localizedString(R.string.runtime_relay_url_is_not_configured),
             )
-            return Result.failure(IllegalStateException("Relay URL is not configured"))
+            return Result.failure(IllegalStateException(ctx.localizedString(R.string.runtime_relay_url_is_not_configured)))
         }
 
         _relayServerHealth.value = HealthStatus.Probing
         DiagnosticsLog.record(
             category = DiagnosticCategory.Voice,
             severity = DiagnosticSeverity.Info,
-            title = ctx.getString(R.string.conn_status_checking_relay_voice),
+            title = ctx.localizedString(R.string.conn_status_checking_relay_voice),
             url = url,
         )
         val result = relayHttpClient.probeHealth(url)
@@ -6042,7 +6043,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 ) {
                     Result.failure(
                         IllegalStateException(
-                            "Relay pairing setup expired. Scan the gateway QR again.",
+                            ctx.localizedString(R.string.runtime_relay_pairing_setup_expired_scan_the_gateway_qr_again),
                         ),
                     )
                 } else {
@@ -6072,7 +6073,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             attemptAuthManager.authState.first {
                 it is AuthState.Paired || it is AuthState.Failed
             }
-        } ?: return Result.failure(IllegalStateException("Relay pairing timed out"))
+        } ?: return Result.failure(IllegalStateException(ctx.localizedString(R.string.runtime_relay_pairing_timed_out)))
 
         if (terminal is AuthState.Failed) {
             return Result.failure(IllegalStateException(terminal.reason))
@@ -6084,15 +6085,15 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 activeConnectionId = connectionStore.activeConnectionId.value,
             )
         ) {
-            return Result.failure(IllegalStateException("Connection changed while Relay pairing completed"))
+            return Result.failure(IllegalStateException(ctx.localizedString(R.string.runtime_connection_changed_while_relay_pairing_completed)))
         }
 
         val paired = withTimeoutOrNull(DASHBOARD_RELAY_PAIR_METADATA_TIMEOUT_MS) {
             attemptAuthManager.currentPairedSession.first { it != null }
-        } ?: return Result.failure(IllegalStateException("Relay pairing metadata did not settle"))
+        } ?: return Result.failure(IllegalStateException(ctx.localizedString(R.string.runtime_relay_pairing_metadata_did_not_settle)))
         val current = connectionStore.connections.value
             .firstOrNull { it.id == ownerId }
-            ?: return Result.failure(IllegalStateException("Paired connection disappeared"))
+            ?: return Result.failure(IllegalStateException(ctx.localizedString(R.string.runtime_paired_connection_disappeared)))
         if (current.pairedAt == null) {
             connectionStore.markPaired(
                 connectionId = ownerId,
@@ -6479,7 +6480,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DashboardSetupResult(
                     ok = false,
                     dashboardUrl = "",
-                    message = "Enter a Hermes address",
+                    message = ctx.localizedString(R.string.runtime_enter_a_hermes_address),
                 ),
             )
             return
@@ -6489,7 +6490,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DashboardSetupResult(
                     ok = false,
                     dashboardUrl = dashboardUrl,
-                    message = "Public Gateway addresses require HTTPS",
+                    message = ctx.localizedString(R.string.runtime_public_gateway_addresses_require_https),
                 ),
             )
             return
@@ -6505,7 +6506,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                             ok = false,
                             dashboardUrl = dashboardUrl,
                             message = statusResult.exceptionOrNull()?.message
-                                ?: "Hermes was not found at this address",
+                                ?: ctx.localizedString(R.string.runtime_hermes_was_not_found_at_this_address),
                         ),
                     )
                     return@launch
@@ -6525,7 +6526,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                     DashboardSetupResult(
                         ok = true,
                         dashboardUrl = dashboardUrl,
-                        message = status.message ?: "Hermes is ready",
+                        message = status.message ?: ctx.localizedString(R.string.runtime_hermes_is_ready),
                         signInRequired = status.authRequired && !authenticated,
                         authenticated = authenticated,
                         voiceAvailability = voice,
@@ -6538,7 +6539,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                     DashboardSetupResult(
                         ok = false,
                         dashboardUrl = dashboardUrl,
-                        message = e.message ?: "Hermes was not found at this address",
+                        message = e.message ?: ctx.localizedString(R.string.runtime_hermes_was_not_found_at_this_address),
                     ),
                 )
             } finally {
@@ -6558,11 +6559,11 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             defaultPort = Connection.DEFAULT_DASHBOARD_PORT,
         )
         if (normalized.isBlank()) {
-            onComplete(Result.failure(IllegalArgumentException("Hermes address is required")))
+            onComplete(Result.failure(IllegalArgumentException(ctx.localizedString(R.string.runtime_hermes_address_is_required))))
             return
         }
         if (publicDashboardAddressRequiresHttps(role = null, normalizedAddress = normalized)) {
-            onComplete(Result.failure(IllegalArgumentException("Public Gateway addresses require HTTPS")))
+            onComplete(Result.failure(IllegalArgumentException(ctx.localizedString(R.string.runtime_public_gateway_addresses_require_https))))
             return
         }
         viewModelScope.launch {
@@ -6580,10 +6581,10 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
 
                 ensureActiveConnectionForSetup()
                 val activeId = connectionStore.activeConnectionId.value
-                    ?: error("No active connection")
+                    ?: error(ctx.localizedString(R.string.runtime_no_active_connection))
                 val current = connectionStore.connections.value
                     .firstOrNull { it.id == activeId }
-                    ?: error("Active connection is missing")
+                    ?: error(ctx.localizedString(R.string.runtime_active_connection_is_missing))
                 val primaryHost = Connection.extractDefaultLabel(normalized)
                 val nextLabel = if (current.label == PLACEHOLDER_LABEL || current.label.isBlank()) {
                     discoveredHostname?.trim()?.takeIf { it.isNotBlank() } ?: primaryHost
@@ -6639,24 +6640,24 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
     ) {
         val normalized = normalizeDashboardAddressForEdit(url)
         if (normalized == null) {
-            onResult("Enter an http:// or https:// Hermes Dashboard address")
+            onResult(ctx.localizedString(R.string.runtime_enter_dashboard_address))
             return
         }
         if (publicDashboardAddressRequiresHttps(role = null, normalizedAddress = normalized)) {
-            onResult("Public Gateway addresses require HTTPS")
+            onResult(ctx.localizedString(R.string.runtime_public_gateway_addresses_require_https))
             return
         }
         viewModelScope.launch {
             val activeId = connectionStore.activeConnectionId.value
             val current = connectionStore.connections.value.firstOrNull { it.id == activeId }
             if (activeId == null || current == null) {
-                onResult("No active connection")
+                onResult(ctx.localizedString(R.string.runtime_no_active_connection))
                 return@launch
             }
             val probe = probeDashboardAddress(normalized)
             val failure = probe.exceptionOrNull()
             if (failure != null) {
-                onResult(failure.message ?: "Hermes was not found at this address")
+                onResult(failure.message ?: ctx.localizedString(R.string.runtime_hermes_was_not_found_at_this_address))
                 return@launch
             }
             val originChanged = !sameDashboardBase(current.resolvedDashboardUrl, normalized)
@@ -6690,10 +6691,10 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             runCatching {
                 val activeId = connectionStore.activeConnectionId.value
-                    ?: error("No active connection")
+                    ?: error(ctx.localizedString(R.string.runtime_no_active_connection))
                 val current = connectionStore.connections.value
                     .firstOrNull { it.id == activeId }
-                    ?: error("Active connection is missing")
+                    ?: error(ctx.localizedString(R.string.runtime_active_connection_is_missing))
                 if (current.authenticatedDashboardOrigin == null) return@runCatching
 
                 val reset = withoutAuthenticatedDashboardOrigin(current)
@@ -6763,17 +6764,17 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         viewModelScope.launch {
             val dashboardUrl = activeDashboardUrl()
             if (dashboardUrl.isNullOrBlank()) {
-                onResult("No Dashboard address is configured")
+                onResult(ctx.localizedString(R.string.runtime_no_dashboard_address_is_configured))
                 return@launch
             }
             val result = probeDashboardAddress(dashboardUrl)
             if (result.isFailure) {
                 persistDashboardProbeFailure(
                     connectionId = connectionStore.activeConnectionId.value,
-                    message = result.exceptionOrNull()?.message ?: "Dashboard is unreachable",
+                    message = result.exceptionOrNull()?.message ?: ctx.localizedString(R.string.runtime_dashboard_is_unreachable),
                 )
                 probeStandardVoice()
-                onResult(result.exceptionOrNull()?.message ?: "Dashboard is unreachable")
+                onResult(result.exceptionOrNull()?.message ?: ctx.localizedString(R.string.runtime_dashboard_is_unreachable))
                 return@launch
             }
             val connectionId = connectionStore.activeConnectionId.value
@@ -6797,7 +6798,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                     null
                 }
                 Result.success(status to session)
-            } ?: Result.failure(java.net.SocketTimeoutException("Dashboard check timed out"))
+            } ?: Result.failure(java.net.SocketTimeoutException(ctx.localizedString(R.string.runtime_dashboard_check_timed_out)))
         } catch (cancelled: kotlinx.coroutines.CancellationException) {
             throw cancelled
         } catch (error: Exception) {
@@ -6901,7 +6902,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                     authenticated = false,
                     authProvider = null,
                     gatewayTicketAvailable = false,
-                    message = "Dashboard session cleared",
+                    message = ctx.localizedString(R.string.dashboard_session_cleared),
                     gatewayMode = active?.dashboardLastStatus?.gatewayMode,
                     servedProfiles = active?.dashboardLastStatus?.servedProfiles.orEmpty(),
                     profiles = active?.dashboardLastStatus?.profiles.orEmpty(),
@@ -6932,7 +6933,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             onResult(
                 StandardApiSetupResult(
                     ok = false,
-                    message = it.message ?: "Invalid API credential",
+                    message = it.message ?: ctx.localizedString(R.string.runtime_invalid_api_credential),
                     apiReachable = false,
                     relayPaired = authState.value is AuthState.Paired,
                 ),
@@ -6953,7 +6954,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             onResult(
                 StandardApiSetupResult(
                     ok = false,
-                    message = "API server URL is required",
+                    message = ctx.localizedString(R.string.runtime_api_server_url_is_required),
                     apiReachable = false,
                     relayPaired = authState.value is AuthState.Paired,
                 ),
@@ -6963,6 +6964,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         standardApiDashboardSecurityError(
             normalizedApiUrl = trimmedApiUrl,
             normalizedDashboardUrl = trimmedDashboardUrl,
+            context = ctx,
         )?.let { message ->
             onResult(
                 StandardApiSetupResult(
@@ -7059,14 +7061,14 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Api,
                     severity = DiagnosticSeverity.Warning,
-                    title = ctx.getString(R.string.conn_status_setup_skipped),
-                    detail = ctx.getString(R.string.conn_detail_no_api_client),
+                    title = ctx.localizedString(R.string.conn_status_setup_skipped),
+                    detail = ctx.localizedString(R.string.conn_detail_no_api_client),
                     url = effectiveApiServerUrlSnapshot(),
                 )
                 onResult(
                     StandardApiSetupResult(
                         ok = false,
-                        message = ctx.getString(R.string.conn_detail_no_api_client),
+                        message = ctx.localizedString(R.string.conn_detail_no_api_client),
                         apiReachable = false,
                         relayPaired = authState.value is AuthState.Paired,
                     ),
@@ -7079,7 +7081,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Api,
                 severity = DiagnosticSeverity.Info,
-                title = ctx.getString(R.string.conn_status_testing_standard),
+                title = ctx.localizedString(R.string.conn_status_testing_standard),
                 operation = "Hermes API health check",
                 configuredUrl = diagnosticApiUrl,
                 requestUrl = "${diagnosticApiUrl.trimEnd('/')}/health",
@@ -7092,7 +7094,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Api,
                     severity = DiagnosticSeverity.Error,
-                    title = ctx.getString(R.string.conn_status_setup_health_failed),
+                    title = ctx.localizedString(R.string.conn_status_setup_health_failed),
                     detail = health.message,
                     operation = "Hermes API health check",
                     configuredUrl = diagnosticApiUrl,
@@ -7164,9 +7166,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             val message = when (sessions) {
                 is com.hermesandroid.relay.network.upstream.HealthCheckResult.Healthy -> {
                     if (dashboardSignInRequired) {
-                        "Connected to Hermes API. Dashboard sign-in required for Manage."
+                        ctx.localizedString(R.string.runtime_connected_to_hermes_api_dashboard_sign_in_required_for_manage)
                     } else {
-                        "Connected to Hermes API and sessions"
+                        ctx.localizedString(R.string.runtime_connected_to_hermes_api_and_sessions)
                     }
                 }
                 is com.hermesandroid.relay.network.upstream.HealthCheckResult.Unhealthy ->
@@ -7175,7 +7177,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Api,
                 severity = if (reachable) DiagnosticSeverity.Info else DiagnosticSeverity.Error,
-                title = if (reachable) ctx.getString(R.string.conn_status_hermes_ok) else ctx.getString(R.string.conn_status_auth_failed),
+                title = if (reachable) ctx.localizedString(R.string.conn_status_hermes_ok) else ctx.localizedString(R.string.conn_status_auth_failed),
                 detail = message,
                 operation = "Hermes API sessions authentication check",
                 configuredUrl = diagnosticApiUrl,
@@ -7280,10 +7282,10 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                     IllegalStateException(
                         when (_standardVoiceAvailability.value) {
                             StandardVoiceAvailability.SignInRequired ->
-                                "Vanilla Hermes voice needs dashboard sign-in (Manage tab)"
+                                ctx.localizedString(R.string.runtime_vanilla_hermes_voice_needs_dashboard_sign_in_manage_tab)
                             StandardVoiceAvailability.Unsupported ->
-                                "This Hermes build has no dashboard audio routes"
-                            else -> "Vanilla Hermes voice is not available"
+                                ctx.localizedString(R.string.runtime_this_hermes_build_has_no_dashboard_audio_routes)
+                            else -> ctx.localizedString(R.string.runtime_vanilla_hermes_voice_is_not_available)
                         },
                     ),
                 )
@@ -7382,7 +7384,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Api,
                     severity = DiagnosticSeverity.Error,
-                    title = ctx.getString(R.string.conn_info_profile_api_key_save_failed),
+                    title = ctx.localizedString(R.string.conn_info_profile_api_key_save_failed),
                     detail = it.message,
                 )
                 onComplete(false)
@@ -7419,11 +7421,11 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Api,
                     severity = DiagnosticSeverity.Warning,
-                    title = ctx.getString(R.string.conn_status_api_test_skipped),
-                    detail = ctx.getString(R.string.conn_detail_no_api_client),
+                    title = ctx.localizedString(R.string.conn_status_api_test_skipped),
+                    detail = ctx.localizedString(R.string.conn_detail_no_api_client),
                     url = effectiveApiServerUrlSnapshot(),
                 )
-                onResult(false, ctx.getString(R.string.conn_detail_no_api_client))
+                onResult(false, ctx.localizedString(R.string.conn_detail_no_api_client))
                 return@launch
             }
 
@@ -7432,7 +7434,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Api,
                 severity = DiagnosticSeverity.Info,
-                title = ctx.getString(R.string.conn_status_testing_api),
+                title = ctx.localizedString(R.string.conn_status_testing_api),
                 operation = "Hermes API health check",
                 configuredUrl = diagnosticApiUrl,
                 requestUrl = "${diagnosticApiUrl.trimEnd('/')}/health",
@@ -7444,7 +7446,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Api,
                     severity = DiagnosticSeverity.Error,
-                    title = ctx.getString(R.string.conn_status_api_health_failed),
+                    title = ctx.localizedString(R.string.conn_status_api_health_failed),
                     detail = health.message,
                     operation = "Hermes API health check",
                     configuredUrl = diagnosticApiUrl,
@@ -7460,14 +7462,14 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             _apiServerHealth.value = if (reachable) HealthStatus.Reachable else HealthStatus.Unreachable
             val message = when (sessions) {
                 is com.hermesandroid.relay.network.upstream.HealthCheckResult.Healthy ->
-                    "Connection OK - health and sessions auth passed"
+                    ctx.localizedString(R.string.runtime_connection_ok_health_and_sessions_auth_passed)
                 is com.hermesandroid.relay.network.upstream.HealthCheckResult.Unhealthy ->
                     sessions.message
             }
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Api,
                 severity = if (reachable) DiagnosticSeverity.Info else DiagnosticSeverity.Error,
-                title = if (reachable) ctx.getString(R.string.conn_status_api_test_ok) else ctx.getString(R.string.conn_status_api_test_failed),
+                title = if (reachable) ctx.localizedString(R.string.conn_status_api_test_ok) else ctx.localizedString(R.string.conn_status_api_test_failed),
                 detail = message,
                 operation = "Hermes API sessions authentication check",
                 configuredUrl = diagnosticApiUrl,
@@ -7658,8 +7660,8 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Session,
                 severity = DiagnosticSeverity.Warning,
-                title = ctx.getString(R.string.conn_status_relay_connect_skipped),
-                detail = ctx.getString(R.string.conn_detail_no_paired_session),
+                title = ctx.localizedString(R.string.conn_status_relay_connect_skipped),
+                detail = ctx.localizedString(R.string.conn_detail_no_paired_session),
                 url = url,
             )
             return
@@ -7667,7 +7669,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         DiagnosticsLog.record(
             category = DiagnosticCategory.Relay,
             severity = DiagnosticSeverity.Info,
-            title = ctx.getString(R.string.conn_status_relay_connect_requested),
+            title = ctx.localizedString(R.string.conn_status_relay_connect_requested),
             url = url,
         )
         if (freshPairing) {
@@ -7682,7 +7684,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         DiagnosticsLog.record(
             category = DiagnosticCategory.Relay,
             severity = DiagnosticSeverity.Info,
-            title = ctx.getString(R.string.conn_status_relay_disconnect_requested),
+            title = ctx.localizedString(R.string.conn_status_relay_disconnect_requested),
             url = effectiveRelayUrlSnapshot(),
         )
         connectionManager.disconnect()
@@ -7743,25 +7745,25 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         onResult: (String?) -> Unit,
     ) {
         if (original?.priority == 0) {
-            onResult("The primary route mirrors the connection's Dashboard/Gateway address — edit that instead")
+            onResult(ctx.localizedString(R.string.runtime_the_primary_route_mirrors_the_connection_s_dashboard_gateway_address_edit_that_i))
             return
         }
         viewModelScope.launch {
             val current = activeConnectionSnapshot()
             if (current == null) {
-                onResult("No active connection")
+                onResult(ctx.localizedString(R.string.runtime_no_active_connection))
                 return@launch
             }
             // Accept bare hosts/IPs — http:// is assumed and the standard
             // Dashboard/Gateway port defaults to 9119.
             val trimmedUrl = Connection.normalizeDashboardUrlInput(dashboardUrl)
             if (publicDashboardAddressRequiresHttps(role, trimmedUrl)) {
-                onResult("Public Gateway routes require HTTPS")
+                onResult(ctx.localizedString(R.string.runtime_public_gateway_routes_require_https))
                 return@launch
             }
             val existing = seedRouteCandidates(current)
             if (existing.isEmpty()) {
-                onResult("Set the connection's Dashboard/Gateway URL first")
+                onResult(ctx.localizedString(R.string.runtime_set_the_connection_s_dashboard_gateway_url_first))
                 return@launch
             }
             val withoutOriginal = if (original != null) {
@@ -7788,8 +7790,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             )
             if (candidate == null) {
                 onResult(
-                    "Enter the Dashboard/Gateway host — e.g. 100.64.0.1 or " +
-                        "http://host:9119 (http/https only; port defaults to 9119)",
+                    ctx.localizedString(R.string.runtime_route_host_hint),
                 )
                 return@launch
             }
@@ -7799,9 +7800,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             if (collision != null) {
                 onResult(
                     if (collision.priority == 0) {
-                        "That host is already the primary route"
+                        ctx.localizedString(R.string.runtime_that_host_is_already_the_primary_route)
                     } else {
-                        "The ${collision.displayLabel()} route already uses that host"
+                        ctx.localizedString(R.string.runtime_fmt_the_1_s_route_already_uses_that_host, collision.displayLabel())
                     },
                 )
                 return@launch
@@ -7824,13 +7825,13 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
      */
     fun removeExtraRoute(candidate: EndpointCandidate, onResult: (String?) -> Unit = {}) {
         if (candidate.priority == 0) {
-            onResult("The primary route can't be removed — edit the connection's Dashboard/Gateway address instead")
+            onResult(ctx.localizedString(R.string.runtime_the_primary_route_can_t_be_removed_edit_the_connection_s_dashboard_gateway_addre))
             return
         }
         viewModelScope.launch {
             val current = activeConnectionSnapshot()
             if (current == null) {
-                onResult("No active connection")
+                onResult(ctx.localizedString(R.string.runtime_no_active_connection))
                 return@launch
             }
             val existing = seedRouteCandidates(current)
@@ -8041,7 +8042,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Endpoint,
                     severity = DiagnosticSeverity.Warning,
-                    title = ctx.getString(R.string.conn_status_route_recheck_failed),
+                    title = ctx.localizedString(R.string.conn_status_route_recheck_failed),
                     detail = e.javaClass.simpleName,
                 )
             }
@@ -8146,7 +8147,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
     fun testRelayReachable(url: String) {
         val trimmed = url.trim()
         if (trimmed.isEmpty()) {
-            _relayReachableResult.value = RelayReachable.Fail("Enter a relay URL first")
+            _relayReachableResult.value = RelayReachable.Fail(ctx.localizedString(R.string.runtime_enter_a_relay_url_first))
             return
         }
         // Persist the typed URL immediately — that's the "Save" half.
@@ -8177,7 +8178,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                     )
                 },
                 onFailure = { err ->
-                    RelayReachable.Fail(err.message ?: "Unknown error")
+                    RelayReachable.Fail(err.message ?: ctx.localizedString(R.string.runtime_profile_unknown))
                 }
             )
         }
@@ -8480,7 +8481,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
             when (result) {
                 is PetImportResult.Success -> {
                     refreshAgentAvatars()
-                    _avatarEvents.tryEmit("Imported “${result.label}”")
+                    _avatarEvents.tryEmit(ctx.localizedString(R.string.runtime_fmt_imported_1_s, result.label))
                 }
                 is PetImportResult.Failure -> _avatarEvents.tryEmit(result.reason)
             }
@@ -8530,7 +8531,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
         saveCustomTheme(
             preset.copy(
                 id = UUID.randomUUID().toString(),
-                name = "${preset.name} copy".take(CustomThemePreset.MAX_NAME_LENGTH),
+                name = ctx.localizedString(R.string.runtime_fmt_1_s_copy, preset.name).take(CustomThemePreset.MAX_NAME_LENGTH),
             ),
         )
     }
@@ -8578,7 +8579,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 is SphereSkinImportResult.Success -> {
                     setSphereSkin(result.id)
                     refreshAgentAvatars()
-                    _avatarEvents.tryEmit("Imported “${result.label}”")
+                    _avatarEvents.tryEmit(ctx.localizedString(R.string.runtime_fmt_imported_1_s, result.label))
                 }
                 is SphereSkinImportResult.Failure -> _avatarEvents.tryEmit(result.reason)
             }
@@ -8595,7 +8596,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 is PetImportResult.Success -> {
                     setBackgroundAvatar(result.id)
                     refreshAgentAvatars()
-                    _avatarEvents.tryEmit("Imported background “${result.label}”")
+                    _avatarEvents.tryEmit(ctx.localizedString(R.string.runtime_fmt_imported_background_1_s, result.label))
                 }
                 is PetImportResult.Failure -> _avatarEvents.tryEmit(result.reason)
             }
@@ -8612,9 +8613,9 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 if (floatingPet.value == avatarId) setFloatingPet(null)
                 if (backgroundAvatar.value == avatarId) setBackgroundAvatar(SphereAvatar.id)
                 refreshAgentAvatars()
-                _avatarEvents.tryEmit("Removed “$label”")
+                _avatarEvents.tryEmit(ctx.localizedString(R.string.runtime_fmt_removed_1_s, label))
             } else {
-                _avatarEvents.tryEmit("Couldn’t remove “$label”")
+                _avatarEvents.tryEmit(ctx.localizedString(R.string.runtime_fmt_couldn_t_remove_1_s, label))
             }
         }
     }
@@ -8659,7 +8660,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                 disconnectRelay()
                 authManager.clearSession()
                 authManager.clearApiKey()
-                check(dataManager.resetAppData()) { "App data store reset failed" }
+                check(dataManager.resetAppData()) { ctx.localizedString(R.string.runtime_app_data_store_reset_failed) }
                 profileController.profileSelectionStore.clearAll()
                 profileController.profileLockStore.clearAll()
                 com.hermesandroid.relay.data.SupervisedModeStore(getApplication<Application>())
@@ -8748,7 +8749,7 @@ class ConnectionViewModel(application: Application) : AndroidViewModel(applicati
                     backup.apiServerUrl?.let { updateApiServerUrl(it) }
                 }
                 check(dataManager.setOnboardingCompleted(backup.onboardingCompleted)) {
-                    "Failed to restore onboarding state"
+                    ctx.localizedString(R.string.runtime_failed_to_restore_onboarding_state)
                 }
                 _onboardingCompleted.value = backup.onboardingCompleted
             }.onFailure {

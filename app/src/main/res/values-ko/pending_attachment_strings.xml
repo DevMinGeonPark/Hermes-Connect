@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pending_attachment_preview_named">%1$s 미리보기</string>
+    <string name="pending_attachment_remove">%1$s 제거</string>
+    <string name="pending_attachment_move_left">%1$s 왼쪽으로 이동</string>
+    <string name="pending_attachment_move_right">%1$s 오른쪽으로 이동</string>
+    <string name="pending_attachment_status_loading">미리보기 준비 중</string>
+    <string name="pending_attachment_status_ready">준비됨</string>
+    <string name="pending_attachment_status_failed">미리보기를 사용할 수 없음</string>
+    <string name="chat_shared_files_limited">공유한 파일 중 처음 %1$d개만 추가했습니다.</string>
+</resources>

@@ -20,6 +20,17 @@ LOCALE_DIR = re.compile(r"^values-(?:[a-z]{2,3}(?:-r[A-Z]{2})?|b\+[A-Za-z0-9+]+)
 PRINTF = re.compile(r"%(?:(\d+)\$)?[-#+ 0,(<]*\d*(?:\.\d+)?([A-Za-z%])")
 ANDROID_NS = "{http://schemas.android.com/apk/res/android}"
 VERIFICATION_STATES = {"canonical", "ai-translated", "community-reviewed", "verified"}
+# These catalogs replace previously hardcoded English. Existing locales retain
+# that English fallback until translated; Korean ships complete coverage.
+NEW_FALLBACK_CATALOGS = {
+    "supervised_strings.xml",
+    "korean_coverage_strings.xml",
+    "korean_runtime_strings.xml",
+    "runtime_notice_strings.xml",
+    "ui_label_strings.xml",
+}
+COMPLETE_CATALOG_LOCALES = {"ko"}
+PLURAL_QUANTITIES = {"zero", "one", "two", "few", "many", "other"}
 
 
 @dataclass(frozen=True)
@@ -38,37 +49,53 @@ def text(node: ET.Element) -> str:
     return "".join(node.itertext())
 
 
+def path_label(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def load_catalog(path: Path, errors: list[str]) -> dict[tuple[str, str], Entry]:
     try:
         root = ET.parse(path).getroot()
     except (ET.ParseError, OSError) as exc:
-        fail(f"{path.relative_to(REPO_ROOT)}: cannot parse XML: {exc}", errors)
+        fail(f"{path_label(path)}: cannot parse XML: {exc}", errors)
         return {}
 
+    if root.tag != "resources":
+        fail(f"{path_label(path)}: expected <resources> root", errors)
+        return {}
     catalog: dict[tuple[str, str], Entry] = {}
     seen: Counter[tuple[str, str]] = Counter()
     for node in root:
         name = node.attrib.get("name")
         if not name or node.tag not in {"string", "plurals", "string-array"}:
             continue
-        if node.attrib.get("translatable", "true").lower() == "false":
-            continue
         key = (node.tag, name)
         seen[key] += 1
+        if node.attrib.get("translatable", "true").lower() == "false":
+            continue
         formatted = node.attrib.get("formatted", "true").lower() != "false"
         if node.tag == "string":
             values = {"value": text(node)}
         else:
-            values = {
-                item.attrib.get("quantity", str(index)): text(item)
-                for index, item in enumerate(node.findall("item"))
-            }
+            values = {}
+            for index, item in enumerate(node.findall("item")):
+                variant = item.attrib.get("quantity", str(index))
+                if variant in values:
+                    fail(f"{path_label(path)}: {node.tag}/{name} has duplicate variant {variant!r}", errors)
+                if node.tag == "plurals" and variant not in PLURAL_QUANTITIES:
+                    fail(f"{path_label(path)}: plurals/{name} has invalid quantity {variant!r}", errors)
+                values[variant] = text(item)
+            if node.tag == "plurals" and "other" not in values:
+                fail(f"{path_label(path)}: plurals/{name} is missing required 'other' quantity", errors)
         catalog[key] = Entry(node.tag, name, values, formatted)
 
     for key, count in seen.items():
         if count > 1:
             fail(
-                f"{path.relative_to(REPO_ROOT)}: duplicate <{key[0]}> name={key[1]!r}",
+                f"{path_label(path)}: duplicate <{key[0]}> name={key[1]!r}",
                 errors,
             )
     return catalog
@@ -95,6 +122,10 @@ def compare_entry(
     translated: Entry,
     errors: list[str],
 ) -> None:
+    if canonical.formatted != translated.formatted:
+        fail(f"{locale_label}: {canonical.kind}/{canonical.name} changes formatted attribute", errors)
+    if canonical.kind == "string-array" and set(canonical.values) != set(translated.values):
+        fail(f"{locale_label}: string-array/{canonical.name} item count does not match {source_label}", errors)
     if not canonical.formatted:
         return
     for variant, translated_value in translated.values.items():
@@ -117,35 +148,91 @@ def compare_entry(
             )
 
 
+def load_resource_directory(
+    directory: Path, errors: list[str]
+) -> tuple[dict[tuple[str, str], Entry], dict[tuple[str, str], Path]]:
+    """Android merges resource keys across every values XML file."""
+    catalog: dict[tuple[str, str], Entry] = {}
+    origins: dict[tuple[str, str], Path] = {}
+    for path in sorted(directory.glob("*.xml")):
+        entries = load_catalog(path, errors)
+        for key, entry in entries.items():
+            if key in catalog:
+                fail(
+                    f"{path_label(path)}: duplicate <{key[0]}> name={key[1]!r}; "
+                    f"also defined in {path_label(origins[key])}",
+                    errors,
+                )
+            catalog[key] = entry
+            origins[key] = path
+    return catalog, origins
+
+
+def locale_directories(resource_root: Path) -> list[Path]:
+    if not resource_root.is_dir():
+        return []
+    return sorted(
+        path for path in resource_root.iterdir()
+        if path.is_dir() and LOCALE_DIR.fullmatch(path.name)
+        and any(path.glob("*.xml"))
+    )
+
+
 def validate_source_set(source_set: Path, errors: list[str]) -> int:
     resource_root = source_set / "res"
-    canonical_path = resource_root / "values" / "strings.xml"
-    if not canonical_path.is_file():
+    canonical, origins = load_resource_directory(resource_root / "values", errors)
+    if not canonical:
         return 0
 
-    canonical = load_catalog(canonical_path, errors)
-    locale_paths = sorted(
-        path / "strings.xml"
-        for path in resource_root.iterdir()
-        if path.is_dir() and LOCALE_DIR.match(path.name) and (path / "strings.xml").is_file()
-    )
+    locale_paths = locale_directories(resource_root)
+    # Flavor resources can otherwise silently fall back if an entire Korean
+    # directory is removed, rather than just one key inside it.
+    existing_tags = {qualifier_to_tag(path.name) for path in locale_paths}
+    for main_locale in locale_directories(source_set.parent / "main" / "res"):
+        tag = qualifier_to_tag(main_locale.name)
+        if tag in COMPLETE_CATALOG_LOCALES and tag not in existing_tags:
+            locale_paths.append(resource_root / main_locale.name)
     for locale_path in locale_paths:
-        translated = load_catalog(locale_path, errors)
-        missing = sorted(set(canonical) - set(translated))
+        translated, _ = load_resource_directory(locale_path, errors)
+        required = {
+            key for key in canonical
+            if qualifier_to_tag(locale_path.name) in COMPLETE_CATALOG_LOCALES
+            or origins[key].name not in NEW_FALLBACK_CATALOGS
+        }
+        missing = sorted(required - set(translated))
         extra = sorted(set(translated) - set(canonical))
         for kind, name in missing:
-            fail(f"{locale_path.parent.name}: missing {kind}/{name}", errors)
+            fail(f"{source_set.name}/{locale_path.name}: missing {kind}/{name}", errors)
         for kind, name in extra:
-            fail(f"{locale_path.parent.name}: extra {kind}/{name}", errors)
+            fail(f"{source_set.name}/{locale_path.name}: extra {kind}/{name}", errors)
         for key in sorted(set(canonical) & set(translated)):
             compare_entry(
                 f"{source_set.name}/values",
-                f"{source_set.name}/{locale_path.parent.name}",
+                f"{source_set.name}/{locale_path.name}",
                 canonical[key],
                 translated[key],
                 errors,
             )
     return len(locale_paths)
+
+
+def source_catalog_hashes(errors: list[str], app_src: Path | None = None) -> dict[str, str]:
+    """Fingerprint every translatable canonical file, including its filename."""
+    hashes = {}
+    for source_set in sorted((app_src or APP_SRC).iterdir()):
+        if not source_set.is_dir():
+            continue
+        _, origins = load_resource_directory(source_set / "res" / "values", errors)
+        paths = sorted(set(origins.values()))
+        if not paths:
+            continue
+        digest = hashlib.sha256()
+        for path in paths:
+            digest.update(path.name.encode("utf-8") + b"\0")
+            digest.update(path.read_text(encoding="utf-8").replace("\r\n", "\n").encode("utf-8"))
+            digest.update(b"\0")
+        hashes[source_set.name] = digest.hexdigest()
+    return hashes
 
 
 def qualifier_to_tag(qualifier: str) -> str:
@@ -175,8 +262,7 @@ def validate_locale_config(errors: list[str]) -> None:
     }
     discovered = {
         qualifier_to_tag(path.name)
-        for path in (APP_SRC / "main" / "res").iterdir()
-        if path.is_dir() and LOCALE_DIR.match(path.name) and (path / "strings.xml").is_file()
+        for path in locale_directories(APP_SRC / "main" / "res")
     }
     expected = {"en", *discovered}
     if configured != expected:
@@ -206,8 +292,7 @@ def validate_status_registry(errors: list[str]) -> None:
 
     discovered = {
         qualifier_to_tag(path.name)
-        for path in (APP_SRC / "main" / "res").iterdir()
-        if path.is_dir() and LOCALE_DIR.match(path.name) and (path / "strings.xml").is_file()
+        for path in locale_directories(APP_SRC / "main" / "res")
     }
     expected = {"en", *discovered}
     if set(locales) != expected:
@@ -216,16 +301,7 @@ def validate_status_registry(errors: list[str]) -> None:
             errors,
         )
 
-    source_hashes = {
-        source_set.name: hashlib.sha256(
-            (source_set / "res" / "values" / "strings.xml")
-            .read_text(encoding="utf-8")
-            .replace("\r\n", "\n")
-            .encode("utf-8")
-        ).hexdigest()
-        for source_set in APP_SRC.iterdir()
-        if (source_set / "res" / "values" / "strings.xml").is_file()
-    }
+    source_hashes = source_catalog_hashes(errors)
 
     for tag, entry in locales.items():
         if not isinstance(entry, dict):

@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.ui.components
 
+import com.hermesandroid.relay.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -537,9 +539,9 @@ private fun PetTerrainInspectorPanel(
                 }
                 Text(
                     text = when {
-                        passThrough -> "Pet paths"
-                        expanded -> "Pet path inspector"
-                        else -> "Pet paths"
+                        passThrough -> stringResource(R.string.ko_pet_paths)
+                        expanded -> stringResource(R.string.ko_pet_inspector)
+                        else -> stringResource(R.string.ko_pet_paths)
                     },
                     modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium,
@@ -569,9 +571,9 @@ private fun PetTerrainInspectorPanel(
                 ) {
                     Text(
                         text = when {
-                            passThrough -> "PASS"
-                            frozen -> "FROZEN"
-                            else -> "LIVE"
+                            passThrough -> stringResource(R.string.ko_pet_pass)
+                            frozen -> stringResource(R.string.ko_pet_frozen)
+                            else -> stringResource(R.string.ko_pet_live)
                         },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         style = MaterialTheme.typography.labelMedium,
@@ -585,9 +587,9 @@ private fun PetTerrainInspectorPanel(
                     Icon(
                         imageVector = if (passThrough) Icons.Filled.LockOpen else Icons.Filled.Lock,
                         contentDescription = if (passThrough) {
-                            "Enable pet inspector controls"
+                            stringResource(R.string.ko_pet_enable_controls)
                         } else {
-                            "Make pet inspector click-through"
+                            stringResource(R.string.ko_pet_click_through)
                         },
                     )
                 }
@@ -603,9 +605,9 @@ private fun PetTerrainInspectorPanel(
                                 Icons.Filled.ExpandMore
                             },
                             contentDescription = if (expanded) {
-                                "Collapse pet path inspector"
+                                stringResource(R.string.ko_pet_collapse)
                             } else {
-                                "Expand pet path inspector"
+                                stringResource(R.string.ko_pet_expand)
                             },
                         )
                     }
@@ -630,7 +632,11 @@ private fun PetTerrainInspectorPanel(
                                     index = index,
                                     count = PetTerrainDebugViewMode.entries.size,
                                 ),
-                                label = { Text(candidate.label) },
+                                label = { Text(stringResource(when (candidate) {
+                                    PetTerrainDebugViewMode.Plan -> R.string.ko_pet_plan
+                                    PetTerrainDebugViewMode.Terrain -> R.string.ko_pet_terrain
+                                    PetTerrainDebugViewMode.Full -> R.string.ko_pet_full
+                                })) },
                             )
                         }
                     }
@@ -659,20 +665,20 @@ private fun PetTerrainInspectorPanel(
                             shape = RoundedCornerShape(9.dp),
                         ) {
                             Text(
-                                text = if (frozen) "Resume" else "Freeze",
+                                text = if (frozen) stringResource(R.string.dashboard_action_resume) else stringResource(R.string.ko_pet_freeze),
                                 style = MaterialTheme.typography.labelLarge,
                             )
                         }
                     }
                     if (mode == PetTerrainDebugViewMode.Full) {
                         Text(
-                            text = "${model.possibleRoutes.size} candidate routes · gate ${model.gateLabel}",
+                            text = stringResource(R.string.ko_pet_routes, model.possibleRoutes.size, model.gateLabel),
                             style = MaterialTheme.typography.labelSmall,
                             color = TerrainInspectorTertiaryText,
                             fontFamily = FontFamily.Monospace,
                         )
                         Text(
-                            text = "rail ${model.activeRailKey ?: "none"} · move ${model.locomotionLabel}",
+                            text = stringResource(R.string.ko_pet_rail, model.activeRailKey ?: stringResource(R.string.voice_settings_none), model.locomotionLabel),
                             style = MaterialTheme.typography.labelSmall,
                             color = TerrainInspectorTertiaryText,
                             fontFamily = FontFamily.Monospace,
@@ -685,11 +691,11 @@ private fun PetTerrainInspectorPanel(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         TextButton(onClick = onResetPosition) {
-                            Text("Reset position")
+                            Text(stringResource(R.string.floating_pet_action_reset))
                         }
                         TextButton(onClick = onExit) {
                             Text(
-                                text = "Exit inspector",
+                                text = stringResource(R.string.ko_pet_exit),
                                 color = MaterialTheme.colorScheme.error,
                             )
                         }
@@ -723,7 +729,7 @@ private fun PetTerrainInspectorDragHandle(
     ) {
         Icon(
             imageVector = Icons.Filled.DragIndicator,
-            contentDescription = "Move pet path inspector",
+            contentDescription = stringResource(R.string.ko_pet_move),
             tint = TerrainInspectorSecondaryText,
         )
     }
@@ -742,12 +748,12 @@ private enum class PetTerrainLegendKind {
 private fun PetTerrainLayerLegend() {
     Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
         listOf(
-            ("Selected route" to PetTerrainLegendKind.Selected) to
-                ("Walk rails" to PetTerrainLegendKind.Rail),
-            ("Active segment" to PetTerrainLegendKind.Active) to
-                ("Collision bounds" to PetTerrainLegendKind.Obstacle),
-            ("Candidate hops" to PetTerrainLegendKind.Candidate) to
-                ("Touchdown" to PetTerrainLegendKind.Touchdown),
+            (stringResource(R.string.ko_pet_selected_route) to PetTerrainLegendKind.Selected) to
+                (stringResource(R.string.ko_pet_walk_rails) to PetTerrainLegendKind.Rail),
+            (stringResource(R.string.ko_pet_active_segment) to PetTerrainLegendKind.Active) to
+                (stringResource(R.string.ko_pet_collision_bounds) to PetTerrainLegendKind.Obstacle),
+            (stringResource(R.string.ko_pet_candidate_hops) to PetTerrainLegendKind.Candidate) to
+                (stringResource(R.string.ko_pet_touchdown) to PetTerrainLegendKind.Touchdown),
         ).forEach { (left, right) ->
             Row(
                 modifier = Modifier.fillMaxWidth(),

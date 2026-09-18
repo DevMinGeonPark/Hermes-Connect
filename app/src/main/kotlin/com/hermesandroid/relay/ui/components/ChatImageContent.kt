@@ -1,5 +1,8 @@
 package com.hermesandroid.relay.ui.components
 
+import androidx.compose.ui.res.stringResource
+import com.hermesandroid.relay.R
+
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -270,12 +273,12 @@ fun ChatInlineImages(
                     } else {
                         UnrenderableImageNotice(
                             image,
-                            reason = "Server image — pair the relay to show it.",
+                            reason = stringResource(R.string.ui_label_image_pair_relay),
                         )
                     }
                 else -> UnrenderableImageNotice(
                     image,
-                    reason = "Unsupported image path: ${image.src}",
+                    reason = stringResource(R.string.ui_label_image_unsupported_path, image.src),
                 )
             }
         }
@@ -329,8 +332,8 @@ private fun DataUrlChatImage(image: ChatInlineImage, maxWidth: Dp) {
             contentAlignment = Alignment.Center,
         ) { CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp) }
         DataUrlImagePhase.Rejected -> UnrenderableImageNotice(
-            image.copy(src = "inline image"),
-            reason = "Unsupported or oversized inline image.",
+            image.copy(src = stringResource(R.string.image_inline)),
+            reason = stringResource(R.string.ui_label_image_rejected),
         )
         is DataUrlImagePhase.Loaded -> {
             val viewerSource = ChatImageViewerSource.Bitmap(
@@ -623,7 +626,7 @@ private fun RelayServerImageContent(
 @Composable
 private fun UnrenderableImageNotice(
     image: ChatInlineImage,
-    reason: String = "This image is on the server and can't be shown here.",
+    reason: String = stringResource(R.string.ui_label_image_on_server),
 ) {
     val context = LocalContext.current
     val remote = image.isRemote()
@@ -657,14 +660,14 @@ private fun UnrenderableImageNotice(
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = image.alt.ifBlank { "Image" },
+                    text = image.alt.ifBlank { stringResource(R.string.ui_label_image) },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = if (remote) "Tap to open · ${image.src}" else "$reason\n${image.src}",
+                    text = if (remote) stringResource(R.string.ui_label_image_tap_open, image.src) else "$reason\n${image.src}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 3,

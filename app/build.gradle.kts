@@ -329,6 +329,9 @@ tasks.withType<Test>().configureEach {
     javaLauncher.set(
         javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) }
     )
+    // API 35+ Robolectric creates ApplicationSharedMemory through the JDK's
+    // FileDescriptor bridge. Export it only to the host-side test JVM.
+    jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
 }
 
 dependencies {
@@ -464,4 +467,3 @@ dependencies {
     testImplementation(libs.compose.ui.test.manifest)
     testImplementation("androidx.test.ext:junit:1.3.0")
 }
-
