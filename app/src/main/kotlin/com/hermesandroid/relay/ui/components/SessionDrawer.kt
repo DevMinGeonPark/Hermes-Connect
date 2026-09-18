@@ -37,26 +37,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.AccountTree
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,6 +46,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -187,7 +168,7 @@ internal fun sessionWorkLabels(session: ChatSession): List<String> =
     sessionWorkBadges(session).map(SessionWorkBadge::label)
 
 internal fun sessionPinIcon(pinned: Boolean) =
-    if (pinned) Icons.Filled.Star else Icons.Outlined.StarBorder
+    if (pinned) RelayIcons.Star else RelayIcons.StarBorder
 
 internal fun resolveSessionDrawerFilter(
     filter: SessionDrawerFilter,
@@ -459,7 +440,7 @@ fun SessionDrawerContent(
                             modifier = Modifier.size(36.dp),
                         ) {
                             Icon(
-                                Icons.Filled.FilterList,
+                                RelayIcons.FilterList,
                                 contentDescription = stringResource(R.string.drawer_filter_by_source),
                                 tint = if (presentSources.any { it in hiddenSources }) {
                                     RelayRefresh.Relay
@@ -496,7 +477,7 @@ fun SessionDrawerContent(
                                     leadingIcon = {
                                         if (shown) {
                                             Icon(
-                                                Icons.Filled.Check,
+                                                RelayIcons.Check,
                                                 contentDescription = null,
                                                 tint = badge?.color ?: RelayRefresh.Relay,
                                             )
@@ -539,7 +520,7 @@ fun SessionDrawerContent(
                     modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
-                        Icons.Filled.Search,
+                        RelayIcons.Search,
                         contentDescription = stringResource(R.string.drawer_search_sessions),
                         tint = if (searchExpanded || query.isNotBlank()) {
                             RelayRefresh.Relay
@@ -555,7 +536,7 @@ fun SessionDrawerContent(
                 onRefresh?.let { refresh ->
                     IconButton(onClick = refresh, modifier = Modifier.size(36.dp)) {
                         Icon(
-                            Icons.Filled.Refresh,
+                            RelayIcons.Refresh,
                             contentDescription = stringResource(R.string.drawer_refresh_sessions),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp),
@@ -581,7 +562,7 @@ fun SessionDrawerContent(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = newChatEnabled,
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null)
+                Icon(RelayIcons.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.drawer_new_chat))
             }
@@ -592,7 +573,7 @@ fun SessionDrawerContent(
                     onClick = openBotMode,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Icon(Icons.Filled.Groups, contentDescription = null)
+                    Icon(RelayIcons.Groups, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Column(
                         modifier = Modifier.weight(1f),
@@ -616,7 +597,7 @@ fun SessionDrawerContent(
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     leadingIcon = {
-                        Icon(Icons.Filled.Search, contentDescription = null)
+                        Icon(RelayIcons.Search, contentDescription = null)
                     },
                     placeholder = { Text(stringResource(R.string.drawer_search_placeholder)) },
                 )
@@ -685,7 +666,7 @@ fun SessionDrawerContent(
                     modifier = Modifier.align(Alignment.Start),
                 ) {
                     Icon(
-                        Icons.Filled.FilterList,
+                        RelayIcons.FilterList,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                     )
@@ -1262,7 +1243,7 @@ private fun SessionDrawerOptionsDialog(
                 onClick = { onOptionsChange(SessionDrawerViewOptions()) },
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             ) {
-                Icon(Icons.Filled.Refresh, contentDescription = null)
+                Icon(RelayIcons.Refresh, contentDescription = null)
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.drawer_reset_filters))
             }
@@ -1354,7 +1335,7 @@ private fun ProfileColorEditor(
                         ) {
                             if (selected) {
                                 Icon(
-                                    Icons.Filled.Check,
+                                    RelayIcons.Check,
                                     contentDescription = null,
                                     tint = readableContentColor(swatch),
                                     modifier = Modifier.size(15.dp),
@@ -1448,7 +1429,7 @@ private fun ProjectGroupHeader(
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    imageVector = if (isHome) Icons.Filled.Home else Icons.Filled.Folder,
+                    imageVector = if (isHome) RelayIcons.Home else RelayIcons.Folder,
                     contentDescription = null,
                     tint = if (isHome) MaterialTheme.colorScheme.onSurfaceVariant else RelayRefresh.Relay,
                     modifier = Modifier.size(22.dp),
@@ -1479,7 +1460,7 @@ private fun ProjectGroupHeader(
             )
         }
         Icon(
-            imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+            imageVector = if (expanded) RelayIcons.ExpandLess else RelayIcons.ExpandMore,
             contentDescription = action,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1585,7 +1566,7 @@ private fun SessionItem(
                 }
                 if (pinned) {
                     Icon(
-                        Icons.Filled.Star,
+                        RelayIcons.Star,
                         contentDescription = null,
                         tint = RelayRefresh.Amber,
                         modifier = Modifier.size(12.dp),
@@ -1661,7 +1642,7 @@ private fun SessionItem(
                 modifier = Modifier.size(36.dp),
             ) {
                 Icon(
-                    Icons.Filled.MoreVert,
+                    RelayIcons.MoreVert,
                     contentDescription = stringResource(R.string.drawer_session_actions),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(19.dp),
@@ -1700,7 +1681,7 @@ private fun SessionItem(
                 if (!provisional && supervisedSessionActions == null) DropdownMenuItem(
                     text = { Text(stringResource(R.string.chat_copy_session_id)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.ContentCopy, contentDescription = null)
+                        Icon(RelayIcons.ContentCopy, contentDescription = null)
                     },
                     onClick = {
                         menuOpen = false
@@ -1710,7 +1691,7 @@ private fun SessionItem(
                 if (!provisional && supervisedSessionActions?.rename != false) DropdownMenuItem(
                     text = { Text(stringResource(R.string.drawer_rename)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.Edit, contentDescription = null)
+                        Icon(RelayIcons.Edit, contentDescription = null)
                     },
                     onClick = {
                         menuOpen = false
@@ -1722,7 +1703,7 @@ private fun SessionItem(
                         text = { Text(if (archived) stringResource(R.string.drawer_restore) else stringResource(R.string.drawer_archive)) },
                         leadingIcon = {
                             Icon(
-                                Icons.Filled.Archive,
+                                RelayIcons.Archive,
                                 contentDescription = null,
                                 tint = if (archived) {
                                     RelayRefresh.Relay
@@ -1746,7 +1727,7 @@ private fun SessionItem(
                     },
                     leadingIcon = {
                         Icon(
-                            Icons.Filled.Delete,
+                            RelayIcons.Delete,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.error.copy(alpha = 0.75f),
                         )
@@ -1774,9 +1755,9 @@ internal fun sessionActivityLabelResource(state: SessionActivityState): Int = wh
 @Composable
 private fun SessionWorkBadgeChip(badge: SessionWorkBadge) {
     val icon: ImageVector = when (badge.kind) {
-        SessionWorkBadgeKind.PROJECT -> Icons.Filled.Folder
-        SessionWorkBadgeKind.BRANCH -> Icons.Filled.AccountTree
-        SessionWorkBadgeKind.PULL_REQUEST -> Icons.Filled.Code
+        SessionWorkBadgeKind.PROJECT -> RelayIcons.Folder
+        SessionWorkBadgeKind.BRANCH -> RelayIcons.AccountTree
+        SessionWorkBadgeKind.PULL_REQUEST -> RelayIcons.Code
     }
     val badgeLabel = if (badge.kind == SessionWorkBadgeKind.PULL_REQUEST) localizedPrBadge(badge.label) else badge.label
     val kindLabel = when (badge.kind) {
@@ -1841,7 +1822,7 @@ private fun ProfileBadge(
         ) {
             if (isDefault) {
                 Icon(
-                    Icons.Filled.Home,
+                    RelayIcons.Home,
                     contentDescription = null,
                     tint = foreground,
                     modifier = Modifier.size(11.dp),

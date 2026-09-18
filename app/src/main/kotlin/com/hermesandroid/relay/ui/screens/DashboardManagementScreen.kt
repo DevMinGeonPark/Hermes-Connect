@@ -47,17 +47,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -70,6 +59,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -130,7 +120,6 @@ import com.hermesandroid.relay.ui.components.RelayNavTile
 import com.hermesandroid.relay.ui.components.RelayReturnStrip
 import com.hermesandroid.relay.ui.components.RelaySectionCaption
 import com.hermesandroid.relay.ui.theme.RelayRefresh
-import com.hermesandroid.relay.ui.theme.relayGridTexture
 import com.hermesandroid.relay.ui.theme.relayMetadataStyle
 import com.hermesandroid.relay.ui.theme.relayPanel
 import com.hermesandroid.relay.viewmodel.ConnectionViewModel
@@ -1533,20 +1522,20 @@ fun DashboardManagementScreen(
                 title = { Text(stringResource(R.string.dashboard_title)) },
                 navigationIcon = {
                     RelayChromeIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        icon = RelayIcons.ArrowBack,
                         contentDescription = stringResource(R.string.dashboard_back),
                         onClick = onBack,
                     )
                 },
                 actions = {
                     RelayChromeIconButton(
-                        icon = Icons.Filled.Code,
+                        icon = RelayIcons.Code,
                         contentDescription = stringResource(R.string.dashboard_terminal),
                         onClick = onNavigateToTerminal,
                         modifier = Modifier.padding(end = 4.dp),
                     )
                     RelayChromeIconButton(
-                        icon = Icons.Filled.Tune,
+                        icon = RelayIcons.Tune,
                         contentDescription = stringResource(R.string.dashboard_settings),
                         onClick = onNavigateToSettings,
                         modifier = Modifier.padding(end = 4.dp),
@@ -1559,7 +1548,7 @@ fun DashboardManagementScreen(
                         enabled = !isRefreshing,
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Refresh,
+                            imageVector = RelayIcons.Refresh,
                             contentDescription = stringResource(R.string.dashboard_refresh),
                         )
                     }
@@ -1575,7 +1564,6 @@ fun DashboardManagementScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(RelayRefresh.Background)
-                .relayGridTexture(alpha = 0.12f)
         ) {
             if (dashboardUrl.isNotBlank()) {
                 ManageDashboardTargetLine(
@@ -1914,67 +1902,67 @@ private data class ManageTileSpec(
 @Composable
 private fun manageTileSpec(section: DashboardManagementSection): ManageTileSpec = when (section) {
     DashboardManagementSection.Profiles -> ManageTileSpec(
-        icon = Icons.Filled.Person,
+        icon = RelayIcons.Person,
         title = stringResource(R.string.dashboard_tile_profiles_title),
         subtitle = stringResource(R.string.dashboard_tile_profiles_sub),
     )
     DashboardManagementSection.Memory -> ManageTileSpec(
-        icon = Icons.Filled.AutoAwesome,
+        icon = RelayIcons.AutoAwesome,
         title = stringResource(R.string.dashboard_tile_memory_title),
         subtitle = stringResource(R.string.dashboard_tile_memory_sub),
     )
     DashboardManagementSection.Learning -> ManageTileSpec(
-        icon = Icons.Filled.AutoAwesome,
+        icon = RelayIcons.AutoAwesome,
         title = stringResource(R.string.dashboard_tile_learning_title),
         subtitle = stringResource(R.string.dashboard_tile_learning_sub),
     )
     DashboardManagementSection.Channels -> ManageTileSpec(
-        icon = Icons.Filled.Link,
+        icon = RelayIcons.Link,
         title = stringResource(R.string.dashboard_tile_channels_title),
         subtitle = stringResource(R.string.dashboard_tile_channels_sub),
     )
     DashboardManagementSection.Operations -> ManageTileSpec(
-        icon = Icons.Filled.Tune,
+        icon = RelayIcons.Tune,
         title = stringResource(R.string.dashboard_tile_operations_title),
         subtitle = stringResource(R.string.dashboard_tile_operations_sub),
     )
     DashboardManagementSection.Skills -> ManageTileSpec(
-        icon = Icons.Filled.AutoAwesome,
+        icon = RelayIcons.AutoAwesome,
         title = stringResource(R.string.dashboard_tile_skills_title),
         subtitle = stringResource(R.string.dashboard_tile_skills_sub),
     )
     DashboardManagementSection.Cron -> ManageTileSpec(
-        icon = Icons.Filled.Schedule,
+        icon = RelayIcons.Schedule,
         title = stringResource(R.string.dashboard_tile_cron_title),
         subtitle = stringResource(R.string.dashboard_tile_cron_sub),
     )
     DashboardManagementSection.Mcp -> ManageTileSpec(
-        icon = Icons.Filled.Code,
+        icon = RelayIcons.Code,
         title = stringResource(R.string.dashboard_tile_mcp_title),
         subtitle = stringResource(R.string.dashboard_tile_mcp_sub),
     )
     DashboardManagementSection.Catalog -> ManageTileSpec(
-        icon = Icons.Filled.AutoAwesome,
+        icon = RelayIcons.AutoAwesome,
         title = stringResource(R.string.dashboard_tile_catalog_title),
         subtitle = stringResource(R.string.dashboard_tile_catalog_sub),
     )
     DashboardManagementSection.CustomEndpoints -> ManageTileSpec(
-        icon = Icons.Filled.Link,
+        icon = RelayIcons.Link,
         title = stringResource(R.string.dashboard_tile_custom_endpoints_title),
         subtitle = stringResource(R.string.dashboard_tile_custom_endpoints_sub),
     )
     DashboardManagementSection.Models -> ManageTileSpec(
-        icon = Icons.Filled.Tune,
+        icon = RelayIcons.Tune,
         title = stringResource(R.string.dashboard_tile_models_title),
         subtitle = stringResource(R.string.dashboard_tile_models_sub),
     )
     DashboardManagementSection.Keys -> ManageTileSpec(
-        icon = Icons.Filled.Key,
+        icon = RelayIcons.Key,
         title = stringResource(R.string.dashboard_tile_keys_title),
         subtitle = stringResource(R.string.dashboard_tile_keys_sub),
     )
     DashboardManagementSection.Config -> ManageTileSpec(
-        icon = Icons.Filled.Tune,
+        icon = RelayIcons.Tune,
         title = stringResource(R.string.dashboard_tile_config_title),
         subtitle = stringResource(R.string.dashboard_tile_config_sub),
     )
@@ -2150,7 +2138,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.Link,
+                icon = RelayIcons.Link,
                 title = stringResource(R.string.dashboard_nav_connections_title),
                 subtitle = stringResource(R.string.dashboard_nav_connections_sub),
                 onClick = onNavigateToConnections,
@@ -2158,7 +2146,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.Person,
+                icon = RelayIcons.Person,
                 title = stringResource(R.string.dashboard_tile_profiles_title),
                 subtitle = stringResource(R.string.dashboard_tile_profiles_sub),
                 onClick = { onSelectSection(DashboardManagementSection.Profiles) },
@@ -2166,7 +2154,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.AutoAwesome,
+                icon = RelayIcons.AutoAwesome,
                 title = stringResource(R.string.dashboard_tile_skills_title),
                 subtitle = stringResource(R.string.dashboard_tile_skills_sub),
                 onClick = { onSelectSection(DashboardManagementSection.Skills) },
@@ -2174,7 +2162,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.Schedule,
+                icon = RelayIcons.Schedule,
                 title = stringResource(R.string.dashboard_tile_cron_title),
                 subtitle = stringResource(R.string.dashboard_tile_cron_sub),
                 onClick = { onSelectSection(DashboardManagementSection.Cron) },
@@ -2182,7 +2170,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.Code,
+                icon = RelayIcons.Code,
                 title = stringResource(R.string.dashboard_tile_mcp_title),
                 subtitle = stringResource(R.string.dashboard_tile_mcp_sub),
                 onClick = { onSelectSection(DashboardManagementSection.Mcp) },
@@ -2190,7 +2178,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.AutoAwesome,
+                icon = RelayIcons.AutoAwesome,
                 title = stringResource(R.string.dashboard_tile_catalog_title),
                 subtitle = stringResource(R.string.dashboard_tile_catalog_sub),
                 onClick = { onSelectSection(DashboardManagementSection.Catalog) },
@@ -2198,7 +2186,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.Tune,
+                icon = RelayIcons.Tune,
                 title = stringResource(R.string.dashboard_tile_models_title),
                 subtitle = stringResource(R.string.dashboard_tile_models_sub),
                 onClick = { onSelectSection(DashboardManagementSection.Models) },
@@ -2206,7 +2194,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.Link,
+                icon = RelayIcons.Link,
                 title = stringResource(R.string.dashboard_tile_custom_endpoints_title),
                 subtitle = stringResource(R.string.dashboard_tile_custom_endpoints_sub),
                 onClick = { onSelectSection(DashboardManagementSection.CustomEndpoints) },
@@ -2214,7 +2202,7 @@ private fun ManageOverviewBody(
         }
         item {
             RelayNavTile(
-                icon = Icons.Filled.Key,
+                icon = RelayIcons.Key,
                 title = stringResource(R.string.dashboard_tile_keys_title),
                 subtitle = stringResource(R.string.dashboard_tile_keys_sub),
                 onClick = { onSelectSection(DashboardManagementSection.Keys) },
@@ -3300,7 +3288,7 @@ private fun DashboardOAuthSignInDialog(
                     }
                     IconButton(onClick = onDismiss) {
                         Icon(
-                            imageVector = Icons.Filled.Close,
+                            imageVector = RelayIcons.Close,
                             contentDescription = stringResource(R.string.dashboard_close_signin),
                         )
                     }
@@ -3635,7 +3623,7 @@ private fun ModelPickerDialog(
                                 )
                             } else {
                                 Icon(
-                                    imageVector = Icons.Filled.Refresh,
+                                    imageVector = RelayIcons.Refresh,
                                     contentDescription = null,
                                     modifier = Modifier.size(18.dp),
                                 )

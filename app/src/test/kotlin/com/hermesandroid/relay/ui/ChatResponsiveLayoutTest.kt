@@ -42,9 +42,11 @@ class ChatResponsiveLayoutTest {
     }
 
     @Test
-    fun focusVoiceSplitsOnlyOnExpandedLandscapeWindows() {
+    fun focusVoiceSplitsOnWideFoldableWindowsWithEnoughHeight() {
         assertTrue(useSplitVoiceLayout(screenWidthDp = 1280, screenHeightDp = 800))
-        assertFalse(useSplitVoiceLayout(screenWidthDp = 800, screenHeightDp = 1280))
-        assertFalse(useSplitVoiceLayout(screenWidthDp = 839, screenHeightDp = 600))
+        assertTrue(useSplitVoiceLayout(screenWidthDp = 800, screenHeightDp = 1280))
+        assertTrue(useSplitVoiceLayout(screenWidthDp = 720, screenHeightDp = 840))
+        assertFalse(useSplitVoiceLayout(screenWidthDp = 719, screenHeightDp = 840))
+        assertFalse(useSplitVoiceLayout(screenWidthDp = 900, screenHeightDp = 479))
     }
 }

@@ -21,6 +21,13 @@ import sys
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 FOCUSED_TESTS = (
+    "com.hermesandroid.relay.ui.ChatResponsiveLayoutTest",
+    "com.hermesandroid.relay.ui.ConnectNavigationTest",
+    "com.hermesandroid.relay.ui.components.ChatInputBarTest",
+    "com.hermesandroid.relay.ui.components.VoiceModeOverlayInteractionTest",
+    "com.hermesandroid.relay.ui.components.MessageBubbleInteractionTest",
+    "com.hermesandroid.relay.ui.components.MessageDeliveryContrastTest",
+    "com.hermesandroid.relay.screenshots.ConnectUiScreenshotTest",
     "com.hermesandroid.relay.viewmodel.InjectedContextTest",
     "com.hermesandroid.relay.screenshots.InjectedContextSheetTest",
     "com.hermesandroid.relay.viewmodel.ChatViewModelGatewayInboundTurnTest.injectedContextPreviewMatchesBareGatewayPayload",
@@ -110,9 +117,15 @@ def main() -> int:
     if not args.skip_lint and not args.release_prep:
         tasks.append("lint" if args.both_flavors else ":app:lintGooglePlayDebug")
     if not args.skip_tests:
-        tasks.append(":app:testSideloadDebugUnitTest")
+        test_tasks = [":app:testSideloadDebugUnitTest"]
         if args.both_flavors:
-            tasks.append(":app:testGooglePlayDebugUnitTest")
+            test_tasks.append(":app:testGooglePlayDebugUnitTest")
+        # Gradle task options belong to the immediately preceding task. Each
+        # flavor needs its own filters or the first flavor runs the entire suite.
+        for test_task in test_tasks:
+            tasks.append(test_task)
+            for test_name in selected_tests:
+                tasks.extend(("--tests", test_name))
     if not tasks:
         print("\nAndroid repository checks passed.")
         return 0
@@ -134,9 +147,6 @@ def main() -> int:
         "--configuration-cache",
         *tasks,
     ])
-    if not args.skip_tests:
-        for test_name in selected_tests:
-            gradle.extend(("--tests", test_name))
     label = (
         "Android release metadata and presentation tests"
         if args.release_prep

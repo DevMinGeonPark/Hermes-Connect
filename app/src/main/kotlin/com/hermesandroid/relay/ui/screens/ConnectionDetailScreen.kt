@@ -15,18 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Chat
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
@@ -36,6 +24,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -196,7 +185,7 @@ fun ConnectionDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = RelayIcons.ArrowBack,
                             contentDescription = stringResource(R.string.detail_back),
                         )
                     }
@@ -204,7 +193,7 @@ fun ConnectionDetailScreen(
                 actions = {
                     IconButton(onClick = { menuExpanded = true }) {
                         Icon(
-                            imageVector = Icons.Filled.MoreVert,
+                            imageVector = RelayIcons.MoreVert,
                             contentDescription = stringResource(R.string.detail_more_actions),
                         )
                     }
@@ -229,7 +218,7 @@ fun ConnectionDetailScreen(
                             },
                             leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Filled.QrCodeScanner,
+                                    imageVector = RelayIcons.QrCodeScanner,
                                     contentDescription = null,
                                 )
                             },
@@ -597,20 +586,20 @@ private fun ActiveOverview(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         OverviewCapabilityCard(
-            icon = Icons.Filled.Chat,
+            icon = RelayIcons.Chat,
             label = stringResource(R.string.conn_chat_label),
             status = chatStatus,
             modifier = Modifier.weight(1f),
         )
         OverviewCapabilityCard(
-            icon = Icons.Filled.Dashboard,
+            icon = RelayIcons.Dashboard,
             label = stringResource(R.string.conn_manage_label),
             status = manageStatus,
             modifier = Modifier.weight(1f),
             onClick = onOpenDashboard,
         )
         OverviewCapabilityCard(
-            icon = Icons.Filled.GraphicEq,
+            icon = RelayIcons.GraphicEq,
             label = stringResource(R.string.conn_voice_label),
             status = voiceStatus,
             modifier = Modifier.weight(1f),
@@ -626,7 +615,7 @@ private fun ActiveOverview(
 
     HorizontalDivider(modifier = Modifier.padding(top = 4.dp))
     OverviewOptionalRow(
-        icon = Icons.Filled.Link,
+        icon = RelayIcons.Link,
         label = stringResource(R.string.active_section_relay_connected_features),
         description = stringResource(R.string.active_section_relay_optional_summary),
         status = relayStatus,
@@ -634,7 +623,7 @@ private fun ActiveOverview(
     )
     HorizontalDivider()
     OverviewOptionalRow(
-        icon = Icons.Filled.Code,
+        icon = RelayIcons.Code,
         label = stringResource(R.string.api_fallback_title),
         description = stringResource(R.string.active_section_api_not_required),
         status = apiStatus,
@@ -737,7 +726,7 @@ private fun CurrentRouteOverviewCard(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Language,
+                    imageVector = RelayIcons.Language,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(26.dp),
@@ -752,7 +741,7 @@ private fun CurrentRouteOverviewCard(
                 }
                 TextButton(onClick = onEdit) {
                     Icon(
-                        imageVector = Icons.Filled.Edit,
+                        imageVector = RelayIcons.Edit,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
@@ -857,7 +846,7 @@ private fun OverviewOptionalRow(
             maxLines = 1,
         )
         Icon(
-            imageVector = Icons.Filled.ChevronRight,
+            imageVector = RelayIcons.ChevronRight,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(18.dp),

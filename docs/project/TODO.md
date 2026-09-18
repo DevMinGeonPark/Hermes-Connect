@@ -6,6 +6,29 @@ For shipped work, see `DEVLOG.md`. For architectural decisions, see `docs/decisi
 
 ---
 
+## Complete native UI device certification
+
+Verify the refreshed Chat/profile/navigation and split Voice Focus on a physical
+Fold8: outer/inner display transitions, hinge posture, keyboard, TalkBack,
+200% text, and returning to an unsent draft. Width-based Compose renders and
+an API 36 emulator do not certify the physical hinge or OEM lifecycle behavior.
+
+## Repair five existing Android unit-test failures
+
+The native UI audit reproduced five failures on the unchanged `f642597a` base:
+`ChatViewModelGatewayInboundTurnTest` has three profile display-name expectation
+failures (`explicitDefaultDraftUsesLiteralDefaultProfile`,
+`allProfilesSwitchBetweenDifferentOwnersReplacesVisibleIdentity`,
+`allProfilesOpenScopesHistoryResumeAndSendToSelectedOwner`).
+`VoiceViewModelBargeInTest`'s interaction-mode capture-release case and
+`VoiceViewModelRealtimeSessionFenceTest.queuedCancelDismissesWhenAcknowledgementNeverArrives`
+hit a null XML parser while resolving Android resources. Reconcile the former
+with current display-name rules and give the latter a resource-capable test
+environment. These are outside the native presentation change; the focused
+pre-push shard remains the required local gate.
+
+---
+
 ## Restore the plugin manifest v2 declaration after the Hermes installer fix ships
 
 Hermes installers in affected stable releases reject `manifest_version: 2`

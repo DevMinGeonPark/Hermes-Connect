@@ -28,35 +28,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Message
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.AccountTree
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.Extension
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Info
 // === PHASE3-safety-rails: bridge safety entry-point ===
-import androidx.compose.material.icons.filled.Security
 // === END PHASE3-safety-rails ===
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.NewReleases
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.PhoneAndroid
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -438,7 +418,7 @@ fun SettingsScreen(
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                imageVector = RelayIcons.ArrowBack,
                                 contentDescription = stringResource(R.string.settings_back),
                             )
                         }
@@ -461,7 +441,7 @@ fun SettingsScreen(
         ) {
             if (supervisedPolicy?.enabled == true && parentAccessUnlocked) {
                 SettingsCategoryRow(
-                    icon = Icons.Filled.Security,
+                    icon = RelayIcons.Security,
                     title = stringResource(R.string.settings_supervised_mode),
                     subtitle = stringResource(R.string.settings_supervised_on_profile, supervisedPolicy.pinnedProfileName.orEmpty()),
                     badge = SettingsStatusPillModel(
@@ -570,7 +550,7 @@ fun SettingsScreen(
             // layer everything else points at (standard + plugin), not a Hermes
             // feature — and the home for multi-connection.
             SettingsCategoryRow(
-                icon = Icons.Filled.Devices,
+                icon = RelayIcons.Devices,
                 title = stringResource(R.string.settings_connections),
                 subtitle = stringResource(R.string.settings_connections_desc),
                 onClick = onNavigateToConnections,
@@ -590,7 +570,7 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_hermes))
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Link,
+                icon = RelayIcons.Link,
                 title = stringResource(R.string.settings_hermes_management),
                 subtitle = stringResource(R.string.settings_hermes_management_desc),
                 badge = dashboardPill,
@@ -599,7 +579,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Extension,
+                icon = RelayIcons.Extension,
                 title = stringResource(R.string.plugins_title),
                 subtitle = stringResource(R.string.settings_plugins_desc),
                 onClick = onNavigateToPlugins,
@@ -607,7 +587,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.AccountTree,
+                icon = RelayIcons.AccountTree,
                 title = stringResource(R.string.settings_git_workspace),
                 subtitle = stringResource(
                     if (gitRepoScanningEnabled) {
@@ -621,7 +601,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.AutoMirrored.Filled.Chat,
+                icon = RelayIcons.Chat,
                 title = stringResource(R.string.settings_chat),
                 subtitle = stringResource(R.string.settings_chat_desc),
                 badge = chatPill,
@@ -630,7 +610,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Image,
+                icon = RelayIcons.Image,
                 title = stringResource(R.string.settings_media),
                 subtitle = stringResource(R.string.settings_media_desc),
                 onClick = onNavigateToMediaSettings,
@@ -638,7 +618,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.GraphicEq,
+                icon = RelayIcons.GraphicEq,
                 title = stringResource(R.string.settings_voice_mode),
                 subtitle = stringResource(R.string.settings_voice_mode_desc),
                 onClick = onNavigateToVoiceSettings,
@@ -648,7 +628,7 @@ fun SettingsScreen(
             SettingsSectionHeader(stringResource(R.string.settings_power_tools), trailing = pluginBadge)
 
             SettingsCategoryRow(
-                icon = Icons.AutoMirrored.Filled.Message,
+                icon = RelayIcons.Message,
                 title = stringResource(R.string.settings_threads),
                 subtitle = stringResource(R.string.settings_threads_desc),
                 onClick = onNavigateToProactiveSettings,
@@ -656,14 +636,14 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Code,
+                icon = RelayIcons.Code,
                 title = stringResource(R.string.settings_terminal),
                 subtitle = stringResource(R.string.settings_terminal_desc),                onClick = onNavigateToTerminal,
                 isDarkTheme = isDarkTheme,
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.PhoneAndroid,
+                icon = RelayIcons.PhoneAndroid,
                 title = if (BuildFlavor.isSideload) stringResource(R.string.settings_bridge) else stringResource(R.string.settings_bridge_core),
                 subtitle = if (BuildFlavor.isSideload) {
                     stringResource(R.string.settings_bridge_desc)
@@ -674,7 +654,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Devices,
+                icon = RelayIcons.Devices,
                 title = stringResource(R.string.settings_relay_sessions),
                 subtitle = stringResource(R.string.settings_relay_sessions_desc),                onClick = onNavigateToPairedDevices,
                 isDarkTheme = isDarkTheme,
@@ -682,7 +662,7 @@ fun SettingsScreen(
 
             // === PHASE3-notif-listener-followup: notification companion entry-point ===
             SettingsCategoryRow(
-                icon = Icons.Filled.Notifications,
+                icon = RelayIcons.Notifications,
                 title = stringResource(R.string.settings_notification_companion),
                 subtitle = stringResource(R.string.settings_notification_companion_desc),                onClick = onNavigateToNotificationCompanion,
                 isDarkTheme = isDarkTheme,
@@ -692,7 +672,7 @@ fun SettingsScreen(
             if (BuildFlavor.isSideload) {
                 // === PHASE3-safety-rails: bridge safety entry-point ===
                 SettingsCategoryRow(
-                    icon = Icons.Filled.Security,
+                    icon = RelayIcons.Security,
                     title = stringResource(R.string.settings_bridge_safety),
                     subtitle = stringResource(R.string.settings_bridge_safety_desc),
                     badge = SettingsStatusPillModel(
@@ -708,7 +688,7 @@ fun SettingsScreen(
             SettingsSectionHeader("App")
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Security,
+                icon = RelayIcons.Security,
                 title = stringResource(R.string.settings_permissions),
                 subtitle = stringResource(R.string.settings_permissions_desc),
                 onClick = onNavigateToPermissions,
@@ -716,7 +696,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Palette,
+                icon = RelayIcons.Palette,
                 title = stringResource(R.string.settings_appearance),
                 subtitle = stringResource(R.string.settings_appearance_desc),
                 onClick = onNavigateToAppearanceSettings,
@@ -724,7 +704,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Security,
+                icon = RelayIcons.Security,
                 title = stringResource(R.string.settings_advanced),
                 subtitle = when {
                     supervisedPolicy?.isActive == true -> "On · ${supervisedPolicy.pinnedProfileName}"
@@ -742,7 +722,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Analytics,
+                icon = RelayIcons.Analytics,
                 title = stringResource(R.string.settings_analytics),
                 subtitle = stringResource(R.string.settings_analytics_desc),
                 onClick = onNavigateToAnalytics,
@@ -750,7 +730,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Info,
+                icon = RelayIcons.Info,
                 title = stringResource(R.string.settings_diagnostics),
                 subtitle = stringResource(R.string.settings_diagnostics_desc),
                 onClick = onNavigateToDiagnostics,
@@ -759,7 +739,7 @@ fun SettingsScreen(
 
             if (devOptionsUnlocked) {
                 SettingsCategoryRow(
-                    icon = Icons.Filled.Code,
+                    icon = RelayIcons.Code,
                     title = stringResource(R.string.settings_developer_options),
                     subtitle = stringResource(R.string.settings_developer_options_desc),
                     onClick = onNavigateToDeveloperSettings,
@@ -768,7 +748,7 @@ fun SettingsScreen(
             }
 
             SettingsCategoryRow(
-                icon = Icons.Filled.NewReleases,
+                icon = RelayIcons.NewReleases,
                 title = stringResource(R.string.settings_whats_new),
                 subtitle = stringResource(R.string.settings_whats_new_desc),
                 onClick = { showChangelog = true },
@@ -776,7 +756,7 @@ fun SettingsScreen(
             )
 
             SettingsCategoryRow(
-                icon = Icons.Filled.Info,
+                icon = RelayIcons.Info,
                 title = stringResource(R.string.settings_about),
                 subtitle = stringResource(R.string.settings_about_desc),
                 onClick = onNavigateToAbout,
@@ -934,7 +914,7 @@ private fun ActiveAgentCard(
                 }
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = RelayIcons.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -974,7 +954,7 @@ private fun ProfileLockCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector = Icons.Filled.Lock,
+                imageVector = RelayIcons.Lock,
                 contentDescription = null,
                 tint = if (lockedDisplayName != null) {
                     MaterialTheme.colorScheme.primary
@@ -1000,7 +980,7 @@ private fun ProfileLockCard(
                 )
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = RelayIcons.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1433,7 +1413,7 @@ private fun ProviderUsageLandingCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Analytics,
+                    imageVector = RelayIcons.Analytics,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(22.dp),
@@ -1461,7 +1441,7 @@ private fun ProviderUsageLandingCard(
                 }
                 IconButton(onClick = onRefresh, enabled = !refreshing) {
                     Icon(
-                        imageVector = Icons.Filled.Refresh,
+                        imageVector = RelayIcons.Refresh,
                         contentDescription = stringResource(R.string.provider_usage_refresh),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1619,7 +1599,7 @@ internal fun SettingsCategoryRow(
                 }
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = RelayIcons.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )

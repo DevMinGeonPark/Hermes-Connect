@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Hermes Connect · Android 적용 화면</title>
+    <link rel="icon" href="assets/hermes.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="native.css" />
+  </head>
+  <body>
+    <header><a href="./">Hermes Connect</a><a class="back" href="./">디자인 시안으로</a></header>
+    <main>
+      <div class="intro">
+        <p class="eyebrow">ANDROID · FIRST BUILD</p>
+        <h1>손에 익는 도구로.</h1>
+        <p>Ionicons로 통일한 아이콘, 차분한 다크 모드,<br />프로필 중심의 대화와 Javis 음성 화면.</p>
+      </div>
+      <section aria-labelledby="app-title">
+        <h2 id="app-title">앱에서 확인한 화면</h2>
+        <p class="note">대화는 Android 16 에뮬레이터의 오프라인 데모, 프로필은 실제 컴포넌트에 예시 데이터를 넣은 화면입니다. 캡처를 누르면 원본을 볼 수 있습니다.</p>
+        <div class="gallery">
+          <figure><a href="assets/native/chat-dark.png"><img src="assets/native/chat-dark.png" alt="다크 모드의 실제 Android 대화 화면" /></a><figcaption>대화 · 다크<span>프로필, 새 대화, 더보기로 정리한 상단 메뉴.</span></figcaption></figure>
+          <figure><a href="assets/native/chat-light.png"><img src="assets/native/chat-light.png" alt="라이트 모드의 실제 Android 대화 화면" /></a><figcaption>대화 · 라이트<span>중립적인 배경과 파란색 보낸 메시지.</span></figcaption></figure>
+          <figure><a href="assets/native/profiles.png"><img src="assets/native/profiles.png" alt="프로필을 선택하는 Android 화면" /></a><figcaption>프로필 전환<span>프로필 이름과 현재 선택을 함께 확인합니다.</span></figcaption></figure>
+        </div>
+      </section>
+      <section aria-labelledby="voice-title">
+        <h2 id="voice-title">Javis 음성</h2>
+        <p class="note">앱의 실제 Compose 컴포넌트를 예시 상태로 렌더링했습니다. 마이크와 외부 음성 서비스는 호출하지 않았습니다.</p>
+        <div class="gallery">
+          <figure><a href="assets/native/voice-dark.png"><img loading="lazy" src="assets/native/voice-dark.png" alt="청록색 원과 마이크가 있는 다크 모드 음성 화면" /></a><figcaption>다크<span>음성 상태와 입력 크기에 반응하는 원형 표시.</span></figcaption></figure>
+          <figure><a href="assets/native/voice-light.png"><img loading="lazy" src="assets/native/voice-light.png" alt="라이트 모드의 Javis 음성 화면" /></a><figcaption>라이트<span>같은 구조를 밝은 배경에서도 유지합니다.</span></figcaption></figure>
+          <figure><a href="assets/native/voice-large-text.png"><img loading="lazy" src="assets/native/voice-large-text.png" alt="한국어 글자 크기 200퍼센트에서의 음성 화면" /></a><figcaption>큰 글자 · 200%<span>320dp의 좁은 화면에서도 음성 조작을 확인했습니다.</span></figcaption></figure>
+        </div>
+      </section>
+      <section aria-labelledby="fold-title">
+        <h2 id="fold-title">펼치면 넓게</h2>
+        <p class="note">720dp 너비에서 음성과 대화 내용을 나란히 배치합니다. Fold8 실기기의 힌지·접힘 전환 검증은 남아 있습니다.</p>
+        <figure class="wide"><a href="assets/native/voice-fold.png"><img loading="lazy" src="assets/native/voice-fold.png" alt="720dp 세로 화면에서 두 패널로 나뉜 음성 화면" /></a><figcaption>펼친 화면 · 음성<span>왼쪽은 음성 상태와 조작, 오른쪽은 대화 내용.</span></figcaption></figure>
+        <figure class="wide fold-chat"><a href="assets/native/chat-fold.png"><img loading="lazy" src="assets/native/chat-fold.png" alt="720dp 너비 에뮬레이터의 실제 대화 화면" /></a><figcaption>펼친 화면 · 대화<span>에뮬레이터에서 화면 크기를 바꾸며 같은 대화를 확인했습니다.</span></figcaption></figure>
+      </section>
+    </main>
+    <footer>검토용 첫 적용본 · 기존 연결 및 대화 기능을 사용하는 Android UI</footer>
+  </body>
+</html>

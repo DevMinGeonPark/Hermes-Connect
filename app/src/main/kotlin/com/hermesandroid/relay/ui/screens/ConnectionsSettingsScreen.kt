@@ -19,14 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Badge
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -37,6 +29,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -150,7 +143,7 @@ fun ConnectionsSettingsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = RelayIcons.ArrowBack,
                             contentDescription = stringResource(R.string.conn_back),
                         )
                     }
@@ -170,7 +163,7 @@ fun ConnectionsSettingsScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
-                    Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                    Icon(imageVector = RelayIcons.Add, contentDescription = null)
                     Text(
                         text = stringResource(R.string.gateway_add),
                         modifier = Modifier.padding(start = 8.dp),
@@ -292,7 +285,7 @@ private fun StartupConnectionSelector(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    imageVector = Icons.Filled.AccessTime,
+                    imageVector = RelayIcons.AccessTime,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(end = 12.dp),
@@ -306,7 +299,7 @@ private fun StartupConnectionSelector(
                     Text(text = selectedLabel, style = MaterialTheme.typography.bodyLarge)
                 }
                 Icon(
-                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    imageVector = RelayIcons.KeyboardArrowDown,
                     contentDescription = stringResource(R.string.conn_startup_choose),
                 )
             }
@@ -440,7 +433,7 @@ private fun ConnectionListCard(
                     .background(gatewayStatusColor(presentation.status)),
             )
             Icon(
-                imageVector = Icons.Filled.Dns,
+                imageVector = RelayIcons.Dns,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp),
@@ -512,7 +505,7 @@ private fun ConnectionListCard(
                             Text(stringResource(R.string.conn_switching), modifier = Modifier.padding(start = 6.dp))
                         }
                         justSwitched -> {
-                            Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(RelayIcons.CheckCircle, contentDescription = null, modifier = Modifier.size(16.dp))
                             Text(stringResource(R.string.conn_switched), modifier = Modifier.padding(start = 6.dp))
                         }
                         else -> Text(stringResource(R.string.conn_switch))
@@ -520,7 +513,7 @@ private fun ConnectionListCard(
                 }
             }
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = RelayIcons.KeyboardArrowRight,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )

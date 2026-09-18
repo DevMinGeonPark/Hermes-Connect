@@ -43,19 +43,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CenterFocusStrong
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.GraphicEq
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
+import com.hermesandroid.relay.ui.icons.RelayIcons
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
@@ -79,6 +68,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -94,6 +85,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.hermesandroid.relay.ui.theme.LocalBrand
 import androidx.compose.ui.zIndex
 import com.hermesandroid.relay.data.ChatMessage
 import com.hermesandroid.relay.data.HermesCardAction
@@ -202,6 +195,9 @@ fun VoiceModeOverlay(
     val surface = MaterialTheme.colorScheme.surface
     val haptic = LocalHapticFeedback.current
     val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    var focusHeaderHeightPx by remember { mutableStateOf(0) }
+    val focusTopPadding = maxOf(92.dp, with(density) { focusHeaderHeightPx.toDp() } + 8.dp)
     val responsiveLayout = chatResponsiveLayout(configuration.screenWidthDp)
     val splitFocusLayout = useSplitVoiceLayout(
         screenWidthDp = configuration.screenWidthDp,
@@ -326,6 +322,7 @@ fun VoiceModeOverlay(
                     .fillMaxWidth()
                     .statusBarsPadding()
                     .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .onSizeChanged { focusHeaderHeightPx = it.height }
                     .zIndex(2f)
                     .align(Alignment.TopCenter),
             )
@@ -408,7 +405,7 @@ fun VoiceModeOverlay(
                             .widthIn(max = responsiveLayout.focusVoiceMaxWidth ?: 1120.dp)
                             .fillMaxSize()
                             .navigationBarsPadding()
-                            .padding(top = 92.dp, bottom = 28.dp, start = 32.dp, end = 32.dp)
+                            .padding(top = focusTopPadding, bottom = 28.dp, start = 32.dp, end = 32.dp)
                             .testTag(VOICE_FOCUS_SPLIT_LAYOUT_TEST_TAG),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -452,7 +449,7 @@ fun VoiceModeOverlay(
                                 } ?: Modifier,
                             )
                             .fillMaxSize()
-                            .padding(top = 92.dp, bottom = 160.dp, start = 20.dp, end = 20.dp)
+                            .padding(top = focusTopPadding, bottom = 160.dp, start = 20.dp, end = 20.dp)
                             .testTag(VOICE_FOCUS_STACKED_LAYOUT_TEST_TAG),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
@@ -465,7 +462,7 @@ fun VoiceModeOverlay(
                             showMic = false,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f),
+                                .weight(1.35f),
                         )
                         VoiceFocusStatusAndTranscriptPane(
                             uiState = uiState,
@@ -483,7 +480,7 @@ fun VoiceModeOverlay(
                             horizontalContentPadding = 24.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1.25f),
+                                .weight(0.9f),
                         )
                     }
                 }
@@ -567,7 +564,7 @@ private fun VoiceErrorDialog(
         containerColor = MaterialTheme.colorScheme.surface,
         icon = {
             Icon(
-                imageVector = Icons.Default.ErrorOutline,
+                imageVector = RelayIcons.ErrorOutline,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.error,
             )
@@ -618,6 +615,15 @@ private fun VoiceFocusIdentityPane(
         modifier = modifier.testTag("voiceFocusIdentityPane"),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        Text(
+            text = "JAVIS",
+            style = MaterialTheme.typography.labelSmall,
+            letterSpacing = 3.sp,
+            color = LocalBrand.current.cyan,
+            modifier = Modifier.padding(top = 12.dp, bottom = 6.dp),
+        )
+        Text(conversationDockStateLabel(uiState.state), style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -625,24 +631,30 @@ private fun VoiceFocusIdentityPane(
             contentAlignment = Alignment.Center,
         ) {
             if (backgroundVisualizationEnabled) {
-                LocalAgentAvatar.current.Render(
-                    state = AvatarRenderState(
-                        state = voiceStateToSphereState(uiState.state),
-                        voiceAmplitude = uiState.amplitude,
-                        voiceMode = true,
-                    ),
-                    modifier = Modifier.fillMaxSize(),
-                )
+                if (LocalAgentAvatar.current.id == "sphere") {
+                    JavisVoiceSignal(uiState.state, uiState.amplitude, Modifier.fillMaxSize(), uiState.outputAudioActive)
+                } else {
+                    LocalAgentAvatar.current.Render(
+                        state = AvatarRenderState(
+                            state = voiceStateToSphereState(uiState.state),
+                            voiceAmplitude = uiState.amplitude,
+                            voiceMode = true,
+                        ),
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
-        VoiceWaveform(
-            amplitude = uiState.amplitude,
-            state = uiState.state,
-            outputAudioActive = uiState.outputAudioActive,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-        )
+        if (LocalAgentAvatar.current.id != "sphere") {
+            VoiceWaveform(
+                amplitude = uiState.amplitude,
+                state = uiState.state,
+                outputAudioActive = uiState.outputAudioActive,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+            )
+        }
         if (showMic) {
             Spacer(Modifier.height(16.dp))
             VoiceMicButton(
@@ -843,16 +855,16 @@ private fun VoiceMicButton(
         VoiceState.Speaking -> Color(0xFFE53935)
         VoiceState.Transcribing, VoiceState.Thinking -> Color(0xFFE53935)
         VoiceState.Error -> MaterialTheme.colorScheme.errorContainer
-        else -> MaterialTheme.colorScheme.primary
+        VoiceState.Idle -> LocalBrand.current.cyan.copy(alpha = 0.14f)
     }
 
     val icon = when (uiState.state) {
-        VoiceState.Listening -> Icons.Filled.Stop
-        VoiceState.Transcribing, VoiceState.Thinking -> Icons.Filled.Stop
+        VoiceState.Listening -> RelayIcons.Stop
+        VoiceState.Transcribing, VoiceState.Thinking -> RelayIcons.Stop
         // Stop icon makes the "tap to interrupt TTS" affordance obvious;
         // VolumeUp looked decorative and users didn't try tapping it.
-        VoiceState.Speaking -> Icons.Filled.Stop
-        else -> Icons.Filled.Mic
+        VoiceState.Speaking -> RelayIcons.Stop
+        else -> RelayIcons.Mic
     }
 
     val gestureModifier = when (uiState.interactionMode) {
@@ -874,7 +886,7 @@ private fun VoiceMicButton(
             .then(gestureModifier),
         shape = CircleShape,
         color = containerColor,
-        shadowElevation = 6.dp,
+        shadowElevation = 0.dp,
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
@@ -884,7 +896,11 @@ private fun VoiceMicButton(
                 } else {
                     micActionDescription
                 },
-                tint = Color.White,
+                tint = when (uiState.state) {
+                    VoiceState.Idle -> LocalBrand.current.cyan
+                    VoiceState.Error -> MaterialTheme.colorScheme.onErrorContainer
+                    else -> Color.White
+                },
                 modifier = Modifier.size(iconSize.dp),
             )
         }
@@ -1132,7 +1148,7 @@ fun ConversationVoiceDock(
                         modifier = Modifier.size(40.dp),
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Settings,
+                            imageVector = RelayIcons.Settings,
                             contentDescription = stringResource(R.string.voice_overlay_settings_cd),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -1180,7 +1196,7 @@ fun ConversationVoiceDock(
                     } else {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                imageVector = Icons.Filled.GraphicEq,
+                                imageVector = RelayIcons.GraphicEq,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(14.dp),
@@ -1228,7 +1244,7 @@ fun ConversationVoiceDock(
                         .testTag("conversationVoiceDockFocus"),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.CenterFocusStrong,
+                        imageVector = RelayIcons.CenterFocusStrong,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )
@@ -1246,7 +1262,7 @@ fun ConversationVoiceDock(
                         .testTag("conversationVoiceDockExpand"),
                 ) {
                     Icon(
-                        imageVector = if (expanded) Icons.Filled.ExpandMore else Icons.Filled.ExpandLess,
+                        imageVector = if (expanded) RelayIcons.ExpandMore else RelayIcons.ExpandLess,
                         contentDescription = if (expanded) {
                             stringResource(R.string.voice_overlay_collapse_cd)
                         } else {
@@ -1305,8 +1321,8 @@ private fun VoiceSessionPill(
         // translucent surface let the background bleed through and made the
         // dropdown text hard to read.
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 5.dp,
-        shadowElevation = 7.dp,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             Row(
@@ -1333,7 +1349,7 @@ private fun VoiceSessionPill(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Filled.GraphicEq,
+                        imageVector = RelayIcons.GraphicEq,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp),
@@ -1347,7 +1363,7 @@ private fun VoiceSessionPill(
                         maxLines = 1,
                     )
                     Text(
-                        text = "$engineText · $profileText",
+                        text = profileText,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -1364,7 +1380,7 @@ private fun VoiceSessionPill(
                     )
                 }
                 Icon(
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    imageVector = if (expanded) RelayIcons.ExpandLess else RelayIcons.ExpandMore,
                     contentDescription = if (expanded) stringResource(R.string.voice_overlay_collapse_cd) else stringResource(R.string.voice_overlay_expand_cd),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp),
@@ -1374,7 +1390,7 @@ private fun VoiceSessionPill(
                     modifier = Modifier.size(36.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Close,
+                        imageVector = RelayIcons.Close,
                         contentDescription = stringResource(R.string.voice_overlay_exit_cd),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(20.dp),
@@ -1485,7 +1501,7 @@ private fun VoiceSessionPill(
                             modifier = Modifier.size(40.dp),
                         ) {
                             Icon(
-                                imageVector = Icons.Filled.Settings,
+                                imageVector = RelayIcons.Settings,
                                 contentDescription = stringResource(R.string.voice_overlay_settings_cd),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -1638,7 +1654,7 @@ private fun VoiceRouteSummary(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Icon(
-                imageVector = Icons.Filled.GraphicEq,
+                imageVector = RelayIcons.GraphicEq,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(18.dp),
@@ -1974,9 +1990,9 @@ private fun VoiceRichResultAffordance(
             } else {
                 Icon(
                     imageVector = if (voiceRichResultUsesImageLabel(message, inlineImages.size)) {
-                        Icons.Filled.Image
+                        RelayIcons.Image
                     } else {
-                        Icons.Filled.Description
+                        RelayIcons.Description
                     },
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
@@ -2333,7 +2349,7 @@ private fun BackgroundRunChip(
                     modifier = Modifier.size(32.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.Close,
+                        imageVector = RelayIcons.Close,
                         // The VM treats ✕ on a DONE chip as a local dismiss,
                         // never a cancel — label it accordingly for TalkBack.
                         contentDescription = if (done) stringResource(R.string.common_dismiss) else stringResource(R.string.voice_overlay_cancel_task_cd),

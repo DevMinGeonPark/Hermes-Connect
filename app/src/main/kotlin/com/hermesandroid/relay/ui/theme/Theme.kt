@@ -29,7 +29,7 @@ import com.hermesandroid.relay.data.PersistedAppearance
  * @param themePreference mode axis — "auto" / "light" / "dark". Only meaningful
  *   for [ThemeMode.BOTH] themes; fixed-mode themes ignore it.
  * @param appFontId id from [AppFont]; selects the body typeface for the whole
- *   app. Defaults to Inter. Code/metadata styles stay monospaced regardless.
+ *   app. Defaults to the system font. Code blocks opt into monospace locally.
  * @param accentHex optional locally persisted RGB override for brand accents.
  */
 @Composable

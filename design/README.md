@@ -1,5 +1,9 @@
 # Hermes-Connect UI study
 
+The first [native Android implementation](native-ui.md) now has its own
+[capture gallery](uiux-preview/native.html), separate from the interactive web
+design studies below.
+
 Five interactive Korean design proposals for the Android companion. Revision 4
 combines light/dark appearance, separate profile contexts, official Ionicons
 with distinct outline/filled states, and a Javis-style voice assistant. Conversation, task, file, and note

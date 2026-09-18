@@ -46,8 +46,8 @@ enum class AppFont(
     }
 
     companion object {
-        /** Inter is the app default when nothing is persisted. */
-        val DEFAULT: AppFont = Inter
+        /** New installations use the platform typeface; saved choices are preserved. */
+        val DEFAULT: AppFont = System
 
         /** Resolve a persisted id back to an [AppFont]; unknown → [DEFAULT]. */
         fun byId(id: String?): AppFont = entries.firstOrNull { it.id == id } ?: DEFAULT
