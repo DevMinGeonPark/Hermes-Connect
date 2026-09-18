@@ -180,7 +180,7 @@ fun EndpointsCard(
         } else {
             Text(
                 text = currentRouteText.format(
-                    activeEndpoint.displayLabel(),
+                    activeEndpoint.localizedDisplayLabel(),
                     when {
                         manualSwitchActive -> manualUntilDisconnectText
                         manualOverrideRole != null -> preferredText
@@ -309,7 +309,7 @@ private fun EndpointRow(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
-                        text = candidate.displayLabel(),
+                        text = candidate.localizedDisplayLabel(),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f),
                         maxLines = 1,
@@ -533,7 +533,7 @@ private fun EndpointRow(
     if (confirmRemove && onRemove != null) {
         AlertDialog(
             onDismissRequest = { confirmRemove = false },
-            title = { Text(stringResource(R.string.endpoints_remove_route_title, candidate.displayLabel())) },
+            title = { Text(stringResource(R.string.endpoints_remove_route_title, candidate.localizedDisplayLabel())) },
             text = {
                 Text(
                     text = stringResource(R.string.endpoints_remove_route_body, candidate.routeAuthority().orEmpty()),

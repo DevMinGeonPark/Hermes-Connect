@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.viewmodel
 
+import com.hermesandroid.relay.util.localizedString
 import com.hermesandroid.relay.data.BusyMessageAction
 import com.hermesandroid.relay.data.canCorrectBusyMessage
 import android.content.Context
@@ -235,8 +236,9 @@ data class SessionDirectoryReadyEvent(
 internal fun modelInventoryFailureNotice(
     failure: Throwable,
     userInitiated: Boolean,
+    appContext: Context? = null,
 ): String? = if (userInitiated) {
-    "Couldn't refresh API model inventory: ${failure.message ?: "unknown error"}"
+    (appContext?.localizedString(R.string.runtime_fmt_couldn_t_refresh_api_model_inventory_1_s, failure.message ?: "unknown error") ?: "Couldn't refresh API model inventory: ${failure.message ?: "unknown error"}")
 } else {
     null
 }
@@ -398,8 +400,10 @@ internal fun voiceTurnTransportRejection(
     pendingPhoneThread: Boolean,
     activeSessionSource: String?,
     hasIsolatedContext: Boolean,
+    appContext: Context? = null,
 ): String? = if (hasIsolatedContext && (pendingPhoneThread || activeSessionSource == "phone")) {
-    "Voice screen context cannot be sent to a phone thread. Open a Hermes chat and try again."
+    appContext?.localizedString(R.string.runtime_voice_phone_context_blocked)
+        ?: "Voice screen context cannot be sent to a phone thread. Open a Hermes chat and try again."
 } else {
     null
 }
@@ -702,6 +706,7 @@ class ChatViewModel : ViewModel() {
     private val historyLoadGeneration = AtomicInteger(0)
     private val sessionRefreshGeneration = AtomicInteger(0)
     private val realtimeAgentUserMessages = mutableMapOf<String, String>()
+    private val realtimeAgentUserPlaceholderIds = mutableSetOf<String>()
     private val realtimeAgentInputTranscripts = mutableMapOf<String, StringBuilder>()
     private val realtimeAgentProviderBadges = mutableMapOf<String, String>()
     private val realtimeAgentToolCallIds = mutableMapOf<String, MutableSet<String>>()
@@ -1271,7 +1276,7 @@ class ChatViewModel : ViewModel() {
                 onFailure = {
                     android.util.Log.w("ChatViewModel", "model.options failed: ${it.message}")
                     if (refresh) {
-                        _transientNotice.tryEmit("Couldn't refresh models: ${it.message ?: "unknown error"}")
+                        _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_fmt_couldn_t_refresh_models_1_s, it.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "Couldn't refresh models: ${it.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"))
                     }
                 },
             )
@@ -1389,7 +1394,7 @@ class ChatViewModel : ViewModel() {
                         _approvalMode.value = previous
                         _approvalModeCapability.value = gateway.approvalModeCapability.value
                         chatHandler?.addSystemNotice(
-                            "Couldn't update profile approval mode: ${error.message ?: "gateway error"}",
+                            (appContext?.localizedString(R.string.runtime_fmt_couldn_t_update_profile_approval_mode_1_s, error.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")) ?: "Couldn't update profile approval mode: ${error.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")}"),
                         )
                     }
                 },
@@ -1557,7 +1562,7 @@ class ChatViewModel : ViewModel() {
                     val inventoryFailure = failure
                         ?: ApiModelRoutingException(
                             ApiModelRoutingErrorCode.INVENTORY_UNAVAILABLE,
-                            "Model inventory could not be loaded.",
+                            appContext?.localizedString(R.string.runtime_model_inventory_unavailable) ?: "Model inventory could not be loaded.",
                         )
                     DiagnosticsLog.record(
                         category = DiagnosticCategory.Api,
@@ -1572,7 +1577,7 @@ class ChatViewModel : ViewModel() {
                         ),
                         stacktrace = inventoryFailure.stackTraceToString(),
                     )
-                    modelInventoryFailureNotice(inventoryFailure, userInitiated)
+                    modelInventoryFailureNotice(inventoryFailure, userInitiated, appContext)
                         ?.let(_transientNotice::tryEmit)
                     return@launch
                 }
@@ -1613,7 +1618,7 @@ class ChatViewModel : ViewModel() {
                 _selectedProviderOverride.value = locked.provider
                 transitionReasoningEffortIdentity()
                 _transientNotice.tryEmit(
-                    "This session is locked to ${locked.model}. Start a new chat to use Server default.",
+                    (appContext?.localizedString(R.string.runtime_fmt_this_session_is_locked_to_1_s_start_a_new_chat_to_use_server_default, locked.model) ?: "This session is locked to ${locked.model}. Start a new chat to use Server default."),
                 )
                 return
             }
@@ -1629,7 +1634,7 @@ class ChatViewModel : ViewModel() {
         val handler = chatHandler
         if (streamingEndpoint == "gateway" && (gateway == null || handler == null)) {
             restoreModelSelection(previousModel, previousProvider)
-            _transientNotice.tryEmit("Couldn't switch model: Gateway is unavailable.")
+            _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_couldn_t_switch_model_gateway_is_unavailable) ?: "Couldn't switch model: Gateway is unavailable."))
             return
         }
         if (model.isNullOrBlank()) {
@@ -1652,11 +1657,11 @@ class ChatViewModel : ViewModel() {
                         requestValue = defaultModel,
                         previousModel = previousModel,
                         previousProvider = previousProvider,
-                        failurePrefix = "Couldn't switch to server default model",
+                        failurePrefix = (appContext?.localizedString(R.string.runtime_couldn_t_switch_to_server_default_model) ?: "Couldn't switch to server default model"),
                     )
                 } else {
                     restoreModelSelection(previousModel, previousProvider)
-                    _transientNotice.tryEmit("Couldn't resolve the server default model.")
+                    _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_couldn_t_resolve_the_server_default_model) ?: "Couldn't resolve the server default model."))
                 }
             }
             refreshActiveAgentName()
@@ -1681,7 +1686,7 @@ class ChatViewModel : ViewModel() {
                 requestValue = value,
                 previousModel = previousModel,
                 previousProvider = previousProvider,
-                failurePrefix = "Couldn't switch model",
+                failurePrefix = (appContext?.localizedString(R.string.runtime_couldn_t_switch_model) ?: "Couldn't switch model"),
             )
         }
         refreshActiveAgentName()
@@ -1705,7 +1710,7 @@ class ChatViewModel : ViewModel() {
                 .getOrElse { error ->
                     if (selectionRevision == modelSelectionRevision.get()) {
                         restoreModelSelection(previousModel, previousProvider)
-                        _transientNotice.tryEmit("$failurePrefix: ${error.message ?: "gateway unavailable"}")
+                        _transientNotice.tryEmit("$failurePrefix: ${error.message ?: (appContext?.localizedString(R.string.runtime_gateway_unavailable) ?: "gateway unavailable")}")
                     }
                     return@launch
                 }
@@ -1741,7 +1746,7 @@ class ChatViewModel : ViewModel() {
                             requestValue = requestValue,
                             message = result.stringValue("confirm_message")
                                 ?: result.stringValue("warning")
-                                ?: "This model requires confirmation.",
+                                ?: (appContext?.localizedString(R.string.runtime_this_model_requires_confirmation) ?: "This model requires confirmation."),
                             profileContextKey = requestProfileContextKey,
                             sessionId = requestSessionId,
                             previousModel = previousModel,
@@ -1766,7 +1771,7 @@ class ChatViewModel : ViewModel() {
                 onFailure = { error ->
                     if (selectionRevision != modelSelectionRevision.get()) return@fold
                     restoreModelSelection(previousModel, previousProvider)
-                    _transientNotice.tryEmit("$failurePrefix: ${error.message ?: "unknown error"}")
+                    _transientNotice.tryEmit("$failurePrefix: ${error.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}")
                 },
             )
         }
@@ -1794,7 +1799,7 @@ class ChatViewModel : ViewModel() {
             pending.sessionId != handler.currentSessionId.value
         ) {
             _modelSelectionConfirmation.value = null
-            _transientNotice.tryEmit("The chat changed before the model was confirmed. Choose it again.")
+            _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_the_chat_changed_before_the_model_was_confirmed_choose_it_again) ?: "The chat changed before the model was confirmed. Choose it again."))
             return
         }
         val selectionRevision = modelSelectionRevision.incrementAndGet()
@@ -1813,7 +1818,7 @@ class ChatViewModel : ViewModel() {
                         transitionReasoningEffortIdentity()
                         _transientNotice.tryEmit(
                             result.stringValue("confirm_message")
-                                ?: "Hermes did not accept the model confirmation.",
+                                ?: (appContext?.localizedString(R.string.runtime_hermes_did_not_accept_the_model_confirmation) ?: "Hermes did not accept the model confirmation."),
                         )
                         refreshActiveAgentName()
                         return@fold
@@ -1840,7 +1845,7 @@ class ChatViewModel : ViewModel() {
                     transitionReasoningEffortIdentity()
                     refreshActiveAgentName()
                     _transientNotice.tryEmit(
-                        "Couldn't switch model: ${error.message ?: "unknown error"}",
+                        (appContext?.localizedString(R.string.runtime_fmt_couldn_t_switch_model_1_s, error.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "Couldn't switch model: ${error.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"),
                     )
                 },
             )
@@ -1898,7 +1903,7 @@ class ChatViewModel : ViewModel() {
                 },
                 onFailure = { e ->
                     handler.addSystemNotice(
-                        "Couldn't switch reasoning effort: ${e.message ?: "unknown error"}",
+                        (appContext?.localizedString(R.string.runtime_fmt_couldn_t_switch_reasoning_effort_1_s, e.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "Couldn't switch reasoning effort: ${e.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"),
                     )
                     refreshReasoningSettings()
                 },
@@ -1966,7 +1971,7 @@ class ChatViewModel : ViewModel() {
                     // mid-flight switch may have already nulled it).
                     if (_yoloEnabled.value == enabled) _yoloEnabled.value = previous
                     handler.addSystemNotice(
-                        "Couldn't ${if (enabled) "enable" else "disable"} YOLO: ${e.message ?: "gateway error"}",
+                        (appContext?.localizedString(R.string.runtime_fmt_couldn_t_1_s_yolo_2_s, if (enabled) appContext?.localizedString(R.string.dashboard_action_enable) ?: "enable" else appContext?.localizedString(R.string.dashboard_action_disable) ?: "disable", e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")) ?: "Couldn't ${if (enabled) appContext?.localizedString(R.string.dashboard_action_enable) ?: "enable" else appContext?.localizedString(R.string.dashboard_action_disable) ?: "disable"} YOLO: ${e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")}"),
                     )
                 },
             )
@@ -2002,7 +2007,7 @@ class ChatViewModel : ViewModel() {
                 onFailure = { e ->
                     if (_fastEnabled.value == enabled) _fastEnabled.value = previous
                     handler.addSystemNotice(
-                        "Couldn't switch fast mode: ${e.message ?: "gateway error"}",
+                        (appContext?.localizedString(R.string.runtime_fmt_couldn_t_switch_fast_mode_1_s, e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")) ?: "Couldn't switch fast mode: ${e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")}"),
                     )
                 },
             )
@@ -2039,7 +2044,7 @@ class ChatViewModel : ViewModel() {
                 onSuccess = { _yoloEnabled.value = it },
                 onFailure = { e ->
                     chatHandler?.addSystemNotice(
-                        "Couldn't apply YOLO to the new chat: ${e.message ?: "gateway error"}",
+                        (appContext?.localizedString(R.string.runtime_fmt_couldn_t_apply_yolo_to_the_new_chat_1_s, e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")) ?: "Couldn't apply YOLO to the new chat: ${e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")}"),
                     )
                 },
             )
@@ -2315,11 +2320,11 @@ class ChatViewModel : ViewModel() {
             exact ?: GatewayProcess(
                 id = record.processId ?: record.sourceId,
                 command = if (supervisedModePolicy.enabled) {
-                    appContext?.getString(R.string.chat_activity_receipt_process) ?: "Background command"
+                    appContext?.localizedString(R.string.chat_activity_receipt_process) ?: "Background command"
                 } else record.title,
                 status = record.phase.name.lowercase(),
                 outputTail = if (supervisedModePolicy.enabled) null else processDetail?.take(4_000)
-                    ?: appContext?.getString(R.string.chat_activity_output_unavailable)
+                    ?: appContext?.localizedString(R.string.chat_activity_output_unavailable)
                     ?: "Output is no longer available. This entry preserves the recorded process status.",
                 exitCode = record.exitCode,
             )
@@ -3312,7 +3317,7 @@ class ChatViewModel : ViewModel() {
                         activeTurnCheckpointSeed?.liveSessionId =
                             client.currentLiveSessionId(storedSessionId)
                         handler.setTurnStatus(
-                            "Reconnected — queued: “${queuedPromptPreview(handoff.queuedUserText)}”",
+                            (appContext?.localizedString(R.string.runtime_fmt_reconnected_queued_1_s, queuedPromptPreview(handoff.queuedUserText)) ?: "Reconnected — queued: “${queuedPromptPreview(handoff.queuedUserText)}”"),
                         )
                         scheduleCheckpointWrite(immediate = true)
                     }
@@ -3747,7 +3752,7 @@ class ChatViewModel : ViewModel() {
                             reactions = persisted,
                         )
                     }
-                    _transientNotice.tryEmit(if (emoji == null) "Reaction removed." else "Reaction added.")
+                    _transientNotice.tryEmit(if (emoji == null) (appContext?.localizedString(R.string.runtime_reaction_removed) ?: "Reaction removed.") else (appContext?.localizedString(R.string.runtime_reaction_added) ?: "Reaction added."))
                 },
                 onFailure = { error ->
                     handler.mutateMessage(message.uiKey) { current ->
@@ -3755,9 +3760,9 @@ class ChatViewModel : ViewModel() {
                     }
                     if ((error as? GatewayRpcException)?.code == -32601) {
                         _messageReactionsSupported.value = false
-                        _transientNotice.tryEmit("Message reactions aren't supported by this gateway.")
+                        _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_message_reactions_aren_t_supported_by_this_gateway) ?: "Message reactions aren't supported by this gateway."))
                     } else {
-                        _transientNotice.tryEmit("Couldn't update reaction: ${error.message ?: "unknown error"}")
+                        _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_fmt_couldn_t_update_reaction_1_s, error.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "Couldn't update reaction: ${error.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"))
                     }
                 },
             )
@@ -3772,12 +3777,12 @@ class ChatViewModel : ViewModel() {
                 onSuccess = { result ->
                     val status = result.stringValue("status") ?: "queued"
                     _transientNotice.tryEmit(
-                        if (status == "rejected") "Subagent redirect was rejected."
-                        else "Subagent redirect queued.",
+                        if (status == "rejected") (appContext?.localizedString(R.string.runtime_subagent_redirect_was_rejected) ?: "Subagent redirect was rejected.")
+                        else (appContext?.localizedString(R.string.runtime_subagent_redirect_queued) ?: "Subagent redirect queued."),
                     )
                 },
                 onFailure = { error ->
-                    _transientNotice.tryEmit("Couldn't redirect subagent: ${error.message ?: "unknown error"}")
+                    _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_fmt_couldn_t_redirect_subagent_1_s, error.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "Couldn't redirect subagent: ${error.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"))
                 },
             )
         }
@@ -4162,7 +4167,7 @@ class ChatViewModel : ViewModel() {
         }
         if (requireProfileScope) {
             throw IllegalStateException(
-                "Profile-scoped conversation history is unavailable for this connection.",
+                (appContext?.localizedString(R.string.runtime_profile_scoped_conversation_history_is_unavailable_for_this_connection) ?: "Profile-scoped conversation history is unavailable for this connection."),
             )
         }
         return apiClient?.getMessages(sessionId, mode) ?: emptyList()
@@ -4192,7 +4197,7 @@ class ChatViewModel : ViewModel() {
                     _selectedPersonality.value = previous
                     refreshActiveAgentName()
                     chatHandler?.addSystemNotice(
-                        "Couldn't set personality: ${e.message ?: "gateway error"}"
+                        (appContext?.localizedString(R.string.runtime_fmt_couldn_t_set_personality_1_s, e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")) ?: "Couldn't set personality: ${e.message ?: (appContext?.localizedString(R.string.runtime_gateway_error) ?: "gateway error")}")
                     )
                 }
                 // On success the session.info echo + collector confirm the value.
@@ -4484,7 +4489,7 @@ class ChatViewModel : ViewModel() {
             return
         }
         val rawError = error.message?.takeIf { it.isNotBlank() }
-            ?: "The active profile's conversation history could not be reached."
+            ?: (appContext?.localizedString(R.string.runtime_the_active_profile_s_conversation_history_could_not_be_reached) ?: "The active profile's conversation history could not be reached.")
         _chatFailure.value = ChatFailureNotice(
             sessionId = sessionId,
             turnId = "history-$sessionId",
@@ -4844,7 +4849,7 @@ class ChatViewModel : ViewModel() {
                 startCheckpointHistoryRecovery(
                     handler,
                     droppedSseCheckpoint,
-                    "The chat route changed while the reply was in flight.",
+                    (appContext?.localizedString(R.string.runtime_the_chat_route_changed_while_the_reply_was_in_flight) ?: "The chat route changed while the reply was in flight."),
                 )
             }
         }
@@ -6230,9 +6235,9 @@ class ChatViewModel : ViewModel() {
         if (removedQueued > 0) {
             _transientNotice.tryEmit(
                 if (removedQueued == 1) {
-                    "A queued message was canceled because its chat was deleted."
+                    (appContext?.localizedString(R.string.runtime_a_queued_message_was_canceled_because_its_chat_was_deleted) ?: "A queued message was canceled because its chat was deleted.")
                 } else {
-                    "$removedQueued queued messages were canceled because their chat was deleted."
+                    (appContext?.localizedString(R.string.runtime_fmt_1_s_queued_messages_were_canceled_because_their_chat_was_deleted, removedQueued) ?: "$removedQueued queued messages were canceled because their chat was deleted.")
                 },
             )
         }
@@ -6276,7 +6281,7 @@ class ChatViewModel : ViewModel() {
                 // Restore on failure
                 handler.addSession(removedSession)
                 emitError(
-                    IllegalStateException("Profile-scoped session delete failed"),
+                    IllegalStateException((appContext?.localizedString(R.string.runtime_profile_scoped_session_delete_failed) ?: "Profile-scoped session delete failed")),
                     context = "delete_profile_session",
                 )
             }
@@ -6319,7 +6324,7 @@ class ChatViewModel : ViewModel() {
                 if (scoped != true) {
                     previousTitle?.let { handler.renameSessionLocal(sessionId, it) }
                     emitError(
-                        IllegalStateException("Profile-scoped session rename failed"),
+                        IllegalStateException((appContext?.localizedString(R.string.runtime_profile_scoped_session_rename_failed) ?: "Profile-scoped session rename failed")),
                         context = "rename_profile_session",
                     )
                 } else {
@@ -6357,7 +6362,7 @@ class ChatViewModel : ViewModel() {
         if (!supervisedModePolicy.allowsSessionAction(SupervisedSessionAction.Archive)) return
         if (!_sessionArchivingSupported.value) {
             emitError(
-                UnsupportedOperationException("Archive and restore require Dashboard sessions"),
+                UnsupportedOperationException((appContext?.localizedString(R.string.runtime_archive_and_restore_require_dashboard_sessions) ?: "Archive and restore require Dashboard sessions")),
                 context = "archive_session_unsupported",
             )
             return
@@ -6413,7 +6418,7 @@ class ChatViewModel : ViewModel() {
             } else {
                 localUpdate(handler, !target)
                 emitError(
-                    IllegalStateException("Server rejected the session metadata update"),
+                    IllegalStateException((appContext?.localizedString(R.string.runtime_server_rejected_the_session_metadata_update) ?: "Server rejected the session metadata update")),
                     context = errorContext,
                 )
             }
@@ -6428,7 +6433,7 @@ class ChatViewModel : ViewModel() {
             BusyMessageAction.CorrectNow,
     ) {
         if (text.isBlank()) return
-        supervisedMessageBlockReason(supervisedModePolicy, text)?.let { reason ->
+        supervisedMessageBlockReason(supervisedModePolicy, text, appContext)?.let { reason ->
             chatHandler?.addSystemNotice(reason)
             return
         }
@@ -6439,7 +6444,7 @@ class ChatViewModel : ViewModel() {
                 }
             ) {
                 chatHandler?.addSystemNotice(
-                    "One or more attachments are unavailable under the supervised policy.",
+                    (appContext?.localizedString(R.string.runtime_one_or_more_attachments_are_unavailable_under_the_supervised_policy) ?: "One or more attachments are unavailable under the supervised policy."),
                 )
                 return
             }
@@ -6479,9 +6484,9 @@ class ChatViewModel : ViewModel() {
             (streamingEndpoint == "gateway" && gatewayClient == null)
         ) {
             val message = if (streamingEndpoint == "gateway") {
-                "This chat belongs to the Hermes Dashboard. Sign in or reconnect, then retry."
+                (appContext?.localizedString(R.string.runtime_this_chat_belongs_to_the_hermes_dashboard_sign_in_or_reconnect_then_retry) ?: "This chat belongs to the Hermes Dashboard. Sign in or reconnect, then retry.")
             } else {
-                "API fallback is not configured for this connection."
+                (appContext?.localizedString(R.string.runtime_api_fallback_is_not_configured_for_this_connection) ?: "API fallback is not configured for this connection.")
             }
             // The composer clears after invoking Send. Keep its text in the
             // handler-owned retry slot even though no transport accepted it.
@@ -6560,7 +6565,7 @@ class ChatViewModel : ViewModel() {
                 SteerResult.Rejected, SteerResult.Failed -> {
                     if (activeStream != null) {
                         enqueueMessage(text)
-                        _steerNotice.value = "Queued — sends after this turn"
+                        _steerNotice.value = (appContext?.localizedString(R.string.runtime_queued_sends_after_this_turn) ?: "Queued — sends after this turn")
                     } else {
                         // Turn ended while the correction RPC was in flight —
                         // send it as a normal next-turn prompt instead.
@@ -6583,27 +6588,27 @@ class ChatViewModel : ViewModel() {
         onTransportAccepted: () -> Unit = { },
         onTransportFailed: (String) -> Unit = { },
     ): VoiceMessageSubmissionResult {
-        if (text.isBlank()) return VoiceMessageSubmissionResult.Rejected("Nothing was recorded.")
+        if (text.isBlank()) return VoiceMessageSubmissionResult.Rejected((appContext?.localizedString(R.string.runtime_nothing_was_recorded) ?: "Nothing was recorded."))
         if (demoModeProvider()) {
-            return VoiceMessageSubmissionResult.Rejected("Voice sending is unavailable in demo mode.")
+            return VoiceMessageSubmissionResult.Rejected((appContext?.localizedString(R.string.runtime_voice_sending_is_unavailable_in_demo_mode) ?: "Voice sending is unavailable in demo mode."))
         }
         val handler = chatHandler
-            ?: return VoiceMessageSubmissionResult.Rejected("Hermes chat is not ready.")
+            ?: return VoiceMessageSubmissionResult.Rejected((appContext?.localizedString(R.string.runtime_hermes_chat_is_not_ready) ?: "Hermes chat is not ready."))
         val client = apiClient
         if ((streamingEndpoint != "gateway" && client == null) ||
             (streamingEndpoint == "gateway" && gatewayClient == null)
         ) {
             return VoiceMessageSubmissionResult.Rejected(
                 if (streamingEndpoint == "gateway") {
-                    "This chat needs the Hermes Dashboard. Sign in or reconnect, then retry."
+                    (appContext?.localizedString(R.string.runtime_this_chat_needs_the_hermes_dashboard_sign_in_or_reconnect_then_retry) ?: "This chat needs the Hermes Dashboard. Sign in or reconnect, then retry.")
                 } else {
-                    "The direct API connection is unavailable."
+                    (appContext?.localizedString(R.string.runtime_the_direct_api_connection_is_unavailable) ?: "The direct API connection is unavailable.")
                 },
             )
         }
         if (activeStream != null || streamRecovery != null || handler.isStreaming.value) {
             return VoiceMessageSubmissionResult.Rejected(
-                "Hermes is still handling another turn. Your screen context was kept; try again.",
+                (appContext?.localizedString(R.string.runtime_hermes_is_still_handling_another_turn_your_screen_context_was_kept_try_again) ?: "Hermes is still handling another turn. Your screen context was kept; try again."),
             )
         }
         if (maybeHandleServerSlashCommand(text.trim())) {
@@ -6615,6 +6620,7 @@ class ChatViewModel : ViewModel() {
             pendingPhoneThread = pendingThread != null,
             activeSessionSource = activeThread?.source,
             hasIsolatedContext = hasScreenContext,
+            appContext = appContext,
         )?.let { return VoiceMessageSubmissionResult.Rejected(it) }
 
         val existingUserKeys = messages.value.asSequence()
@@ -6636,7 +6642,7 @@ class ChatViewModel : ViewModel() {
         val userUiKey = messages.value.lastOrNull {
             it.role == MessageRole.USER && it.uiKey !in existingUserKeys
         }?.uiKey ?: return VoiceMessageSubmissionResult.Rejected(
-            "Hermes could not create the voice turn. Your screen context was kept.",
+            (appContext?.localizedString(R.string.runtime_hermes_could_not_create_the_voice_turn_your_screen_context_was_kept) ?: "Hermes could not create the voice turn. Your screen context was kept."),
         )
         return VoiceMessageSubmissionResult.Submitted(userUiKey)
     }
@@ -6723,7 +6729,7 @@ class ChatViewModel : ViewModel() {
     ) {
         val handler = chatHandler ?: return
         if (supervisedModePolicy.enabled) {
-            handler.addSystemNotice("This action is unavailable in supervised mode.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_this_action_is_unavailable_in_supervised_mode) ?: "This action is unavailable in supervised mode."))
             return
         }
         // Ask answers route straight to the gateway respond RPCs —
@@ -6811,13 +6817,13 @@ class ChatViewModel : ViewModel() {
             GatewayAsk.Kind.APPROVAL -> HermesCard(
                 type = HermesCard.BuiltInTypes.ASK_APPROVAL,
                 title = if (ask.smartDenied) {
-                    appContext?.getString(R.string.chat_approval_smart_denied_title)
+                    appContext?.localizedString(R.string.chat_approval_smart_denied_title)
                         ?: "Smart DENY — owner override"
                 } else {
-                    appContext?.getString(R.string.chat_approval_title) ?: "Approval requested"
+                    appContext?.localizedString(R.string.chat_approval_title) ?: "Approval requested"
                 },
                 body = if (ask.smartDenied) {
-                    appContext?.getString(R.string.chat_approval_smart_denied_body)
+                    appContext?.localizedString(R.string.chat_approval_smart_denied_body)
                         ?: "The smart safety review denied this operation. You may override it once."
                 } else {
                     null
@@ -6830,7 +6836,7 @@ class ChatViewModel : ViewModel() {
 
             GatewayAsk.Kind.CLARIFY -> HermesCard(
                 type = HermesCard.BuiltInTypes.ASK_CLARIFY,
-                title = (appContext?.getString(R.string.chat_approval_clarify_title) ?: "Hermes needs clarification"),
+                title = (appContext?.localizedString(R.string.chat_approval_clarify_title) ?: "Hermes needs clarification"),
                 body = ask.text,
                 accent = HermesCard.Accents.INFO,
                 id = cardKey,
@@ -6849,7 +6855,7 @@ class ChatViewModel : ViewModel() {
 
             GatewayAsk.Kind.SUDO -> HermesCard(
                 type = HermesCard.BuiltInTypes.ASK_SUDO,
-                title = (appContext?.getString(R.string.chat_approval_sudo_title) ?: "Elevated permission requested"),
+                title = (appContext?.localizedString(R.string.chat_approval_sudo_title) ?: "Elevated permission requested"),
                 body = ask.text.takeIf { it != "Elevated permissions requested" },
                 accent = HermesCard.Accents.DANGER,
                 id = cardKey,
@@ -6863,7 +6869,7 @@ class ChatViewModel : ViewModel() {
                 // button (same wire shape as SECRET's Skip).
                 actions = listOf(
                     HermesCardAction(
-                        label = appContext?.getString(R.string.chat_approval_deny) ?: "Deny",
+                        label = appContext?.localizedString(R.string.chat_approval_deny) ?: "Deny",
                         value = "",
                         style = HermesCardAction.Styles.DANGER,
                         mode = HermesCardAction.Modes.SUBMIT_ASK,
@@ -6873,8 +6879,8 @@ class ChatViewModel : ViewModel() {
 
             GatewayAsk.Kind.SECRET -> HermesCard(
                 type = HermesCard.BuiltInTypes.ASK_SECRET,
-                title = (appContext?.getString(R.string.chat_approval_secret_title) ?: "Secret requested"),
-                subtitle = ask.envVar?.let { "Stored as $it" },
+                title = (appContext?.localizedString(R.string.chat_approval_secret_title) ?: "Secret requested"),
+                subtitle = ask.envVar?.let { (appContext?.localizedString(R.string.runtime_fmt_stored_as_1_s, it) ?: "Stored as $it") },
                 body = ask.text,
                 accent = HermesCard.Accents.WARNING,
                 id = cardKey,
@@ -6887,7 +6893,7 @@ class ChatViewModel : ViewModel() {
                 // so the wire's skip path has a button.
                 actions = listOf(
                     HermesCardAction(
-                        label = appContext?.getString(R.string.chat_approval_skip) ?: "Skip",
+                        label = appContext?.localizedString(R.string.chat_approval_skip) ?: "Skip",
                         value = "",
                         style = HermesCardAction.Styles.SECONDARY,
                         mode = HermesCardAction.Modes.SUBMIT_ASK,
@@ -6925,7 +6931,7 @@ class ChatViewModel : ViewModel() {
             pending.messageId,
             HermesCard(
                 type = HermesCard.BuiltInTypes.ASK_CLARIFY,
-                title = appContext?.getString(R.string.chat_approval_clarify_title) ?: "Hermes needs clarification",
+                title = appContext?.localizedString(R.string.chat_approval_clarify_title) ?: "Hermes needs clarification",
                 accent = HermesCard.Accents.INFO,
                 id = pending.cardKey,
                 clarifyBatch = HermesCardClarifyBatch(
@@ -6959,7 +6965,7 @@ class ChatViewModel : ViewModel() {
     private fun denySupervisedInteraction(handler: ChatHandler, ask: GatewayAsk) {
         val gateway = gatewayClient
         if (gateway == null) {
-            handler.addSystemNotice("An interactive request was blocked by supervised mode.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_an_interactive_request_was_blocked_by_supervised_mode) ?: "An interactive request was blocked by supervised mode."))
             cancelStream()
             return
         }
@@ -6972,7 +6978,7 @@ class ChatViewModel : ViewModel() {
                 GatewayAsk.Kind.SUDO -> ask.requestId?.let { gateway.respondSudo(it, "") }
                 GatewayAsk.Kind.SECRET -> ask.requestId?.let { gateway.respondSecret(it, "") }
             }
-            handler.addSystemNotice("An interactive request was denied by supervised mode.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_an_interactive_request_was_denied_by_supervised_mode) ?: "An interactive request was denied by supervised mode."))
             if (response == null || response.isFailure) cancelStream()
         }
     }
@@ -6991,11 +6997,11 @@ class ChatViewModel : ViewModel() {
         }
         return choices.map { choice ->
             val label = when (choice) {
-                "once" -> appContext?.getString(R.string.chat_approval_once) ?: "Approve once"
-                "session" -> appContext?.getString(R.string.chat_approval_session) ?: "Approve for session"
-                "always" -> appContext?.getString(R.string.chat_approval_always) ?: "Always approve"
-                "deny" -> appContext?.getString(R.string.chat_approval_deny) ?: "Deny"
-                else -> appContext?.getString(R.string.chat_approval_approve) ?: "Approve"
+                "once" -> appContext?.localizedString(R.string.chat_approval_once) ?: "Approve once"
+                "session" -> appContext?.localizedString(R.string.chat_approval_session) ?: "Approve for session"
+                "always" -> appContext?.localizedString(R.string.chat_approval_always) ?: "Always approve"
+                "deny" -> appContext?.localizedString(R.string.chat_approval_deny) ?: "Deny"
+                else -> appContext?.localizedString(R.string.chat_approval_approve) ?: "Approve"
             }
             HermesCardAction(
                 label = label,
@@ -7032,7 +7038,7 @@ class ChatViewModel : ViewModel() {
             pending.contextKey != activeProfileContextKey ||
             pending.sessionId != handler.currentSessionId.value
         ) {
-            handler.addSystemNotice("This request is no longer active.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_this_request_is_no_longer_active) ?: "This request is no longer active."))
             return
         }
         if (pending.ask.kind == GatewayAsk.Kind.CLARIFY && value.isBlank()) return
@@ -7045,7 +7051,7 @@ class ChatViewModel : ViewModel() {
         if (question != null && question.qid in pending.ask.answers) return
         val gateway = gatewayClient
         if (gateway == null) {
-            emitError(Exception("Gateway is not connected"), context = "send_message")
+            emitError(Exception((appContext?.localizedString(R.string.runtime_gateway_is_not_connected) ?: "Gateway is not connected")), context = "send_message")
             return
         }
         // Include the request incarnation so a late completion cannot unlock a reused id.
@@ -7204,7 +7210,7 @@ class ChatViewModel : ViewModel() {
         // At the local cap the oldest messages were trimmed — the computed
         // USER ordinal may undercount the server's and truncate wrong.
         if (snapshot.size >= ChatHandler.MAX_MESSAGES) {
-            handler.addSystemNotice("This conversation is too long to edit safely from the phone.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_this_conversation_is_too_long_to_edit_safely_from_the_phone) ?: "This conversation is too long to edit safely from the phone."))
             return false
         }
         val target = snapshot.firstOrNull { it.id == userMessageId } ?: return false
@@ -7216,7 +7222,7 @@ class ChatViewModel : ViewModel() {
         if (ordinal < 0) return false
         if (!handler.hasSafeGatewayRewindAddress(userMessageId)) {
             handler.addSystemNotice(
-                "Refresh this conversation before editing so Hermes can verify the exact message.",
+                (appContext?.localizedString(R.string.runtime_refresh_this_conversation_before_editing_so_hermes_can_verify_the_exact_message) ?: "Refresh this conversation before editing so Hermes can verify the exact message."),
             )
             return false
         }
@@ -7233,7 +7239,7 @@ class ChatViewModel : ViewModel() {
             val catalog = client.commandsCatalog().getOrNull() ?: return@launch
             // The client may have been swapped while the RPC was in flight.
             if (gatewayClient !== client) return@launch
-            _serverCommands.value = parseCommandsCatalog(catalog)
+            _serverCommands.value = parseCommandsCatalog(catalog, appContext)
         }
     }
 
@@ -7261,11 +7267,11 @@ class ChatViewModel : ViewModel() {
                 _openPersonalityPicker.tryEmit(Unit)
             } else if (AgentDisplay.isClearedPersonality(arg)) {
                 selectPersonality("none")
-                handler.addSystemNotice("Personality cleared — no overlay.")
+                handler.addSystemNotice((appContext?.localizedString(R.string.runtime_personality_cleared_no_overlay) ?: "Personality cleared — no overlay."))
             } else {
                 selectPersonality(arg.lowercase())
                 handler.addSystemNotice(
-                    "Personality → ${arg.trim().replaceFirstChar { it.uppercase() }}"
+                    (appContext?.localizedString(R.string.runtime_fmt_personality_1_s, arg.trim().replaceFirstChar { it.uppercase() }) ?: "Personality → ${arg.trim().replaceFirstChar { it.uppercase() }}")
                 )
             }
             return true
@@ -7280,25 +7286,25 @@ class ChatViewModel : ViewModel() {
         }
 
         if (streamingEndpoint != "gateway") {
-            handler.addSystemNotice("Slash commands are available when chat is using the Hermes gateway route.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_slash_commands_are_available_when_chat_is_using_the_hermes_gateway_route) ?: "Slash commands are available when chat is using the Hermes gateway route."))
             return true
         }
 
         val gateway = gatewayClient
         if (gateway == null) {
-            handler.addSystemNotice("Slash commands need the Hermes gateway connection. Check Manage sign-in and connection status.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_slash_commands_need_the_hermes_gateway_connection_check_manage_sign_in_and_conne) ?: "Slash commands need the Hermes gateway connection. Check Manage sign-in and connection status."))
             return true
         }
 
         if (shouldCompactCanonicalBotChat(normalizedName, canonicalBotChatMode)) {
-            handler.addSystemNotice("Bot Chat stays in one conversation — compacting its context instead.")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_bot_chat_stays_in_one_conversation_compacting_its_context_instead) ?: "Bot Chat stays in one conversation — compacting its context instead."))
             viewModelScope.launch {
                 runServerCompressCommand(gateway, handler, focusTopic = null)
             }
             return true
         }
 
-        mobileBlockedSlashNotice(normalizedName)?.let { notice ->
+        mobileBlockedSlashNotice(normalizedName, appContext)?.let { notice ->
             handler.addSystemNotice(notice)
             return true
         }
@@ -7317,7 +7323,7 @@ class ChatViewModel : ViewModel() {
                 normalizeSlashCommandName(it.command.removePrefix("/").substringBefore(' ')) == normalizedName
             }
             if (!known) {
-                handler.addSystemNotice("/$rawName is not available on this Hermes gateway. Use /commands to browse supported commands.")
+                handler.addSystemNotice((appContext?.localizedString(R.string.runtime_fmt_1_s_is_not_available_on_this_hermes_gateway_use_commands_to_browse_supported_com, rawName) ?: "/$rawName is not available on this Hermes gateway. Use /commands to browse supported commands."))
                 return@launch
             }
             runServerSlashCommand(gateway, handler, text, depth = 0)
@@ -7332,11 +7338,11 @@ class ChatViewModel : ViewModel() {
         val current = _serverCommands.value
         if (current.isNotEmpty()) return current
         val catalog = gateway.commandsCatalog(connectIfNeeded = true).getOrElse { e ->
-            handler.addSystemNotice("Slash commands are unavailable: ${e.message ?: "command catalog could not be loaded"}")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_fmt_slash_commands_are_unavailable_1_s, e.message ?: (appContext?.localizedString(R.string.runtime_command_catalog_could_not_be_loaded) ?: "command catalog could not be loaded")) ?: "Slash commands are unavailable: ${e.message ?: (appContext?.localizedString(R.string.runtime_command_catalog_could_not_be_loaded) ?: "command catalog could not be loaded")}"))
             return null
         }
         if (gatewayClient !== gateway) return null
-        val parsed = parseCommandsCatalog(catalog)
+        val parsed = parseCommandsCatalog(catalog, appContext)
         _serverCommands.value = parsed
         return parsed
     }
@@ -7347,7 +7353,7 @@ class ChatViewModel : ViewModel() {
         focusTopic: String?,
     ) {
         val invokedSessionId = handler.currentSessionId.value
-        handler.addSystemNotice("Compressing conversation context…")
+        handler.addSystemNotice((appContext?.localizedString(R.string.runtime_compressing_conversation_context) ?: "Compressing conversation context…"))
         gateway.compressSession(focusTopic).fold(
             onSuccess = { result ->
                 if (
@@ -7362,16 +7368,16 @@ class ChatViewModel : ViewModel() {
                     result.title?.let { title -> handler.renameSessionLocal(sessionId, title) }
                 }
                 val summary = when (result.status.lowercase()) {
-                    "aborted" -> "Compression aborted."
-                    "noop", "no_op" -> result.output ?: "Nothing to compress."
-                    "legacy" -> result.output ?: "Compression command sent through legacy slash support."
+                    "aborted" -> (appContext?.localizedString(R.string.runtime_compression_aborted) ?: "Compression aborted.")
+                    "noop", "no_op" -> result.output ?: (appContext?.localizedString(R.string.runtime_nothing_to_compress) ?: "Nothing to compress.")
+                    "legacy" -> result.output ?: (appContext?.localizedString(R.string.runtime_compression_command_sent_through_legacy_slash_support) ?: "Compression command sent through legacy slash support.")
                     else -> result.output ?: compressionSummary(result)
                 }
                 if (summary.isNotBlank()) handler.addSystemNotice(summary)
                 refreshSessions()
             },
             onFailure = { e ->
-                handler.addSystemNotice("/compress failed: ${e.message ?: "unknown error"}")
+                handler.addSystemNotice((appContext?.localizedString(R.string.runtime_fmt_compress_failed_1_s, e.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "/compress failed: ${e.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"))
             },
         )
     }
@@ -7382,10 +7388,10 @@ class ChatViewModel : ViewModel() {
         val removed = result.removed
         return when {
             before != null && after != null ->
-                "Context compressed — messages $before → $after."
+                (appContext?.localizedString(R.string.runtime_fmt_context_compressed_messages_1_s_2_s, before, after) ?: "Context compressed — messages $before → $after.")
             removed != null && removed > 0 ->
-                "Context compressed — removed $removed messages."
-            else -> "Context compressed."
+                (appContext?.localizedString(R.string.runtime_fmt_context_compressed_removed_1_s_messages, removed) ?: "Context compressed — removed $removed messages.")
+            else -> (appContext?.localizedString(R.string.runtime_context_compressed) ?: "Context compressed.")
         }
     }
 
@@ -7417,14 +7423,14 @@ class ChatViewModel : ViewModel() {
         depth: Int,
     ) {
         if (depth > 2) {
-            handler.addSystemNotice("Command alias loop detected: $commandLine")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_fmt_command_alias_loop_detected_1_s, commandLine) ?: "Command alias loop detected: $commandLine"))
             return
         }
         val name = commandLine.removePrefix("/").substringBefore(' ')
 
         val exec = gateway.slashExec(commandLine)
         exec.onSuccess { result ->
-            val output = result.stringValue("output") ?: "(no output)"
+            val output = result.stringValue("output") ?: (appContext?.localizedString(R.string.runtime_no_output) ?: "(no output)")
             val warning = result.stringValue("warning")
             handler.addSystemNotice(listOfNotNull(output, warning).joinToString("\n\n"))
             return
@@ -7437,7 +7443,7 @@ class ChatViewModel : ViewModel() {
         val fallThrough = code == 4018 ||
             failure?.message?.contains("no live session", ignoreCase = true) == true
         if (!fallThrough) {
-            handler.addSystemNotice("/$name failed: ${failure?.message ?: "unknown error"}")
+            handler.addSystemNotice((appContext?.localizedString(R.string.runtime_fmt_1_s_failed_2_s, name, failure?.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "/$name failed: ${failure?.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"))
             return
         }
 
@@ -7446,9 +7452,9 @@ class ChatViewModel : ViewModel() {
             onSuccess = { result ->
                 when (result.stringValue("type")) {
                     "exec", "plugin" ->
-                        handler.addSystemNotice(result.stringValue("output") ?: "(no output)")
+                        handler.addSystemNotice(result.stringValue("output") ?: (appContext?.localizedString(R.string.runtime_no_output) ?: "(no output)"))
                     "skill" ->
-                        handler.addSystemNotice(safeGatewayCommandDisplay(result, commandLine))
+                        handler.addSystemNotice(safeGatewayCommandDisplay(result, commandLine, appContext))
                     "alias" -> {
                         val target = result.stringValue("target")
                         if (target != null) {
@@ -7466,7 +7472,7 @@ class ChatViewModel : ViewModel() {
                             sendMessageInternal(
                                 client = apiClient,
                                 handler = handler,
-                                text = safeGatewayCommandDisplay(result, commandLine),
+                                text = safeGatewayCommandDisplay(result, commandLine, appContext),
                                 transportText = expandedMessage,
                             )
                         }
@@ -7476,11 +7482,11 @@ class ChatViewModel : ViewModel() {
                         result.stringValue("message")?.let { _composerPrefill.trySend(it) }
                     }
                     else ->
-                        handler.addSystemNotice(result.stringValue("output") ?: "Command completed.")
+                        handler.addSystemNotice(result.stringValue("output") ?: (appContext?.localizedString(R.string.runtime_command_completed) ?: "Command completed."))
                 }
             },
             onFailure = { e ->
-                handler.addSystemNotice("/$name failed: ${e.message ?: "unknown error"}")
+                handler.addSystemNotice((appContext?.localizedString(R.string.runtime_fmt_1_s_failed_2_s, name, e.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")) ?: "/$name failed: ${e.message ?: (appContext?.localizedString(R.string.runtime_unknown_error) ?: "unknown error")}"))
             },
         )
     }
@@ -7846,7 +7852,7 @@ class ChatViewModel : ViewModel() {
         publishQueuedMessages()
         if (droppedAttachmentQueue) {
             _transientNotice.tryEmit(
-                "A queued attachment message could not be restored. Review the attachment and send it again.",
+                (appContext?.localizedString(R.string.runtime_a_queued_attachment_message_could_not_be_restored_review_the_attachment_and_send) ?: "A queued attachment message could not be restored. Review the attachment and send it again."),
             )
         }
     }
@@ -8136,12 +8142,12 @@ class ChatViewModel : ViewModel() {
                     )
                     handler.setTurnStatus(
                         if (recovery.autoContinue != null) {
-                            "Resuming interrupted turn…"
+                            (appContext?.localizedString(R.string.runtime_resuming_interrupted_turn) ?: "Resuming interrupted turn…")
                         } else if (recovery.queued != null) {
-                            "Reconnected — Hermes is working · queued: “${queuedPromptPreview(recovery.queued.user)}”"
+                            (appContext?.localizedString(R.string.runtime_fmt_reconnected_hermes_is_working_queued_1_s, queuedPromptPreview(recovery.queued.user)) ?: "Reconnected — Hermes is working · queued: “${queuedPromptPreview(recovery.queued.user)}”")
                         } else {
                             checkpoint.turnStatus?.takeIf { it.isNotBlank() }
-                                ?: "Reconnected — Hermes is still working…"
+                                ?: (appContext?.localizedString(R.string.runtime_reconnected_hermes_is_still_working) ?: "Reconnected — Hermes is still working…")
                         },
                     )
                     restorePendingAsk(handler, checkpoint)
@@ -8367,7 +8373,7 @@ class ChatViewModel : ViewModel() {
         activeStream = null
         _recoveringAnswer.value = true
         handler.restoreInFlightTurn(checkpoint)
-        handler.setTurnStatus("Reconnecting to the active turn…")
+        handler.setTurnStatus((appContext?.localizedString(R.string.runtime_reconnecting_to_the_active_turn) ?: "Reconnecting to the active turn…"))
         scheduleCheckpointWrite(immediate = true)
         DiagnosticsLog.record(
             category = DiagnosticCategory.Api,
@@ -8404,7 +8410,7 @@ class ChatViewModel : ViewModel() {
                 if (streamRecovery === recovery && ownsTurnCheckpoint(checkpoint, handler)) {
                     handler.loadMessageHistory(items)
                     handler.restoreInFlightTurn(checkpoint)
-                    handler.setTurnStatus("Reconnecting to the active turn…")
+                    handler.setTurnStatus((appContext?.localizedString(R.string.runtime_reconnecting_to_the_active_turn) ?: "Reconnecting to the active turn…"))
                 }
             },
             onRecovered = { items ->
@@ -8426,11 +8432,11 @@ class ChatViewModel : ViewModel() {
                     _recoveringAnswer.value = false
                     val message = when (reason) {
                         ChatStreamRecovery.GiveUpReason.RUN_NOT_FOUND ->
-                            "The unfinished message was not found on the server — please resend."
+                            (appContext?.localizedString(R.string.runtime_the_unfinished_message_was_not_found_on_the_server_please_resend) ?: "The unfinished message was not found on the server — please resend.")
                         ChatStreamRecovery.GiveUpReason.TIMED_OUT ->
-                            "The unfinished reply did not complete in the recovery window."
+                            (appContext?.localizedString(R.string.runtime_the_unfinished_reply_did_not_complete_in_the_recovery_window) ?: "The unfinished reply did not complete in the recovery window.")
                         ChatStreamRecovery.GiveUpReason.HISTORY_UNAVAILABLE ->
-                            appContext?.getString(R.string.chat_profile_history_unavailable)
+                            appContext?.localizedString(R.string.chat_profile_history_unavailable)
                                 ?: "The active profile's conversation history could not be reached. Reconnect and try again."
                     }
                     clearTurnCheckpoint()
@@ -8555,11 +8561,11 @@ class ChatViewModel : ViewModel() {
         }
         cancelAnswerRecovery(settleUi = false)
         _recoveringAnswer.value = true
-        handler.setTurnStatus(appContext?.getString(R.string.chat_approval_reconnecting) ?: "Reconnecting to your answer…")
+        handler.setTurnStatus(appContext?.localizedString(R.string.chat_approval_reconnecting) ?: "Reconnecting to your answer…")
         DiagnosticsLog.record(
             category = DiagnosticCategory.Api,
             severity = DiagnosticSeverity.Warning,
-            title = (appContext?.getString(R.string.chat_approval_stream_dropped) ?: "Chat stream dropped — recovering the answer in the background"),
+            title = (appContext?.localizedString(R.string.chat_approval_stream_dropped) ?: "Chat stream dropped — recovering the answer in the background"),
             detail = cause,
         )
         // Positional invariant for the anchor (issue #166): how many user-role
@@ -8634,11 +8640,11 @@ class ChatViewModel : ViewModel() {
                     _recoveringAnswer.value = false
                     val message = when (reason) {
                         ChatStreamRecovery.GiveUpReason.RUN_NOT_FOUND ->
-                            "Connection dropped before the server received this message — please resend."
+                            (appContext?.localizedString(R.string.runtime_connection_dropped_before_the_server_received_this_message_please_resend) ?: "Connection dropped before the server received this message — please resend.")
                         ChatStreamRecovery.GiveUpReason.TIMED_OUT ->
-                            "Lost the connection mid-reply and the answer never arrived — check the server and try again."
+                            (appContext?.localizedString(R.string.runtime_lost_the_connection_mid_reply_and_the_answer_never_arrived_check_the_server_and) ?: "Lost the connection mid-reply and the answer never arrived — check the server and try again.")
                         ChatStreamRecovery.GiveUpReason.HISTORY_UNAVAILABLE ->
-                            appContext?.getString(R.string.chat_profile_history_unavailable)
+                            appContext?.localizedString(R.string.chat_profile_history_unavailable)
                                 ?: "The active profile's conversation history could not be reached. Reconnect and try again."
                     }
                     AppAnalytics.onStreamError()
@@ -8658,7 +8664,7 @@ class ChatViewModel : ViewModel() {
         val activeOwnerRunId = activeQueueOwnerRunId
         if (contextKey == null || sessionId == null || activeOwnerRunId == null) {
             _transientNotice.tryEmit(
-                "This message could not be queued because the active chat destination is not available.",
+                (appContext?.localizedString(R.string.runtime_this_message_could_not_be_queued_because_the_active_chat_destination_is_not_avai) ?: "This message could not be queued because the active chat destination is not available."),
             )
             return
         }
@@ -8847,7 +8853,7 @@ class ChatViewModel : ViewModel() {
      */
     fun takeQueuedForEdit(index: Int): String? {
         if (_pendingAttachments.value.isNotEmpty()) {
-            _transientNotice.tryEmit("Finish the current attachment draft before editing a queued message.")
+            _transientNotice.tryEmit((appContext?.localizedString(R.string.runtime_finish_the_current_attachment_draft_before_editing_a_queued_message) ?: "Finish the current attachment draft before editing a queued message."))
             return null
         }
         val destination = currentQueueDestination() ?: return null
@@ -8878,7 +8884,7 @@ class ChatViewModel : ViewModel() {
             queuedMessageItems.removeAll { it.id == next.id }
             publishQueuedMessages()
             _transientNotice.tryEmit(
-                "A queued message was not sent because this chat's route changed.",
+                (appContext?.localizedString(R.string.runtime_a_queued_message_was_not_sent_because_this_chat_s_route_changed) ?: "A queued message was not sent because this chat's route changed."),
             )
             return
         }
@@ -9030,7 +9036,7 @@ class ChatViewModel : ViewModel() {
             )
         } else {
             if (client == null) {
-                handler.onStreamError("API fallback is not configured for this connection.")
+                handler.onStreamError((appContext?.localizedString(R.string.runtime_api_fallback_is_not_configured_for_this_connection) ?: "API fallback is not configured for this connection."))
                 return
             }
             viewModelScope.launch {
@@ -9081,8 +9087,8 @@ class ChatViewModel : ViewModel() {
                         handler.renameSessionLocal(session.id, autoTitle)
                     },
                     onFailure = { error ->
-                        val message = error.message?.let { "Failed to create chat session: $it" }
-                            ?: "Failed to create chat session"
+                        val message = error.message?.let { (appContext?.localizedString(R.string.runtime_fmt_failed_to_create_chat_session_1_s, it) ?: "Failed to create chat session: $it") }
+                            ?: (appContext?.localizedString(R.string.runtime_failed_to_create_chat_session) ?: "Failed to create chat session")
                         handler.onStreamError(message)
                         emitError(error, context = "send_message")
                     }
@@ -9094,13 +9100,16 @@ class ChatViewModel : ViewModel() {
     fun startRealtimeAgentTurn(userText: String, chatSessionId: String?): String {
         val handler = chatHandler ?: return UUID.randomUUID().toString()
         AppAnalytics.onMessageSent()
-        val trimmed = userText.trim().ifBlank { "Listening..." }
+        val trimmed = userText.trim().ifBlank {
+            appContext?.localizedString(R.string.voice_overlay_listening) ?: "Listening..."
+        }
         val userMessageId = UUID.randomUUID().toString()
         val assistantMessageId = "realtime-agent-${UUID.randomUUID()}"
         synchronized(terminalRealtimeAgentTurnIdsLock) {
             terminalRealtimeAgentTurnIds.remove(assistantMessageId)
         }
         realtimeAgentUserMessages[assistantMessageId] = userMessageId
+        if (userText.isBlank()) realtimeAgentUserPlaceholderIds.add(userMessageId)
         realtimeAgentInputTranscripts[assistantMessageId] = StringBuilder()
         realtimeAgentToolCallIds[assistantMessageId] = mutableSetOf()
         realtimeAgentHermesBacked[assistantMessageId] = false
@@ -9184,7 +9193,7 @@ class ChatViewModel : ViewModel() {
                 ?.trim()
                 .orEmpty()
             if (existing.isBlank()) {
-                handler.replaceMessageContent(assistantMessageId, "Cancelled.")
+                handler.replaceMessageContent(assistantMessageId, (appContext?.localizedString(R.string.runtime_cancelled) ?: "Cancelled."))
             } else {
                 handler.markStopped(assistantMessageId)
             }
@@ -9207,7 +9216,7 @@ class ChatViewModel : ViewModel() {
                     it.role == MessageRole.USER &&
                         it.id != userMessageId &&
                         it.content.isNotBlank() &&
-                        !it.content.equals("Listening...", ignoreCase = true)
+                        it.id !in realtimeAgentUserPlaceholderIds
                 }
                 ?.content
             userMessageId?.let(handler::removeMessage)
@@ -9227,11 +9236,7 @@ class ChatViewModel : ViewModel() {
         assistantMessageId: String,
     ) {
         val userMessageId = realtimeAgentUserMessages[assistantMessageId] ?: return
-        val current = handler.messages.value
-            .firstOrNull { it.id == userMessageId }
-            ?.content
-            ?.trim()
-        if (current == "Listening...") {
+        if (userMessageId in realtimeAgentUserPlaceholderIds) {
             handler.removeMessage(userMessageId)
         }
     }
@@ -9247,7 +9252,7 @@ class ChatViewModel : ViewModel() {
                 terminalRealtimeAgentTurnIds.remove(oldest)
             }
         }
-        realtimeAgentUserMessages.remove(assistantMessageId)
+        realtimeAgentUserMessages.remove(assistantMessageId)?.let(realtimeAgentUserPlaceholderIds::remove)
         realtimeAgentInputTranscripts.remove(assistantMessageId)
         realtimeAgentProviderBadges.remove(assistantMessageId)
         realtimeAgentToolCallIds.remove(assistantMessageId)
@@ -9295,9 +9300,9 @@ class ChatViewModel : ViewModel() {
             ?.content
             ?.replace(Regex("\\s+"), " ")
             ?.trim()
-            ?.takeUnless { it.equals("Listening...", ignoreCase = true) }
+            ?.takeUnless { userMessageId in realtimeAgentUserPlaceholderIds }
             .orEmpty()
-        if (objective.isBlank()) return "Background task"
+        if (objective.isBlank()) return (appContext?.localizedString(R.string.runtime_background_task) ?: "Background task")
         return if (objective.length <= BACKGROUND_TASK_TITLE_LIMIT) {
             objective
         } else {
@@ -9311,7 +9316,7 @@ class ChatViewModel : ViewModel() {
             .replace('-', ' ')
             .replace(Regex("\\s+"), " ")
             .trim()
-        return if (label.isBlank()) "Working…" else "Running $label…"
+        return if (label.isBlank()) (appContext?.localizedString(R.string.cw_pair_in_progress) ?: "Working…") else (appContext?.localizedString(R.string.runtime_fmt_running_1_s, label) ?: "Running $label…")
     }
 
     fun applyRealtimeAgentEvent(
@@ -9388,7 +9393,7 @@ class ChatViewModel : ViewModel() {
                 if (event.type == "voice.response.started") {
                     handler.updateBackgroundTask(assistantMessageId) { task ->
                         if (task.phase == BackgroundTaskPhase.DELIVERING) {
-                            task.copy(statusLine = "Delivering the answer…")
+                            task.copy(statusLine = (appContext?.localizedString(R.string.runtime_delivering_the_answer) ?: "Delivering the answer…"))
                         } else {
                             task
                         }
@@ -9403,6 +9408,7 @@ class ChatViewModel : ViewModel() {
                     .getOrPut(assistantMessageId) { StringBuilder() }
                     .append(transcript)
                     .toString()
+                realtimeAgentUserPlaceholderIds.remove(userMessageId)
                 handler.replaceMessageContent(userMessageId, accumulated)
                 handler.setLastSentMessage(accumulated)
             }
@@ -9410,6 +9416,7 @@ class ChatViewModel : ViewModel() {
                 val userMessageId = realtimeAgentUserMessages[assistantMessageId] ?: return
                 val transcript = event.text?.takeIf { it.isNotBlank() } ?: return
                 realtimeAgentInputTranscripts[assistantMessageId] = StringBuilder(transcript)
+                realtimeAgentUserPlaceholderIds.remove(userMessageId)
                 handler.replaceMessageContent(userMessageId, transcript)
                 handler.setLastSentMessage(transcript)
             }
@@ -9460,7 +9467,7 @@ class ChatViewModel : ViewModel() {
                     }
                 }
                 if (showDetailedTrace) {
-                    realtimeProgressThinkingLine(event)?.let { message ->
+                    realtimeProgressThinkingLine(event, appContext)?.let { message ->
                         appendRealtimeThinkingStatus(
                             handler = handler,
                             assistantMessageId = assistantMessageId,
@@ -9493,7 +9500,7 @@ class ChatViewModel : ViewModel() {
                     ),
                 )
                 if (showDetailedTrace) {
-                    realtimeProgressThinkingLine(event)?.let { message ->
+                    realtimeProgressThinkingLine(event, appContext)?.let { message ->
                         appendRealtimeThinkingStatus(
                             handler = handler,
                             assistantMessageId = assistantMessageId,
@@ -9568,7 +9575,7 @@ class ChatViewModel : ViewModel() {
                     messageId = assistantMessageId,
                     toolCallId = callId,
                     resultPreview = event.resultPreview
-                        ?.let(::compactRealtimeToolResultPreview)
+                        ?.let { compactRealtimeToolResultPreview(it, appContext = appContext) }
                         ?.takeIf { showDetailedTrace },
                     provenance = "Provider-generated spoken summary after Hermes result",
                 )
@@ -9595,7 +9602,7 @@ class ChatViewModel : ViewModel() {
             }
             "hermes.confirmation.requested" -> {
                 realtimeAgentHermesBacked[assistantMessageId] = true
-                val prompt = event.message ?: "Waiting for confirmation"
+                val prompt = event.message ?: (appContext?.localizedString(R.string.runtime_waiting_for_confirmation) ?: "Waiting for confirmation")
                 handler.setMessageBadges(
                     assistantMessageId,
                     realtimeBadges(
@@ -9654,13 +9661,13 @@ class ChatViewModel : ViewModel() {
                         task.copy(
                             phase = BackgroundTaskPhase.FAILED,
                             statusLine = event.message?.takeIf { it.isNotBlank() }
-                                ?: "Background task failed.",
+                                ?: (appContext?.localizedString(R.string.runtime_background_task_failed) ?: "Background task failed."),
                             queuedCount = event.queuedCount ?: task.queuedCount,
                         )
                     } else {
                         task.copy(
                             phase = BackgroundTaskPhase.DELIVERING,
-                            statusLine = "Done — delivering the answer…",
+                            statusLine = (appContext?.localizedString(R.string.runtime_done_delivering_the_answer) ?: "Done — delivering the answer…"),
                             queuedCount = event.queuedCount ?: task.queuedCount,
                         )
                     }
@@ -9713,12 +9720,12 @@ class ChatViewModel : ViewModel() {
                 // Don't clobber a delivered answer: the cancel confirm can
                 // arrive after the summary already streamed into this bubble
                 // (chip-cancel racing completion, or a stale confirm). Only a
-                // bubble with no real content becomes "Cancelled."; anything
+                // A bubble without real content displays the localized cancellation message; anything
                 // else keeps its text and gets the Stopped badge instead.
                 handler.updateBackgroundTask(assistantMessageId) { task ->
                     task.copy(
                         phase = BackgroundTaskPhase.CANCELLED,
-                        statusLine = "Cancelled.",
+                        statusLine = (appContext?.localizedString(R.string.runtime_cancelled) ?: "Cancelled."),
                     )
                 }
                 removeRealtimeAgentUserPlaceholder(
@@ -9731,7 +9738,7 @@ class ChatViewModel : ViewModel() {
                     ?.trim()
                     .orEmpty()
                 if (existingContent.isBlank()) {
-                    handler.replaceMessageContent(assistantMessageId, "Cancelled.")
+                    handler.replaceMessageContent(assistantMessageId, (appContext?.localizedString(R.string.runtime_cancelled) ?: "Cancelled."))
                 } else {
                     handler.markStopped(assistantMessageId)
                 }
@@ -9745,14 +9752,14 @@ class ChatViewModel : ViewModel() {
                     task.copy(
                         phase = BackgroundTaskPhase.FAILED,
                         statusLine = event.message?.takeIf { it.isNotBlank() }
-                            ?: "Voice connection failed.",
+                            ?: (appContext?.localizedString(R.string.runtime_voice_connection_failed) ?: "Voice connection failed."),
                     )
                 }
                 removeRealtimeAgentUserPlaceholder(
                     handler = handler,
                     assistantMessageId = assistantMessageId,
                 )
-                handler.onStreamError(event.message ?: "Realtime agent failed")
+                handler.onStreamError(event.message ?: (appContext?.localizedString(R.string.voice_test_status_agent_failed) ?: "Realtime agent failed"))
                 if (realtimeAgentPendingDeliveryOwner == assistantMessageId) {
                     clearRealtimeAgentBackgroundOwnership(assistantMessageId)
                 }
@@ -10495,7 +10502,7 @@ class ChatViewModel : ViewModel() {
         }
         val onPreflightErrorCb = { error: Throwable ->
             val errorMsg = error.message
-                ?: "Model routing could not be confirmed before sending."
+                ?: (appContext?.localizedString(R.string.runtime_model_routing_could_not_be_confirmed_before_sending) ?: "Model routing could not be confirmed before sending.")
             markTransportFailed(errorMsg)
             stopImageActivityBridge()
             flushAndReleaseStreamDeltas()
@@ -10605,11 +10612,11 @@ class ChatViewModel : ViewModel() {
             val names = dropped.joinToString(", ") {
                 it.fileName ?: if (it.isImage) "image" else "file"
             }
-            val noun = if (dropped.size == 1) "attachment" else "attachments"
+
             handler.addSystemNotice(
-                "⚠ Couldn't send your $noun ($names) over this connection — " +
-                    "attachments are delivered over the gateway transport. " +
-                    "Your message was sent as text.",
+                appContext?.localizedString(R.string.runtime_attachment_dropped, names)
+                    ?: "⚠ Couldn't send your attachments ($names) over this connection — " +
+                        "attachments are delivered over the gateway transport. Your message was sent as text.",
             )
         }
 
@@ -10617,7 +10624,7 @@ class ChatViewModel : ViewModel() {
         // Warns once per dispatch about any attachment it can't carry.
         fun dispatchSse(endpoint: String): ActiveTurnHandle? {
             val sseClient = client ?: run {
-                onErrorCb("The direct API connection is unavailable.")
+                onErrorCb((appContext?.localizedString(R.string.runtime_the_direct_api_connection_is_unavailable) ?: "The direct API connection is unavailable."))
                 return null
             }
             val prepared = prepareTextTransportAttachments(message, attachments.orEmpty())
@@ -10766,7 +10773,7 @@ class ChatViewModel : ViewModel() {
             // the local transcript/draft and exposes Retry; it never dispatches
             // the turn into the API server's different session database.
             gateway == null -> {
-                onErrorCb("This chat belongs to the Hermes Dashboard. Sign in or reconnect, then retry.")
+                onErrorCb((appContext?.localizedString(R.string.runtime_this_chat_belongs_to_the_hermes_dashboard_sign_in_or_reconnect_then_retry) ?: "This chat belongs to the Hermes Dashboard. Sign in or reconnect, then retry."))
                 null
             }
 
@@ -11117,7 +11124,7 @@ class ChatViewModel : ViewModel() {
             updateAttachmentByToken(handler, messageId, token) { att ->
                 att.copy(
                     state = AttachmentState.FAILED,
-                    errorMessage = "Media pipeline not ready"
+                    errorMessage = (appContext?.localizedString(R.string.runtime_media_pipeline_not_ready) ?: "Media pipeline not ready")
                 )
             }
             return
@@ -11255,7 +11262,7 @@ class ChatViewModel : ViewModel() {
     suspend fun resolveServerImage(serverPath: String): ServerImageResult {
         if (supervisedModePolicy.enabled &&
             !supervisedModePolicy.capabilities.generatedImages
-        ) return ServerImageResult.Failure("Generated images are disabled in supervised mode")
+        ) return ServerImageResult.Failure((appContext?.localizedString(R.string.runtime_generated_images_are_disabled_in_supervised_mode) ?: "Generated images are disabled in supervised mode"))
         val routeOwner = activeProfileContextKey
         val historyGeneration = historyLoadGeneration.get()
         val upstreamMediaClient = dashboardMediaClientProvider?.invoke()
@@ -11269,7 +11276,7 @@ class ChatViewModel : ViewModel() {
             routeOwner != activeProfileContextKey ||
             historyGeneration != historyLoadGeneration.get()
         ) {
-            return ServerImageResult.Failure("Connection changed while loading image")
+            return ServerImageResult.Failure((appContext?.localizedString(R.string.runtime_connection_changed_while_loading_image) ?: "Connection changed while loading image"))
         }
         return result.fold(
             onSuccess = { fetched ->
@@ -11280,15 +11287,15 @@ class ChatViewModel : ViewModel() {
                         fetched.fileName,
                     )?.toString()
                     if (cachedUri == null) {
-                        ServerImageResult.Failure("Media cache is unavailable")
+                        ServerImageResult.Failure((appContext?.localizedString(R.string.runtime_media_cache_is_unavailable) ?: "Media cache is unavailable"))
                     } else {
                         ServerImageResult.Success(cachedUri, fetched.sensitive)
                     }
                 } catch (error: Exception) {
-                    ServerImageResult.Failure(error.message ?: "Image cache failed")
+                    ServerImageResult.Failure(error.message ?: (appContext?.localizedString(R.string.runtime_image_cache_failed) ?: "Image cache failed"))
                 }
             },
-            onFailure = { ServerImageResult.Failure(it.message ?: "Image unavailable") },
+            onFailure = { ServerImageResult.Failure(it.message ?: (appContext?.localizedString(R.string.runtime_image_unavailable) ?: "Image unavailable")) },
         )
     }
 
@@ -11297,7 +11304,7 @@ class ChatViewModel : ViewModel() {
             messageId = messageId,
             originalPath = originalPath,
             expectedRole = MessageRole.ASSISTANT,
-            unavailableMessage = "Media pipeline not ready",
+            unavailableMessage = (appContext?.localizedString(R.string.runtime_media_pipeline_not_ready) ?: "Media pipeline not ready"),
         )
     }
 
@@ -11313,7 +11320,7 @@ class ChatViewModel : ViewModel() {
             messageId = messageId,
             originalPath = originalPath,
             expectedRole = MessageRole.USER,
-            unavailableMessage = "Image unavailable on this connection",
+            unavailableMessage = (appContext?.localizedString(R.string.runtime_image_unavailable_on_this_connection) ?: "Image unavailable on this connection"),
         )
     }
 
@@ -11412,7 +11419,7 @@ class ChatViewModel : ViewModel() {
     ): Result<InboundFetchedMedia> {
         if (upstream != null) {
             val cache = mediaCacheWriter
-                ?: return Result.failure(IOException("Media cache is unavailable"))
+                ?: return Result.failure(IOException((appContext?.localizedString(R.string.runtime_media_cache_is_unavailable) ?: "Media cache is unavailable")))
             val context = appContext
                 ?: return Result.failure(IOException("Application context is unavailable"))
             val staging = File.createTempFile("hermes-media-", ".part", context.cacheDir)
@@ -11505,7 +11512,7 @@ class ChatViewModel : ViewModel() {
         val result = try {
             withTimeout(MEDIA_FETCH_TIMEOUT_MS) { fetch(maxBytes) }
         } catch (e: TimeoutCancellationException) {
-            Result.failure(java.io.IOException("Media download timed out"))
+            Result.failure(java.io.IOException((appContext?.localizedString(R.string.runtime_media_download_timed_out) ?: "Media download timed out")))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -11523,9 +11530,8 @@ class ChatViewModel : ViewModel() {
                     updateAttachmentByToken(handler, messageId, fetchKey, expectedRole = expectedRole) { att ->
                         att.copy(
                             state = AttachmentState.FAILED,
-                            errorMessage = "File too large (%.1f MB, max %d MB)".format(
-                                sizeMb, settings.maxInboundSizeMb
-                            ),
+                            errorMessage = appContext?.localizedString(R.string.runtime_file_size_limit, sizeMb, settings.maxInboundSizeMb)
+                                ?: "File too large (%.1f MB, max %d MB)".format(sizeMb, settings.maxInboundSizeMb),
                             contentType = fetched.contentType,
                             fileName = fetched.fileName ?: att.fileName,
                             fileSize = fetched.sizeBytes
@@ -11988,7 +11994,7 @@ private fun Attachment.toGatewayAttachment(): GatewayAttachment {
  * supplies grouping where the server provides it, everything else lands in
  * the palette's "server" bucket. Pure for unit-testability.
  */
-internal fun parseCommandsCatalog(catalog: JsonObject): List<SlashCommand> {
+internal fun parseCommandsCatalog(catalog: JsonObject, appContext: Context? = null): List<SlashCommand> {
     val categoryByName = mutableMapOf<String, String>()
     (catalog["categories"] as? JsonArray)?.forEach { element ->
         val obj = element as? JsonObject ?: return@forEach
@@ -12025,7 +12031,7 @@ internal fun parseCommandsCatalog(catalog: JsonObject): List<SlashCommand> {
         val skill = skillMetadata[name.lowercase()]
         out += SlashCommand(
             command = name,
-            description = description.ifBlank { "Server command" },
+            description = description.ifBlank { appContext?.localizedString(R.string.runtime_server_command) ?: "Server command" },
             category = categoryByName[name.lowercase()] ?: SlashCommand.CATEGORY_SERVER,
             source = SlashCommand.SOURCE_SERVER,
             usageRank = skill?.first ?: 0,
@@ -12104,9 +12110,10 @@ private fun normalizeSlashCommandName(rawName: String): String? {
     return normalized.takeIf { commandNameChars }
 }
 
-internal fun mobileBlockedSlashNotice(normalizedName: String): String? =
+internal fun mobileBlockedSlashNotice(normalizedName: String, appContext: Context? = null): String? =
     when (normalizedName.replace('_', '-').lowercase()) {
-        "update" -> "/update is only available from messaging platforms. Run `hermes update` from the terminal."
+        "update" -> appContext?.localizedString(R.string.runtime_update_messaging_only)
+            ?: "/update is only available from messaging platforms. Run `hermes update` from the terminal."
         else -> null
     }
 
@@ -12124,7 +12131,7 @@ private fun JsonObject?.booleanValue(vararg keys: String): Boolean? {
 
 private val compactPreviewJson = Json { ignoreUnknownKeys = true }
 
-private fun realtimeProgressThinkingLine(event: RealtimeVoiceEvent): String? {
+private fun realtimeProgressThinkingLine(event: RealtimeVoiceEvent, appContext: Context?): String? {
     val message = (event.message ?: event.delta)
         ?.replace(Regex("\\s+"), " ")
         ?.trim()
@@ -12132,7 +12139,7 @@ private fun realtimeProgressThinkingLine(event: RealtimeVoiceEvent): String? {
         ?: return null
     if (looksLikeRawRealtimeToolOutput(message)) return null
     return if (message.equals("Hermes is still working.", ignoreCase = true)) {
-        "Waiting for Hermes response."
+        (appContext?.localizedString(R.string.runtime_waiting_for_hermes_response) ?: "Waiting for Hermes response.")
     } else {
         message.take(180)
     }
@@ -12144,8 +12151,8 @@ private fun looksLikeRawRealtimeToolOutput(line: String): Boolean {
     return rawMarkers.count { marker -> line.contains(marker) } >= 2
 }
 
-internal fun compactRealtimeToolResultPreview(raw: String, maxChars: Int = 700): String {
-    summarizeStructuredToolPreview(raw)?.let { return it.limitPreview(maxChars) }
+internal fun compactRealtimeToolResultPreview(raw: String, maxChars: Int = 700, appContext: Context? = null): String {
+    summarizeStructuredToolPreview(raw, appContext)?.let { return it.limitPreview(maxChars) }
     val compact = raw
         .replace(Regex("\\s+"), " ")
         .trim()
@@ -12153,45 +12160,45 @@ internal fun compactRealtimeToolResultPreview(raw: String, maxChars: Int = 700):
     return compact.take(maxChars.coerceAtLeast(80)).trimEnd() + "..."
 }
 
-private fun summarizeStructuredToolPreview(raw: String): String? {
+private fun summarizeStructuredToolPreview(raw: String, appContext: Context?): String? {
     val trimmed = raw.trim()
     if (trimmed.isBlank() || trimmed.firstOrNull() !in setOf('{', '[')) return null
     val parsed = runCatching { compactPreviewJson.parseToJsonElement(trimmed) }.getOrNull()
     return when (parsed) {
-        is JsonObject -> summarizeToolPreviewObject(parsed)
-        is JsonArray -> "Structured result: ${parsed.size} items returned"
+        is JsonObject -> summarizeToolPreviewObject(parsed, appContext)
+        is JsonArray -> (appContext?.localizedString(R.string.runtime_fmt_structured_result_1_s_items_returned, parsed.size) ?: "Structured result: ${parsed.size} items returned")
         else -> null
     }
 }
 
-private fun summarizeToolPreviewObject(obj: JsonObject): String? {
+private fun summarizeToolPreviewObject(obj: JsonObject, appContext: Context?): String? {
     val name = obj.stringValue("name") ?: obj.stringValue("tool_name")
     val description = obj.stringValue("description")
     if (!name.isNullOrBlank() && !description.isNullOrBlank()) {
-        return "Loaded $name: ${description.compactWords()}"
+        return (appContext?.localizedString(R.string.runtime_fmt_loaded_1_s_2_s, name, description.compactWords()) ?: "Loaded $name: ${description.compactWords()}")
     }
 
     val output = obj.stringValue("output")
     if (!output.isNullOrBlank()) {
         val compact = output.compactWords()
         return if (compact.length <= 180) {
-            "Command output: $compact"
+            (appContext?.localizedString(R.string.runtime_fmt_command_output_1_s, compact) ?: "Command output: $compact")
         } else {
-            "Command output returned (${compact.length} chars)"
+            (appContext?.localizedString(R.string.runtime_fmt_command_output_returned_1_s_chars, compact.length) ?: "Command output returned (${compact.length} chars)")
         }
     }
 
     val error = obj.stringValue("error") ?: obj.stringValue("message")
     if (!error.isNullOrBlank()) {
-        return "Tool returned: ${error.compactWords()}"
+        return (appContext?.localizedString(R.string.runtime_fmt_tool_returned_1_s, error.compactWords()) ?: "Tool returned: ${error.compactWords()}")
     }
 
     val keys = obj.keys.take(5).joinToString(", ")
-    return if (keys.isBlank()) null else "Structured result: $keys"
+    return if (keys.isBlank()) null else (appContext?.localizedString(R.string.runtime_fmt_structured_result_1_s, keys) ?: "Structured result: $keys")
 }
 
-internal fun safeGatewayCommandDisplay(result: JsonObject, literalInvocation: String): String {
-    val literal = literalInvocation.trim().ifBlank { "Command completed." }
+internal fun safeGatewayCommandDisplay(result: JsonObject, literalInvocation: String, appContext: Context? = null): String {
+    val literal = literalInvocation.trim().ifBlank { (appContext?.localizedString(R.string.runtime_command_completed) ?: "Command completed.") }
     return (result["display"] as? JsonPrimitive)
         ?.contentOrNull
         ?.trim()

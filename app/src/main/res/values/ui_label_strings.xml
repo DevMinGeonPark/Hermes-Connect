@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- These labels previously used hardcoded English. Existing locales retain
+     that fallback; check-android-locales.py requires complete Korean coverage. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="ui_label_dashboard_gateway">Dashboard &amp; Gateway</string>
+    <string name="ui_label_https_dashboard">HTTPS Dashboard</string>
+    <string name="ui_label_mixed">Mixed</string>
+    <string name="ui_label_self_hosted_oidc">Self-hosted OIDC</string>
+    <string name="ui_label_password">Password</string>
+    <string name="ui_label_custom_route">Custom route (%1$s)</string>
+    <string name="ui_label_date">Date</string>
+    <string name="ui_label_created">Created</string>
+    <string name="ui_label_pr_open">Open</string>
+    <string name="ui_label_pr_draft">Draft</string>
+    <string name="ui_label_pr_merged">Merged</string>
+    <string name="ui_label_pr_closed">Closed</string>
+    <string name="ui_label_no_pr">No PR</string>
+    <string name="ui_label_branch">Branch</string>
+    <string name="ui_label_no_project">No project</string>
+    <string name="ui_label_last_week">Last 7 days</string>
+    <string name="ui_label_older">Older</string>
+    <string name="ui_label_preset_hands_free">Continuous listening, exact answers, detailed trace, and low-noise spoken progress after 15 seconds. Your barge-in choice is preserved.</string>
+    <string name="ui_label_preset_fast">Tap capture, the shortest supported silence window, a persistent session, and a fast visual handoff for long work.</string>
+    <string name="ui_label_preset_careful">Hold-to-talk, uninterrupted foreground tool runs, a detailed trace, and exact result delivery.</string>
+    <string name="ui_label_preset_quiet">Manual capture with visual long-task handoffs and results. Normal short voice replies still speak.</string>
+    <string name="ui_label_trigger_app">app %1$s</string>
+    <string name="ui_label_trigger_title">title contains “%1$s”</string>
+    <string name="ui_label_trigger_text">text contains “%1$s”</string>
+    <string name="ui_label_trigger_no_filters">No filters set</string>
+    <string name="ui_label_trigger_default">Ask me about matching notifications</string>
+    <string name="ui_label_reset_now">now</string>
+    <string name="ui_label_reset_days">%1$dd %2$dh</string>
+    <string name="ui_label_reset_hours">%1$dh %2$dm</string>
+    <string name="ui_label_reset_minutes">%1$dm</string>
+    <string name="ui_label_trigger_posted">Prompt posted</string>
+    <string name="ui_label_trigger_permission">Skipped: notification permission missing</string>
+    <string name="ui_label_trigger_failed">Skipped: prompt failed (%1$s)</string>
+    <string name="ui_label_mcp_servers">MCP servers</string>
+    <string name="ui_label_ui_metadata">UI metadata</string>
+    <string name="ui_label_release_candidate">RELEASE CANDIDATE</string>
+    <string name="ui_label_review_candidate">REVIEW CANDIDATE</string>
+    <string name="ui_label_local_review">Local review</string>
+    <string name="ui_label_candidate_track">%1$s Candidate</string>
+    <string name="ui_label_image_pair_relay">Server image — pair the relay to show it.</string>
+    <string name="ui_label_image_unsupported_path">Unsupported image path: %1$s</string>
+    <string name="ui_label_image_rejected">Unsupported or oversized inline image.</string>
+    <string name="ui_label_image_on_server">This image is on the server and cannot be shown here.</string>
+    <string name="ui_label_image">Image</string>
+    <string name="ui_label_image_tap_open">Tap to open · %1$s</string>
+    <string name="ui_label_transport_offline_detail">No reachable Hermes chat transport is available.</string>
+    <string name="ui_label_transport_unavailable_detail">%1$s: unavailable on the current connection.</string>
+    <string name="ui_label_transport_gateway_detail">Hermes Chat uses the signed-in Dashboard connection.</string>
+    <string name="ui_label_transport_sessions_detail">Direct API compatibility chat with server-side session history.</string>
+    <string name="ui_label_transport_completions_detail">Direct API compatibility chat.</string>
+    <string name="ui_label_transport_runs_detail">Direct API compatibility chat with streamed run events.</string>
+    <string name="ui_label_gateway_connected">Gateway connected</string>
+    <string name="ui_label_gateway_sign_in">Gateway sign-in required</string>
+    <string name="ui_label_gateway_unavailable">Gateway unavailable</string>
+    <string name="ui_label_gateway_unsupported">Gateway unsupported</string>
+    <string name="ui_label_gateway_checking">Checking Gateway</string>
+    <string name="ui_label_gateway_ready">Gateway ready</string>
+    <string name="ui_label_direct_selected">Direct API selected</string>
+    <string name="ui_label_direct_unavailable">Direct API unavailable</string>
+</resources>

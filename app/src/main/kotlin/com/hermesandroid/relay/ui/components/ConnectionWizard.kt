@@ -3470,13 +3470,13 @@ private fun ConfirmStep(
             c.hasSecureProxy() || c.relay?.url?.startsWith("wss://") == true || c.api?.tls == true ||
                 c.relay?.transportHint.equals("wss", ignoreCase = true) ||
                 c.dashboard?.url?.startsWith("https://", ignoreCase = true) == true
-        }?.displayLabel()
+        }?.localizedDisplayLabel()
     val firstInsecureLabel = endpoints
         .firstOrNull { c ->
             c.relay?.url?.startsWith("ws://") == true ||
                 c.relay?.transportHint.equals("ws", ignoreCase = true) ||
                 c.dashboard?.url?.startsWith("http://", ignoreCase = true) == true
-        }?.displayLabel()
+        }?.localizedDisplayLabel()
     val distinctRoles = endpoints.map { it.role }.distinct()
     var preferRole by remember(payload) { mutableStateOf<String?>(null) }
     var preferMenuOpen by remember { mutableStateOf(false) }
@@ -4073,7 +4073,7 @@ private fun EndpointPreviewRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
-                    text = candidate.displayLabel(),
+                    text = candidate.localizedDisplayLabel(),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 SoftPill(

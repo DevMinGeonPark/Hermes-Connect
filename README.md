@@ -1,3 +1,15 @@
+# Hermes-Connect
+
+Hermes-Connect is an Android companion for Hermes, based on
+[Hermes-Relay](https://github.com/Codename-11/hermes-relay).
+It adds Korean to the existing language choices. Select **Settings → Appearance →
+Language → 한국어**, or use Android's per-app language settings. Existing languages
+remain available. Commands, protocol identifiers, and content supplied by your
+agent or server retain their original meaning.
+
+The original project's setup and architecture documentation follows below;
+upstream store and release links refer to Hermes-Relay.
+
 <p align="center">
   <img src="assets/readme-hero-v2.jpg" alt="Hermes-Relay — Your Hermes agent. Wherever you are. Android, Voice, Desktop." width="1000">
 </p>

@@ -372,7 +372,7 @@ fun VoiceSettingsScreen(
         if (client == null || priorPromotion == null) {
             scope.launch {
                 snackbarHost.showSnackbar(
-                    "Realtime Agent background settings must be available before applying a preset.",
+                    context.getString(R.string.ko_voice_preset_unavailable),
                 )
             }
             return
@@ -426,8 +426,7 @@ fun VoiceSettingsScreen(
                         )
                     } else {
                         snackbarHost.showSnackbar(
-                            "Preset partly applied: Relay settings changed, but phone " +
-                                "settings could not be saved. Reapply a preset to recover.",
+                            context.getString(R.string.ko_voice_preset_partial),
                         )
                     }
                     return@launch
@@ -708,9 +707,9 @@ internal fun VoiceSettingsTabs(
                     ) {
                         Text(
                             when (section) {
-                                VoiceSettingsSection.Output -> "Output"
-                                VoiceSettingsSection.Listening -> "Listening"
-                                VoiceSettingsSection.Advanced -> "Advanced"
+                                VoiceSettingsSection.Output -> stringResource(R.string.voice_settings_voice_output_label)
+                                VoiceSettingsSection.Listening -> stringResource(R.string.voice_overlay_state_listening)
+                                VoiceSettingsSection.Advanced -> stringResource(R.string.detail_tab_advanced)
                             },
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
@@ -857,6 +856,13 @@ private fun presetDisplayNameRes(preset: VoiceModePreset): Int = when (preset) {
     VoiceModePreset.QuietVisualOnly -> R.string.voice_preset_quiet_visual
 }
 
+private fun presetDescriptionRes(preset: VoiceModePreset): Int = when (preset) {
+    VoiceModePreset.HandsFree -> R.string.ui_label_preset_hands_free
+    VoiceModePreset.LowLatency -> R.string.ui_label_preset_fast
+    VoiceModePreset.CarefulTools -> R.string.ui_label_preset_careful
+    VoiceModePreset.QuietVisualOnly -> R.string.ui_label_preset_quiet
+}
+
 /** Compact segmented-button label resource per preset. */
 private fun presetShortLabelRes(preset: VoiceModePreset): Int = when (preset) {
     VoiceModePreset.HandsFree -> R.string.voice_preset_hands_free
@@ -916,15 +922,14 @@ private fun VoiceModePresetCard(
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = activePreset?.description
+            text = activePreset?.let { stringResource(presetDescriptionRes(it)) }
                 ?: stringResource(R.string.voice_preset_manual_values),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         if (!enabled) {
             Text(
-                text = "Connect Relay voice so background delivery can be " +
-                    "applied with the local controls.",
+                text = stringResource(R.string.ko_voice_preset_relay),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1421,6 +1426,7 @@ private fun StreamingVoiceOutputEditor(
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHost = LocalSnackbarHost.current
+    val context = LocalContext.current
     val previewState by voiceViewModel.voicePreviewState.collectAsState()
 
     var voiceOutputEnabled by remember { mutableStateOf(true) }
@@ -1503,7 +1509,7 @@ private fun StreamingVoiceOutputEditor(
     fun preview(selectionKey: String, voice: String) {
         val sampleRate = voiceOutputSampleRate.toIntOrNull()
         if (sampleRate == null) {
-            settingsViewModel.setVoiceOutputError("Sample rate must be a number")
+            settingsViewModel.setVoiceOutputError(context.getString(R.string.voice_settings_sample_rate_must_be_number))
             return
         }
         voiceViewModel.previewVoiceOutput(
@@ -1515,7 +1521,7 @@ private fun StreamingVoiceOutputEditor(
             language = voiceOutputLanguage,
         ) { result ->
             result.exceptionOrNull()?.let { error ->
-                settingsViewModel.setVoiceOutputError(error.message ?: "Voice preview failed")
+                settingsViewModel.setVoiceOutputError(error.message ?: context.getString(R.string.ko_voice_preview_failed))
             }
         }
     }
@@ -1767,7 +1773,7 @@ private fun StreamingVoiceOutputEditor(
             modifier = Modifier.weight(1f).height(52.dp),
             shape = appearanceRoundedCornerShape(16.dp),
         ) {
-            Text(if (voiceOutputSaving) stringResource(R.string.voice_settings_saving) else "Save changes", fontWeight = FontWeight.SemiBold)
+            Text(if (voiceOutputSaving) stringResource(R.string.voice_settings_saving) else stringResource(R.string.voice_settings_save_changes), fontWeight = FontWeight.SemiBold)
         }
         OutlinedButton(
             onClick = {
@@ -1869,7 +1875,7 @@ internal fun VoiceProviderGroupCard(
                     )
                     Text(
                         provider?.description?.takeIf { it.isNotBlank() }
-                            ?: "${provider?.models?.size ?: 0} models · ${provider?.voices?.size ?: 0} voices",
+                            ?: stringResource(R.string.ko_voice_model_counts, provider?.models?.size ?: 0, provider?.voices?.size ?: 0),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1881,10 +1887,10 @@ internal fun VoiceProviderGroupCard(
                 ) {
                     Text(
                         when {
-                            !enabled -> "Off"
-                            provider?.status == "unavailable" -> "Unavailable"
-                            provider?.status == "needs_auth" -> "Sign in"
-                            else -> "Ready"
+                            !enabled -> stringResource(R.string.voice_settings_off)
+                            provider?.status == "unavailable" -> stringResource(R.string.voice_settings_status_unavailable)
+                            provider?.status == "needs_auth" -> stringResource(R.string.dashboard_sign_in)
+                            else -> stringResource(R.string.voice_settings_status_ready)
                         },
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -2104,7 +2110,7 @@ internal fun ModelAndVoiceGroupCard(
                             active = active,
                             loading = active && previewState.isLoading,
                             enabled = enabled && choice.enabled,
-                            contentDescription = if (active) "Stop ${choice.label} preview" else "Preview ${choice.label}",
+                            contentDescription = if (active) stringResource(R.string.ko_voice_stop_preview, choice.label) else stringResource(R.string.ko_voice_preview, choice.label),
                             onClick = { onPreviewVoice(choice.value) },
                         )
                     }
@@ -2277,13 +2283,13 @@ internal fun LanguageQualityCard(
                 }
                 Icon(
                     if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.ChevronRight,
-                    contentDescription = if (expanded) "Collapse" else "Expand",
+                    contentDescription = if (expanded) stringResource(R.string.stats_collapse) else stringResource(R.string.stats_expand),
                 )
             }
             if (expanded) {
                 if (showLanguage && languages.isNotEmpty()) {
                     VoiceChoiceDropdown(
-                        label = "Language",
+                        label = stringResource(R.string.voice_settings_language_label),
                         value = language,
                         choices = languages,
                         onValueChange = onLanguageChange,
@@ -2291,7 +2297,7 @@ internal fun LanguageQualityCard(
                     )
                 }
                 VoiceChoiceDropdown(
-                    label = "Sample rate",
+                    label = stringResource(R.string.voice_settings_label_sample_rate),
                     value = sampleRate,
                     choices = sampleRates,
                     onValueChange = onSampleRateChange,
@@ -2302,22 +2308,25 @@ internal fun LanguageQualityCard(
     }
 }
 
+@Composable
 private fun languageDisplayName(language: String): String = when (language.lowercase()) {
-    "en", "en-us" -> "English (US)"
-    "en-gb" -> "English (UK)"
-    "es" -> "Spanish"
-    "fr" -> "French"
-    "de" -> "German"
-    "ja" -> "Japanese"
-    "zh" -> "Chinese"
+    "en", "en-us" -> stringResource(R.string.ko_lang_en_us)
+    "en-gb" -> stringResource(R.string.ko_lang_en_gb)
+    "es" -> stringResource(R.string.ko_lang_spanish)
+    "fr" -> stringResource(R.string.ko_lang_french)
+    "de" -> stringResource(R.string.ko_lang_german)
+    "ja" -> stringResource(R.string.ko_lang_japanese)
+    "zh" -> stringResource(R.string.ko_lang_chinese)
+    "ko", "ko-kr" -> stringResource(R.string.appearance_language_korean)
     else -> language
 }
 
+@Composable
 private fun qualityLabel(sampleRate: String): String = when (sampleRate.toIntOrNull()) {
     null -> sampleRate
-    in 0..15999 -> "Compact"
-    in 16000..23999 -> "Balanced"
-    else -> "High quality"
+    in 0..15999 -> stringResource(R.string.voice_overlay_compact)
+    in 16000..23999 -> stringResource(R.string.ko_voice_quality_balanced)
+    else -> stringResource(R.string.voice_settings_high_quality)
 }
 
 @Composable
@@ -2372,7 +2381,7 @@ private fun StaticProviderCard(
                     color = if (ready) MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surfaceVariant,
                     contentColor = if (ready) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurfaceVariant,
                 ) {
-                    Text(if (ready) "Ready" else "Unavailable", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
+                    Text(if (ready) stringResource(R.string.voice_settings_status_ready) else stringResource(R.string.voice_settings_status_unavailable), style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp))
                 }
             }
             if (actionLabel != null && onAction != null) {
@@ -2418,7 +2427,7 @@ private fun StaticModelVoiceCard(
                     Text(stringResource(R.string.model_picker_title), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(model, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                 }
-                PreviewCircleButton(active = false, loading = false, enabled = enabled, contentDescription = "Preview standard voice", onClick = onPreview)
+                PreviewCircleButton(active = false, loading = false, enabled = enabled, contentDescription = stringResource(R.string.ko_voice_preview_standard), onClick = onPreview)
             }
             Surface(
                 shape = appearanceRoundedCornerShape(14.dp),
@@ -2436,7 +2445,7 @@ private fun StaticModelVoiceCard(
                         Text(voice, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                         Text(stringResource(R.string.voice_settings_configured_in_standard), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    PreviewCircleButton(active = false, loading = false, enabled = enabled, contentDescription = "Preview $voice", onClick = onPreview)
+                    PreviewCircleButton(active = false, loading = false, enabled = enabled, contentDescription = stringResource(R.string.ko_voice_preview, voice), onClick = onPreview)
                 }
             }
         }
@@ -2481,7 +2490,7 @@ private fun VoiceOutputLoadingSkeleton() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = "Loading voice options",
+            text = stringResource(R.string.ko_voice_loading_options),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -2553,7 +2562,7 @@ private fun RealtimeBehaviorSettingsCard(
 ) {
     val scope = rememberCoroutineScope()
     val promotion = configState.realtimeConfig?.promotion
-    SectionCard(title = "Real-time behavior") {
+    SectionCard(title = stringResource(R.string.voice_settings_realtime_behavior_title)) {
         SettingSwitchRow(
             title = stringResource(R.string.voice_settings_detailed_trace),
             detail = stringResource(R.string.voice_settings_detailed_trace_desc),
@@ -2594,10 +2603,10 @@ private fun RealtimeBehaviorSettingsCard(
                 )
                 Text(stringResource(R.string.voice_settings_when_answer_ready), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
                 val modes = listOf(
-                    "speak_verbatim" to "Exact",
-                    "speak_when_idle" to "Summary",
-                    "notify_then_speak" to "Notify",
-                    "visual_only" to "Show",
+                    "speak_verbatim" to stringResource(R.string.ko_delivery_exact),
+                    "speak_when_idle" to stringResource(R.string.ko_delivery_summary),
+                    "notify_then_speak" to stringResource(R.string.ko_delivery_notify),
+                    "visual_only" to stringResource(R.string.ko_delivery_show),
                 )
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     modes.forEachIndexed { index, (value, label) ->
@@ -2645,6 +2654,7 @@ private fun RealtimeAgentCard(
 ) {
     val scope = rememberCoroutineScope()
     val snackbarHost = LocalSnackbarHost.current
+    val context = LocalContext.current
     val previewState by voiceViewModel.voicePreviewState.collectAsState()
     val config = configState.realtimeConfig
 
@@ -2706,7 +2716,7 @@ private fun RealtimeAgentCard(
     fun preview(key: String, selectedVoice: String) {
         val rate = sampleRate.toIntOrNull()
         if (rate == null) {
-            settingsViewModel.setRealtimeError("Sample rate must be a number")
+            settingsViewModel.setRealtimeError(context.getString(R.string.voice_settings_sample_rate_must_be_number))
             return
         }
         voiceViewModel.previewRealtimeAgent(
@@ -2716,7 +2726,7 @@ private fun RealtimeAgentCard(
             voice = selectedVoice,
             sampleRate = rate,
         ) { result ->
-            result.exceptionOrNull()?.let { settingsViewModel.setRealtimeError(it.message ?: "Realtime preview failed") }
+            result.exceptionOrNull()?.let { settingsViewModel.setRealtimeError(it.message ?: context.getString(R.string.ko_voice_realtime_preview_failed)) }
         }
     }
 
@@ -2776,7 +2786,7 @@ private fun RealtimeAgentCard(
     LanguageQualityCard(
         expanded = qualityOpen,
         onExpandedChange = { qualityOpen = it },
-        language = "Provider default",
+        language = stringResource(R.string.voice_settings_provider_default),
         languages = emptyList(),
         onLanguageChange = {},
         sampleRate = sampleRate,
@@ -2803,18 +2813,18 @@ private fun RealtimeAgentCard(
             val client = voiceClient ?: return@VoiceSaveActions
             val rate = sampleRate.toIntOrNull()
             if (rate == null) {
-                settingsViewModel.setRealtimeError("Sample rate must be a number")
+                settingsViewModel.setRealtimeError(context.getString(R.string.voice_settings_sample_rate_must_be_number))
                 return@VoiceSaveActions
             }
             scope.launch {
                 saving = true
                 val validation = client.validateRealtimeAgentProvider(provider, model, voice, rate)
-                val issue = validationIssue(validation.getOrNull(), "Provider selection is not valid")
+                val issue = validationIssue(validation.getOrNull(), context.getString(R.string.voice_settings_provider_not_valid))
                 if (validation.isFailure || issue != null) {
                     saving = false
                     val error = validation.exceptionOrNull()
                     if (error != null) snackbarHost.showHumanError(classifyError(error, context = "voice_config"))
-                    settingsViewModel.setRealtimeError(issue ?: error?.message ?: "Provider validation failed")
+                    settingsViewModel.setRealtimeError(issue ?: error?.message ?: context.getString(R.string.ko_voice_validation_failed))
                     return@launch
                 }
                 val result = client.updateRealtimeAgentConfig(enabled, provider, model, voice, rate)
@@ -2965,10 +2975,10 @@ private fun LegacyRealtimeAgentCard(
                 ?: (configState.realtimeConfigError?.let { unavailableLabel } ?: loadingLabel),
         )
         realtimeModel.takeIf { it.isNotBlank() }?.let { model ->
-            ProviderRow(label = "Model", value = model)
+            ProviderRow(label = stringResource(R.string.voice_settings_label_model), value = model)
         }
         realtimeVoice.takeIf { it.isNotBlank() }?.let { voice ->
-            ProviderRow(label = "Voice", value = voice)
+            ProviderRow(label = stringResource(R.string.voice_settings_label_voice), value = voice)
         }
         config?.let { c ->
             ProviderRow(label = stringResource(R.string.voice_settings_label_advertised), value = realtimeProviderList(c))
@@ -3045,7 +3055,7 @@ private fun LegacyRealtimeAgentCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        "When the answer is ready",
+                        stringResource(R.string.voice_settings_when_answer_ready),
                         style = MaterialTheme.typography.labelMedium,
                     )
                     IconButton(
@@ -3054,7 +3064,7 @@ private fun LegacyRealtimeAgentCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Info,
-                            contentDescription = "Delivery mode details",
+                            contentDescription = stringResource(R.string.ko_voice_delivery_details),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -3066,7 +3076,7 @@ private fun LegacyRealtimeAgentCard(
                     "notify_then_speak",
                     "visual_only",
                 )
-                val deliveryLabels = listOf("Exact", "Summary", "Notify", "Show")
+                val deliveryLabels = listOf(stringResource(R.string.ko_delivery_exact), stringResource(R.string.ko_delivery_summary), stringResource(R.string.ko_delivery_notify), stringResource(R.string.ko_delivery_show))
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     deliveryOptions.forEachIndexed { index, option ->
                         SegmentedButton(
@@ -3342,20 +3352,20 @@ private fun DeliveryModeInfoDialog(onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 DeliveryModeInfoRow(
-                    label = "Exact",
-                    body = "Recommended. The realtime voice reads the Hermes answer word for word, falling back to standard TTS only if it goes off-script.",
+                    label = stringResource(R.string.ko_delivery_exact),
+                    body = stringResource(R.string.ko_delivery_exact_desc),
                 )
                 DeliveryModeInfoRow(
-                    label = "Summary",
-                    body = "The realtime voice rephrases the result in its own words. More conversational, less faithful to the exact answer.",
+                    label = stringResource(R.string.ko_delivery_summary),
+                    body = stringResource(R.string.ko_delivery_summary_desc),
                 )
                 DeliveryModeInfoRow(
-                    label = "Notify",
-                    body = "Shows that the answer is ready first, then speaks when you re-engage.",
+                    label = stringResource(R.string.ko_delivery_notify),
+                    body = stringResource(R.string.ko_delivery_notify_desc),
                 )
                 DeliveryModeInfoRow(
-                    label = "Show",
-                    body = "Keeps the completed answer visual only.",
+                    label = stringResource(R.string.ko_delivery_show),
+                    body = stringResource(R.string.ko_delivery_show_desc),
                 )
             }
         },
@@ -3496,7 +3506,7 @@ private fun GlobalVoiceControlsCard(
                     if (lostFocus) persistStopPhrases()
                 },
             singleLine = true,
-            placeholder = { Text("stop, goodbye hermes") },
+            placeholder = { Text(stringResource(R.string.ko_voice_stop_examples)) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
                 onDone = {
@@ -4386,7 +4396,7 @@ private fun StandardVoiceServerConfigCard(
                     toolsetProviders.any { it.id == ttsProvider }
                 ) {
                     Text(
-                        text = "This installed provider uses its own defaults. Configure credentials and additional options in Manage.",
+                        text = stringResource(R.string.ko_voice_provider_defaults),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -4597,11 +4607,12 @@ private fun standardConfigFieldDescription(field: ConfigSchemaField): String? = 
     else -> field.description
 }
 
+@Composable
 private fun providerStatusLabel(status: String?): String? = when (status) {
-    "ready" -> "Ready"
-    "needs_setup" -> "Needs setup"
-    "needs_auth" -> "Sign-in required"
-    "needs_keys" -> "Key required"
+    "ready" -> stringResource(R.string.voice_settings_status_ready)
+    "needs_setup" -> stringResource(R.string.voice_settings_needs_setup)
+    "needs_auth" -> stringResource(R.string.gateway_status_sign_in_required)
+    "needs_keys" -> stringResource(R.string.voice_settings_key_required)
     else -> null
 }
 
@@ -4988,14 +4999,14 @@ private fun voiceOutputSummary(
         if (model == null) "$provider / $voice" else "$provider / $model / $voice"
     } ?: stringResource(R.string.voice_settings_loading_output)
     val realtimeLabel = realtime?.let { config ->
-        val provider = config.default_provider?.takeIf { it.isNotBlank() } ?: "realtime ..."
+        val provider = config.default_provider?.takeIf { it.isNotBlank() } ?: stringResource(R.string.voice_settings_summary_realtime)
         val model = realtimeModel.takeIf { it.isNotBlank() }
             ?: config.default_model?.takeIf { it.isNotBlank() }
         val voice = realtimeVoice.takeIf { it.isNotBlank() }
             ?: config.default_voice?.takeIf { it.isNotBlank() }
-            ?: "voice ..."
+            ?: stringResource(R.string.voice_settings_summary_voice)
         if (model == null) "$provider / $voice" else "$provider / $model / $voice"
-    } ?: "realtime loading..."
+    } ?: stringResource(R.string.voice_settings_loading_realtime)
     return profileLabel to when (currentEngine) {
         VoiceEngineMode.HermesVoiceOutput -> stringResource(R.string.voice_settings_summary_hermes_engine, outputLabel)
         VoiceEngineMode.RealtimeAgent -> stringResource(R.string.voice_settings_summary_realtime_engine, realtimeLabel)
@@ -5059,9 +5070,9 @@ private fun VoiceProfileSummaryCard(
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = if (currentEngine == VoiceEngineMode.RealtimeAgent) {
-                        "Real-time Voice Agent"
+                        stringResource(R.string.voice_settings_engine_realtime)
                     } else {
-                        "Hermes Chat + Voice Output"
+                        stringResource(R.string.voice_settings_engine_hermes)
                     },
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
@@ -5090,7 +5101,7 @@ private fun VoiceProfileSummaryCard(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                 )
             }
-            Icon(Icons.Filled.ChevronRight, contentDescription = "Change voice mode")
+            Icon(Icons.Filled.ChevronRight, contentDescription = stringResource(R.string.ko_voice_change_mode))
         }
     }
 }
@@ -5110,8 +5121,8 @@ private fun VoiceModePickerDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf(
-                    VoiceEngineMode.HermesVoiceOutput to ("Hermes Chat + Voice Output" to "Hermes answers with your selected TTS voice"),
-                    VoiceEngineMode.RealtimeAgent to ("Real-time Voice Agent" to "Low-latency provider-native conversation"),
+                    VoiceEngineMode.HermesVoiceOutput to (stringResource(R.string.voice_settings_engine_hermes) to stringResource(R.string.ko_voice_tts_description)),
+                    VoiceEngineMode.RealtimeAgent to (stringResource(R.string.voice_settings_engine_realtime) to stringResource(R.string.ko_voice_realtime_description)),
                 ).forEach { (engine, copy) ->
                     val available = engine != VoiceEngineMode.RealtimeAgent || relayVoiceReady
                     Row(
@@ -5136,9 +5147,9 @@ private fun VoiceModePickerDialog(
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     Text(stringResource(R.string.voice_settings_output_route_label), style = MaterialTheme.typography.labelLarge)
                     listOf(
-                        VoiceAudioRoute.Auto to "Automatic",
+                        VoiceAudioRoute.Auto to stringResource(R.string.voice_settings_language_auto),
                         VoiceAudioRoute.Standard to stringResource(R.string.voice_provider_standard),
-                        VoiceAudioRoute.Relay to "Relay voice output",
+                        VoiceAudioRoute.Relay to stringResource(R.string.ko_voice_relay_output),
                     ).forEach { (route, label) ->
                         val available = route != VoiceAudioRoute.Relay || relayVoiceReady
                         Row(

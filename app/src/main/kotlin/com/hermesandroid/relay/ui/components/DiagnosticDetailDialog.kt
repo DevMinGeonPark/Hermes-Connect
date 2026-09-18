@@ -63,9 +63,16 @@ import com.hermesandroid.relay.util.IssueReport
 fun DiagnosticDetailDialog(entry: DiagnosticLogEntry, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val plainText = remember(entry) { entry.toPlainText() }
-    val severityName = entry.severity.name
+    val severityName = stringResource(when (entry.severity) {
+        DiagnosticSeverity.Info -> R.string.diag_severity_info
+        DiagnosticSeverity.Warning -> R.string.diag_severity_warning
+        DiagnosticSeverity.Error -> R.string.diag_severity_error
+    })
+    val categoryName = diagnosticCategoryName(entry.category)
     val copiedToast = stringResource(R.string.diag_copied)
     val exportChooserTitle = stringResource(R.string.diag_export)
+    val exportSubject = stringResource(R.string.ko_diagnostic_subject, entry.title)
+    val copiedWithoutShareToast = stringResource(R.string.ko_copied_no_share)
 
     // Info-severity pre-flight: routine log lines only become GitHub issues once
     // the reporter says what they expected instead (that answer replaces the
@@ -90,7 +97,7 @@ fun DiagnosticDetailDialog(entry: DiagnosticLogEntry, onDismiss: () -> Unit) {
                         DiagnosticSeverityChip(entry.severity)
                         Spacer(Modifier.width(10.dp))
                         Text(
-                            text = entry.category.label,
+                            text = categoryName,
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -105,21 +112,21 @@ fun DiagnosticDetailDialog(entry: DiagnosticLogEntry, onDismiss: () -> Unit) {
 
                     Spacer(Modifier.height(10.dp))
                     // Metadata rows — only render the ones that are present.
-                    MetaRow("When", DateFormat.format("yyyy-MM-dd HH:mm:ss", entry.timestampMs).toString())
-                    MetaRow("Severity", severityName)
-                    MetaRow("Category", entry.category.label)
-                    entry.operation?.let { MetaRow("Operation", it) }
-                    entry.endpointRole?.let { MetaRow("Route", it) }
-                    entry.configuredUrl?.let { MetaRow("Configured URL", it) }
-                    entry.requestUrl?.let { MetaRow("Request", it) }
+                    MetaRow(stringResource(R.string.ko_diag_when), DateFormat.format("yyyy-MM-dd HH:mm:ss", entry.timestampMs).toString())
+                    MetaRow(stringResource(R.string.ko_diag_severity), severityName)
+                    MetaRow(stringResource(R.string.ko_diag_category), categoryName)
+                    entry.operation?.let { MetaRow(stringResource(R.string.ko_diag_operation), it) }
+                    entry.endpointRole?.let { MetaRow(stringResource(R.string.ko_diag_route), it) }
+                    entry.configuredUrl?.let { MetaRow(stringResource(R.string.ko_diag_configured_url), it) }
+                    entry.requestUrl?.let { MetaRow(stringResource(R.string.ko_diag_request), it) }
                     if (entry.configuredUrl == null && entry.requestUrl == null) {
                         entry.url?.let { MetaRow("URL", it) }
                     }
-                    entry.elapsedMs?.let { MetaRow("Elapsed", "${it}ms") }
+                    entry.elapsedMs?.let { MetaRow(stringResource(R.string.ko_diag_elapsed), "${it}ms") }
                     entry.suggestion?.let { suggestion ->
                         Spacer(Modifier.height(10.dp))
                         Text(
-                            text = "Suggested next step",
+                            text = stringResource(R.string.ko_diag_next),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -168,7 +175,7 @@ fun DiagnosticDetailDialog(entry: DiagnosticLogEntry, onDismiss: () -> Unit) {
                         OutlinedTextField(
                             value = expectation,
                             onValueChange = { expectation = it },
-                            label = { Text("What were you expecting to happen?") },
+                            label = { Text(stringResource(R.string.ko_diag_expected)) },
                             supportingText = {
                                 Text(stringResource(R.string.diagnostic_routine_hint))
                             },
@@ -194,13 +201,13 @@ fun DiagnosticDetailDialog(entry: DiagnosticLogEntry, onDismiss: () -> Unit) {
                             onClick = {
                                 val shared = IssueReport.share(
                                     context,
-                                    subject = "Hermes-Relay diagnostic — ${entry.title}",
+                                    subject = exportSubject,
                                     text = plainText,
                                     chooserTitle = exportChooserTitle,
                                 )
                                 if (!shared) {
                                     IssueReport.copyToClipboard(context, plainText)
-                                    UiMessageBus.warning("Copied — no app found to share to")
+                                    UiMessageBus.warning(copiedWithoutShareToast)
                                 }
                             },
                         ) { Text(stringResource(R.string.common_export)) }
@@ -303,3 +310,14 @@ private fun DiagnosticLogEntry.toPlainText(): String = buildString {
         append(it)
     }
 }
+
+@Composable
+internal fun diagnosticCategoryName(category: com.hermesandroid.relay.diagnostics.DiagnosticCategory): String =
+    stringResource(when (category) {
+        com.hermesandroid.relay.diagnostics.DiagnosticCategory.Api -> R.string.ko_diagnostic_api
+        com.hermesandroid.relay.diagnostics.DiagnosticCategory.Relay -> R.string.bridge_core_relay_title
+        com.hermesandroid.relay.diagnostics.DiagnosticCategory.Session -> R.string.cmd_cat_session
+        com.hermesandroid.relay.diagnostics.DiagnosticCategory.Voice -> R.string.screen_voice_label
+        com.hermesandroid.relay.diagnostics.DiagnosticCategory.Endpoint -> R.string.ko_diag_route
+        com.hermesandroid.relay.diagnostics.DiagnosticCategory.Auth -> R.string.voice_settings_label_auth
+    })

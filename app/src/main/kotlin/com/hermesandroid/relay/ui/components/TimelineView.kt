@@ -665,12 +665,13 @@ private val TIME_FMT = SimpleDateFormat("HH:mm:ss", Locale.US)
 
 private fun timeOfDay(epochMs: Long): String = TIME_FMT.format(Date(epochMs))
 
+@Composable
 private fun relativeTimeShort(eventMs: Long, nowMs: Long): String {
     val delta = ((nowMs - eventMs) / 1000).coerceAtLeast(0L)
     return when {
-        delta < 2 -> "just now"
-        delta < 60 -> "${delta}s ago"
-        delta < 3600 -> "${delta / 60}m ago"
-        else -> "${delta / 3600}h ago"
+        delta < 2 -> stringResource(R.string.stats_just_now)
+        delta < 60 -> stringResource(R.string.stats_seconds_ago, delta)
+        delta < 3600 -> stringResource(R.string.stats_minutes_ago, delta / 60)
+        else -> stringResource(R.string.stats_hours_ago, delta / 3600)
     }
 }

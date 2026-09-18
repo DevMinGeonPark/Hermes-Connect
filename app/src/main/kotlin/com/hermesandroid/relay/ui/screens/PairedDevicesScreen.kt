@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.ui.screens
 
+import com.hermesandroid.relay.ui.components.localizedDisplayLabel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -927,7 +928,7 @@ private fun EndpointsSubList(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    text = candidate.displayLabel(),
+                    text = candidate.localizedDisplayLabel(),
                     style = MaterialTheme.typography.labelMedium,
                     color = if (isActive) {
                         MaterialTheme.colorScheme.primary

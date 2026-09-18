@@ -787,10 +787,10 @@ fun ChatScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Supervised chat unavailable") },
+                    title = { Text(stringResource(R.string.ko_supervised_chat_unavailable)) },
                     actions = {
                         IconButton(onClick = onNavigateToSettings) {
-                            Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                            Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.screen_settings_label))
                         }
                     },
                 )
@@ -801,7 +801,7 @@ fun ChatScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "The supervised profile is unavailable. Parent access is required to update this connection.",
+                    stringResource(R.string.ko_supervised_profile_unavailable),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -2681,7 +2681,7 @@ fun ChatScreen(
                         if (opened) scope.launch { drawerState.close() }
                     } else {
                         scope.launch {
-                            snackbarHostState.showSnackbar("Profile $profileName is not available.")
+                            snackbarHostState.showSnackbar(context.getString(R.string.ko_profile_unavailable, profileName))
                         }
                     }
                 },
@@ -2764,7 +2764,7 @@ fun ChatScreen(
                         }
                     } else if (supervisedPolicy.capabilities.newChat) {
                         IconButton(onClick = { chatViewModel.createNewChat() }) {
-                            Icon(Icons.Filled.Edit, contentDescription = "New chat")
+                            Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.pet_creator_new_chat))
                         }
                     }
                 },
@@ -3758,7 +3758,7 @@ fun ChatScreen(
                                         } else {
                                             scope.launch {
                                                 snackbarHostState.showSnackbar(
-                                                    message = "Profile ${reference.profile} is not available.",
+                                                    message = context.getString(R.string.ko_profile_unavailable, reference.profile),
                                                     duration = SnackbarDuration.Short,
                                                 )
                                             }
@@ -4018,10 +4018,9 @@ fun ChatScreen(
                                 .size(48.dp)
                                 .semantics {
                                     contentDescription = if (unreadMessageCount > 0) {
-                                        "Scroll to bottom, $unreadMessageCount unread " +
-                                            if (unreadMessageCount == 1) "message" else "messages"
+                                        context.resources.getQuantityString(R.plurals.ko_scroll_unread, unreadMessageCount, unreadMessageCount)
                                     } else {
-                                        "Scroll to bottom"
+                                        context.getString(R.string.ko_scroll_bottom)
                                     }
                                 },
                             onClick = {
@@ -4583,17 +4582,17 @@ fun ChatScreen(
                         isDemoMode = isDemoMode,
                         voiceReady = voiceReady,
                         onDemoNotice = {
-                            UiMessageBus.warning("Voice is unavailable in the offline demo — connect to Hermes to use it")
+                            UiMessageBus.warning(context.getString(R.string.ko_voice_demo_unavailable))
                         },
                         onStartVoice = requestVoiceMode,
                         onSetupNotice = {
                             UiMessageBus.warning(when (standardVoiceAvailability) {
                                     com.hermesandroid.relay.viewmodel.StandardVoiceAvailability.SignInRequired ->
                                         standardVoiceSignInRouteHint?.let { route ->
-                                            "Voice needs a one-time sign-in on the $route route — open Manage"
-                                        } ?: "Voice needs dashboard sign-in — open Manage to sign in"
+                                            context.getString(R.string.voice_toast_signin_route, route)
+                                        } ?: context.getString(R.string.voice_toast_signin_default)
                                     com.hermesandroid.relay.viewmodel.StandardVoiceAvailability.Unsupported ->
-                                        "This Hermes build has no voice routes — update hermes-agent or pair Relay"
+                                        context.getString(R.string.voice_toast_unsupported)
                                     else ->
                                         context.getString(R.string.chat_voice_needs_route)
                                 })
@@ -5259,7 +5258,7 @@ private fun buildChatLoadingCommands(
     val chatModeDetail = when (chatMode) {
         ChatMode.ENHANCED_HERMES -> context.getString(R.string.chat_stream_sessions)
         ChatMode.PORTABLE -> context.getString(R.string.chat_stream_portable)
-        ChatMode.DISCONNECTED -> "waiting"
+        ChatMode.DISCONNECTED -> context.getString(R.string.startup_waiting)
     }
     return listOf(
         ChatLoadingCommand(
@@ -5283,9 +5282,9 @@ private fun buildChatLoadingCommands(
             },
             command = "/gateway wake",
             detail = if (chatReady) {
-                "${agentDisplayName.ifBlank { "Hermes" }} online"
+                context.getString(R.string.startup_online, agentDisplayName.ifBlank { "Hermes" })
             } else {
-                "waking ${agentDisplayName.ifBlank { "Hermes" }}"
+                context.getString(R.string.startup_waking, agentDisplayName.ifBlank { "Hermes" })
             },
         ),
         ChatLoadingCommand(
@@ -5298,8 +5297,8 @@ private fun buildChatLoadingCommands(
             detail = when {
                 isLoadingSessions -> context.getString(R.string.drawer_loading_sessions)
                 isLoadingHistory -> context.getString(R.string.chat_loading_messages)
-                chatReady -> "ready via $chatModeDetail"
-                else -> "waiting for gateway"
+                chatReady -> context.getString(R.string.startup_ready_via, chatModeDetail)
+                else -> context.getString(R.string.startup_waiting_gateway)
             },
         ),
     )

@@ -5,10 +5,10 @@
     <string name="clarify_batch_expired">Этот запрос завершён</string>
     <string name="clarify_batch_sending">Отправка ответа…</string>
     <string name="clarify_batch_answered">Отвеченные вопросы (%1$d)</string>
-    <string name="app_name">Hermes-Relay</string>
-    <string name="app_title">Hermes-Relay</string>
+    <string name="app_name">Hermes-Connect</string>
+    <string name="app_title">Hermes-Connect</string>
     <string name="agent_interface">интерфейс агента</string>
-    <string name="notification_companion_label">Hermes-Relay уведомление-компаньон</string>
+    <string name="notification_companion_label">Hermes-Connect уведомление-компаньон</string>
     <string name="onboarding_skip_setup_title">Пропустить настройку?</string>
     <string name="onboarding_skip_setup_text">Без проблем — изучите демоверсию, а затем в любое время добавьте свой шлюз Hermes в разделе Настройки → Шлюзы. Сопряжение Relay для расширенных инструментов можно добавить позже.</string>
     <string name="onboarding_skip_for_now">Пропустить на время</string>
@@ -641,7 +641,7 @@
     <string name="ncs_status">Статус</string>
     <string name="ncs_access_granted">Доступ разрешен</string>
     <string name="ncs_access_not_granted">Доступ не разрешен</string>
-    <string name="ncs_can_read_notifications">Hermes-Relay может читать отправленные уведомления</string>
+    <string name="ncs_can_read_notifications">Hermes-Connect может читать отправленные уведомления</string>
     <string name="ncs_tap_to_enable">Нажмите ниже, чтобы включить в настройках Android</string>
     <string name="ncs_refresh_status">Обновить статус</string>
     <string name="ncs_manage_in_settings">Управление в настройках Android</string>
@@ -1209,7 +1209,7 @@
     <string name="about_title">О программе</string>
     <string name="about_back">Назад</string>
     <string name="about_section_title">О программе</string>
-    <string name="about_app_name">Hermes-Relay</string>
+    <string name="about_app_name">Hermes-Connect</string>
     <string name="about_app_tagline">Нативный клиент Android для Агента Гермеса</string>
     <string name="about_em_dash">—</string>
     <string name="about_dev_options_unlocked">Разработчик: опции разблокированы</string>
@@ -1278,7 +1278,7 @@
     <string name="appearance_theme">Тема</string>
     <string name="appearance_theme_desc">Выберите внешний вид. Бренд хром, акценты и фон чата следуют вашему выбору.</string>
     <string name="appearance_language">Язык</string>
-    <string name="appearance_language_desc">Выберите язык, используемый Hermes-Relay. Системный по умолчанию следует настройкам вашего устройства.</string>
+    <string name="appearance_language_desc">Выберите язык, используемый Hermes-Connect. Системный по умолчанию следует настройкам вашего устройства.</string>
     <string name="appearance_language_system">Системный по умолчанию</string>
     <string name="appearance_language_english">Английский</string>
     <string name="appearance_language_german">Немецкий</string>
@@ -2835,12 +2835,12 @@
     <string name="attachment_type_pdf">PDF</string>
     <string name="attachment_type_text">Текст</string>
     <string name="attachment_type_file">Файл</string>
-    <string name="crash_title">Hermes-Relay неожиданно закрылся</string>
-    <string name="crash_body">Hermes-Relay перезапустился после непредвиденной проблемы. Приложением можно продолжать пользоваться.</string>
+    <string name="crash_title">Hermes-Connect неожиданно закрылся</string>
+    <string name="crash_body">Hermes-Connect перезапустился после непредвиденной проблемы. Приложением можно продолжать пользоваться.</string>
     <string name="crash_privacy">Ничего не отправлено. Перед отправкой проверьте локально обезличенный отчёт.</string>
     <string name="crash_review">Проверить отчёт</string>
     <string name="crash_share_title">Поделиться отчётом о сбое</string>
-    <string name="crash_share_subject">Отчёт о сбое Hermes-Relay — %1$s</string>
+    <string name="crash_share_subject">Отчёт о сбое Hermes-Connect — %1$s</string>
     <string name="crash_toast_no_share">Отчёт скопирован — приложение для отправки не найдено</string>
     <string name="crash_toast_opened">Полный отчёт скопирован — проверьте проблему GitHub перед отправкой</string>
     <string name="crash_toast_no_browser">Отчёт скопирован — браузер для GitHub не найден</string>
@@ -3402,12 +3402,12 @@
     <string name="tool_output_risk_a11y">, %1$s риск вывода</string>
     <string name="tool_output_risk_findings">Риск вывода</string>
     <string name="tool_output_risk_redacted">Чувствительные фрагменты были удалены выше по потоку.</string>
-    <string name="diag_gateway_heartbeat" translatable="false">Цикл шлюза: %1$s%2$s</string>
-    <string name="diag_toolsets_inventory" translatable="false">Наборы инструментов API: %1$d из %2$d включено · Видимые инструменты Relay: %3$s</string>
-    <string name="diag_yes" translatable="false">да</string>
-    <string name="diag_no" translatable="false">нет</string>
-    <string name="dashboard_nous_terminal_warning" translatable="false">Вход в систему поставщика Nous требует внимания на хосте Гермеса. Это отдельно от управления входом в систему; чат может продолжаться через другого настроенного поставщика.</string>
-    <string name="dashboard_gateway_topology" translatable="false">Шлюз: %1$s · Профили: %2$s · Порты: %3$s</string>
+    <string name="diag_gateway_heartbeat">Цикл шлюза: %1$s%2$s</string>
+    <string name="diag_toolsets_inventory">Наборы инструментов API: %1$d из %2$d включено · Видимые инструменты Relay: %3$s</string>
+    <string name="diag_yes">да</string>
+    <string name="diag_no">нет</string>
+    <string name="dashboard_nous_terminal_warning">Вход в систему поставщика Nous требует внимания на хосте Гермеса. Это отдельно от управления входом в систему; чат может продолжаться через другого настроенного поставщика.</string>
+    <string name="dashboard_gateway_topology">Шлюз: %1$s · Профили: %2$s · Порты: %3$s</string>
     <plurals name="attachment_group_count">
         <item quantity="one">%1$d вложение</item>
         <item quantity="few">%1$d вложения</item>
@@ -3865,7 +3865,7 @@
 <string name="support_bundle_privacy">Ничего не загружается автоматически. Проверьте локальный экспорт с %1$d недавними отчётами и записями диагностики.</string>
     <string name="support_bundle_copied">Сведения для поддержки скопированы</string>
     <string name="support_bundle_no_share">Сведения для поддержки скопированы — приложение для отправки не найдено</string>
-    <string name="support_bundle_share_title">Поделиться сведениями поддержки Hermes-Relay</string>
+    <string name="support_bundle_share_title">Поделиться сведениями поддержки Hermes-Connect</string>
     <string name="chat_search_conversation">Поиск по беседе</string>
     <string name="chat_search_close">Закрыть поиск</string>
     <string name="chat_search_no_results">Ничего не найдено</string>
@@ -4349,4 +4349,47 @@
     <string name="voice_overlay_settings_hint">Необязательно в обеих сборках. Откройте голосовой фокус в чате и выберите оверлей. Одни разрешения никогда не включают прослушивание.</string>
     <string name="voice_overlay_reset_position">Сбросить положение</string>
     <string name="injected_context_gateway_unsupported">Не отправляется в чате Gateway. Это подключение не поддерживает дополнительный контекст для каждого хода.</string>
+    <string name="appearance_language_korean">한국어</string>
+    <string name="chat_debug_title">Session diagnostics</string>
+    <string name="chat_debug_open">Open session diagnostics</string>
+    <string name="chat_debug_close">Close session diagnostics</string>
+    <string name="chat_debug_preparing">Preparing session…</string>
+    <string name="chat_debug_sign_in">Dashboard sign-in</string>
+    <string name="chat_debug_sign_in_needed">Sign in to continue this conversation.</string>
+    <string name="chat_debug_authenticated">Authenticated for this connection.</string>
+    <string name="chat_debug_auth_unknown">Sign-in has not been confirmed.</string>
+    <string name="chat_debug_gateway">Live connection</string>
+    <string name="chat_debug_socket_ready">Gateway is ready to receive requests.</string>
+    <string name="chat_debug_ticket">Requesting a secure connection ticket…</string>
+    <string name="chat_debug_socket_connecting">Opening the Gateway connection…</string>
+    <string name="chat_debug_socket_waiting">Waiting for the Gateway to become ready…</string>
+    <string name="chat_debug_socket_idle">No live Gateway connection.</string>
+    <string name="chat_debug_session">Conversation session</string>
+    <string name="chat_debug_preparing_detail">Hermes is initializing this session. The message has not been sent yet.</string>
+    <string name="chat_debug_history_loading">Loading saved messages…</string>
+    <string name="chat_debug_history_failed">Saved conversations could not be refreshed.</string>
+    <string name="chat_debug_session_selected">Session selected.</string>
+    <string name="chat_debug_session_new">A session will be created when you send.</string>
+    <string name="chat_debug_response">Agent response</string>
+    <string name="chat_debug_response_failed">The request failed. Details are below.</string>
+    <string name="chat_debug_response_waiting">Waiting for session initialization.</string>
+    <string name="chat_debug_response_active">Waiting for the current reply to finish.</string>
+    <string name="chat_debug_response_idle">No reply is currently in progress.</string>
+    <string name="chat_debug_init_recovery">Hermes could not initialize the agent. Check the server runtime and logs before retrying; signing in again may not resolve this.</string>
+    <string name="chat_debug_session_id">Session · %1$s</string>
+    <string name="chat_debug_connections">Connection settings</string>
+    <string name="dev_message_previews">Message previews</string>
+    <string name="dev_message_previews_desc">Local-only samples using the app’s real message surfaces. No requests are sent. Samples clear when you leave this screen.</string>
+    <string name="dev_message_info">Info preview</string>
+    <string name="dev_message_success">Success preview</string>
+    <string name="dev_message_progress">Progress preview</string>
+    <string name="dev_message_warning">Warning preview</string>
+    <string name="dev_message_error">Error preview</string>
+    <string name="dev_message_preview_sample">Show a themed sample. Progress stays until replaced or cleared.</string>
+    <string name="dev_message_action">Actionable error preview</string>
+    <string name="dev_message_action_body">This is a simulated error with a longer explanation. Expand or scroll to check readability. Retry only confirms the preview action; it does not contact a server.</string>
+    <string name="dev_message_retry">Retry</string>
+    <string name="dev_message_retry_result">Preview retry selected — no request sent.</string>
+    <string name="dev_message_clear">Clear previews</string>
+    <string name="dev_message_clear_desc">Dismiss only these samples; real app messages are preserved.</string>
 </resources>

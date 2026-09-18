@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.viewmodel
 
+import android.content.res.Resources
+import com.hermesandroid.relay.R
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,7 +51,9 @@ class ProfileInspectorViewModel(
     private val legacyClient: LegacyProfileInspectorClient,
     private val gatewayClient: GatewayProfileEditorClient?,
     savedStateHandle: SavedStateHandle,
+    private val resourcesProvider: () -> Resources,
 ) : ViewModel() {
+    private val resources: Resources get() = resourcesProvider()
 
     val profileName: String = savedStateHandle.get<String>(ARG_PROFILE_NAME).orEmpty()
 
@@ -114,7 +118,7 @@ class ProfileInspectorViewModel(
         val modelChanged = _configProviderDraft.value != baseline.provider ||
             _configModelDraft.value != baseline.model
         if (modelChanged && (_configProviderDraft.value.isBlank() || _configModelDraft.value.isBlank())) {
-            _editEvents.tryEmit(EditEvent.Error("Provider and model are both required"))
+            _editEvents.tryEmit(EditEvent.Error(resources.getString(R.string.runtime_profile_provider_required)))
             return
         }
         val patch = GatewayProfilePatch(
@@ -173,10 +177,10 @@ class ProfileInspectorViewModel(
             result.fold(
                 onSuccess = {
                     _soulEditing.value = false
-                    _editEvents.tryEmit(EditEvent.Saved("SOUL saved"))
+                    _editEvents.tryEmit(EditEvent.Saved(resources.getString(R.string.runtime_profile_soul_saved)))
                     refreshLegacySection(InspectorSection.Soul)
                 },
-                onFailure = { _editEvents.tryEmit(EditEvent.Error(it.message ?: "Save failed")) },
+                onFailure = { _editEvents.tryEmit(EditEvent.Error(it.message ?: resources.getString(R.string.runtime_profile_save_failed))) },
             )
         }
     }
@@ -209,10 +213,10 @@ class ProfileInspectorViewModel(
             result.fold(
                 onSuccess = {
                     _memoryEditingFilename.value = null
-                    _editEvents.tryEmit(EditEvent.Saved("Memory entry saved"))
+                    _editEvents.tryEmit(EditEvent.Saved(resources.getString(R.string.runtime_profile_memory_saved)))
                     refreshLegacySection(InspectorSection.Memory)
                 },
-                onFailure = { _editEvents.tryEmit(EditEvent.Error(it.message ?: "Save failed")) },
+                onFailure = { _editEvents.tryEmit(EditEvent.Error(it.message ?: resources.getString(R.string.runtime_profile_save_failed))) },
             )
         }
     }
@@ -253,16 +257,16 @@ class ProfileInspectorViewModel(
                 onSuccess = {
                     when (it) {
                         RelaySkillToggleResult.Ok -> {
-                            _editEvents.tryEmit(EditEvent.Saved(if (enabled) "Enabled $skillName" else "Disabled $skillName"))
+                            _editEvents.tryEmit(EditEvent.Saved(resources.getString(if (enabled) R.string.runtime_profile_enabled else R.string.runtime_profile_disabled, skillName)))
                             refreshLegacySection(InspectorSection.Skills)
                         }
                         RelaySkillToggleResult.NotImplemented -> {
                             _skillToggleSupported.value = false
-                            _editEvents.tryEmit(EditEvent.Error("Skill toggle not yet supported on this server"))
+                            _editEvents.tryEmit(EditEvent.Error(resources.getString(R.string.runtime_profile_toggle_unsupported)))
                         }
                     }
                 },
-                onFailure = { _editEvents.tryEmit(EditEvent.Error(it.message ?: "Skill toggle failed")) },
+                onFailure = { _editEvents.tryEmit(EditEvent.Error(it.message ?: resources.getString(R.string.runtime_profile_toggle_failed))) },
             )
         }
     }
@@ -302,17 +306,17 @@ class ProfileInspectorViewModel(
 
     fun validateMemoryFilename(name: String): String? {
         val trimmed = name.trim()
-        if (trimmed.isEmpty()) return "Filename required"
-        if (!trimmed.endsWith(".md")) return "Filename must end in .md"
-        if (trimmed.startsWith(".")) return "Filename cannot start with '.'"
-        if (trimmed.contains("/") || trimmed.contains("\\")) return "Filename cannot contain slashes"
-        if (trimmed.contains("..")) return "Filename cannot contain '..'"
+        if (trimmed.isEmpty()) return resources.getString(R.string.runtime_profile_filename_required)
+        if (!trimmed.endsWith(".md")) return resources.getString(R.string.runtime_profile_filename_md)
+        if (trimmed.startsWith(".")) return resources.getString(R.string.runtime_profile_filename_dot)
+        if (trimmed.contains("/") || trimmed.contains("\\")) return resources.getString(R.string.runtime_profile_filename_slashes)
+        if (trimmed.contains("..")) return resources.getString(R.string.runtime_profile_filename_dotdot)
         return null
     }
 
     fun loadAll() {
         if (profileName.isBlank()) {
-            val error = LoadState.Error("No profile name supplied")
+            val error = LoadState.Error(resources.getString(R.string.runtime_profile_name_missing))
             _configState.value = error
             _soulState.value = error
             _memoryState.value = error
@@ -392,7 +396,7 @@ class ProfileInspectorViewModel(
     ) {
         val client = gatewayClient
         if (client == null) {
-            _editEvents.tryEmit(EditEvent.Error("Gateway profile editor unavailable"))
+            _editEvents.tryEmit(EditEvent.Error(resources.getString(R.string.runtime_profile_editor_unavailable)))
             return
         }
         viewModelScope.launch {
@@ -404,14 +408,14 @@ class ProfileInspectorViewModel(
                     _skillToggleSupported.value = false
                 }
                 clearSavingFlags()
-                _editEvents.tryEmit(EditEvent.Error(configured.exceptionOrNull()?.message ?: "Save failed"))
+                _editEvents.tryEmit(EditEvent.Error(configured.exceptionOrNull()?.message ?: resources.getString(R.string.runtime_profile_save_failed)))
                 return@launch
             }
             val result = configured.getOrThrow()
             val refreshed = client.describeProfile(profileName)
             if (refreshed.isFailure) {
                 clearSavingFlags()
-                _editEvents.tryEmit(EditEvent.Error(saveSummary(result) + "; authoritative refresh failed"))
+                _editEvents.tryEmit(EditEvent.Error(resources.getString(R.string.runtime_profile_refresh_failed, saveSummary(result))))
                 return@launch
             }
             val description = refreshed.getOrThrow()
@@ -430,10 +434,20 @@ class ProfileInspectorViewModel(
     }
 
     private fun saveSummary(result: GatewayProfileConfigureResult): String {
-        val applied = result.applied.joinToString { it.wireName }.ifBlank { "none" }
-        val failed = result.failed.joinToString { it.wireName }.ifBlank { "none" }
-        return "Applied: $applied; failed: $failed"
+        val applied = result.applied.joinToString { sectionLabel(it) }.ifBlank { resources.getString(R.string.conn_info_none) }
+        val failed = result.failed.joinToString { sectionLabel(it) }.ifBlank { resources.getString(R.string.conn_info_none) }
+        return resources.getString(R.string.runtime_profile_save_summary, applied, failed)
     }
+
+    private fun sectionLabel(section: GatewayProfileSection): String = resources.getString(when (section) {
+        GatewayProfileSection.Description -> R.string.profile_inspector_description
+        GatewayProfileSection.Soul -> R.string.profile_inspector_tab_soul
+        GatewayProfileSection.Model -> R.string.profile_inspector_model
+        GatewayProfileSection.Skills -> R.string.profile_inspector_tab_skills
+        GatewayProfileSection.Toolsets -> R.string.profile_inspector_toolsets
+        GatewayProfileSection.McpServers -> R.string.ui_label_mcp_servers
+        GatewayProfileSection.UiMeta -> R.string.ui_label_ui_metadata
+    })
 
     private fun GatewayProfileDescription.toConfigResponse(): ProfileConfigResponse =
         ProfileConfigResponse(
@@ -479,7 +493,7 @@ class ProfileInspectorViewModel(
 
     private fun <T> Result<T>.toLoadState(fallbackMessage: String? = null): LoadState<T> = fold(
         onSuccess = { LoadState.Loaded(it) },
-        onFailure = { LoadState.Error(it.message ?: fallbackMessage ?: "Unknown error") },
+        onFailure = { LoadState.Error(it.message ?: fallbackMessage ?: resources.getString(R.string.runtime_profile_unknown)) },
     )
 
     companion object {

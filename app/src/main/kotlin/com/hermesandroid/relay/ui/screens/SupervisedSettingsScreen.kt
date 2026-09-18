@@ -56,7 +56,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import com.hermesandroid.relay.R
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -99,6 +102,7 @@ fun SupervisedSettingsScreen(
     onParentAccessGranted: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val activeConnection by connectionViewModel.activeConnection.collectAsState()
     val effectiveProfile by connectionViewModel.effectiveDisplayProfile.collectAsState()
     val profileAlias by connectionViewModel.profileDisplayAlias.collectAsState()
@@ -119,13 +123,12 @@ fun SupervisedSettingsScreen(
         when (parentAuthStatus) {
             SupervisedParentAuthStatus.Configured -> parentAuthDialog = ParentAuthDialog.Verify
             SupervisedParentAuthStatus.Missing -> {
-                authError = "This legacy supervised policy has no app-specific parent credential and stays locked. " +
-                    "Reset this app's local data, reconnect, and configure parent access before enabling Supervised Mode again."
+                authError = resources.getString(R.string.supervised_legacy_locked)
             }
             SupervisedParentAuthStatus.Corrupt -> {
-                authError = "Parent access data is unavailable. Supervised Mode remains locked."
+                authError = resources.getString(R.string.supervised_parent_data_locked)
             }
-            null -> authError = "Parent access is still loading."
+            null -> authError = resources.getString(R.string.supervised_parent_loading)
         }
     }
 
@@ -135,11 +138,11 @@ fun SupervisedSettingsScreen(
                 navigationIcon = {
                     if (onBack != null) {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.supervised_back))
                         }
                     }
                 },
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.supervised_settings)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
@@ -160,7 +163,7 @@ fun SupervisedSettingsScreen(
             val agentName = AgentDisplay.profileDisplayName(pinnedProfile)
                 ?: profileAlias?.takeIf { pinnedProfile != null }
                 ?: policy.pinnedProfileName?.let(::profileLabel)
-                ?: "Supervised chat unavailable"
+                ?: stringResource(R.string.supervised_chat_unavailable)
             SupervisedSummaryCard(
                 agentName = agentName,
                 connectionLabel = activeConnection?.label,
@@ -168,29 +171,29 @@ fun SupervisedSettingsScreen(
                 isDarkTheme = isDarkTheme,
             )
 
-            SupervisedSectionLabel("Appearance")
+            SupervisedSectionLabel(stringResource(R.string.supervised_appearance))
             SupervisedNavigationRow(
                 icon = Icons.Filled.Palette,
-                title = "Appearance",
-                subtitle = "Supervised theme and approved agent look",
+                title = stringResource(R.string.supervised_appearance),
+                subtitle = stringResource(R.string.supervised_appearance_summary),
                 onClick = onNavigateToAppearance,
                 isDarkTheme = isDarkTheme,
             )
 
-            SupervisedSectionLabel("Help")
+            SupervisedSectionLabel(stringResource(R.string.supervised_help))
             SupervisedNavigationRow(
                 icon = Icons.Filled.Info,
-                title = "About Hermes Relay",
-                subtitle = "About this supervised client",
+                title = stringResource(R.string.supervised_about_title),
+                subtitle = stringResource(R.string.supervised_about_summary),
                 onClick = { showAbout = true },
                 isDarkTheme = isDarkTheme,
             )
 
-            SupervisedSectionLabel("Parent")
+            SupervisedSectionLabel(stringResource(R.string.supervised_parent))
             SupervisedNavigationRow(
                 icon = Icons.Filled.Lock,
-                title = "Parent access",
-                subtitle = "Unlock full settings with the app parent PIN or password",
+                title = stringResource(R.string.supervised_parent_access),
+                subtitle = stringResource(R.string.supervised_parent_unlock_summary),
                 onClick = ::requestParentAccess,
                 isDarkTheme = isDarkTheme,
             )
@@ -209,15 +212,14 @@ fun SupervisedSettingsScreen(
     if (showAbout) {
         AlertDialog(
             onDismissRequest = { showAbout = false },
-            title = { Text("Hermes Relay") },
+            title = { Text(stringResource(R.string.supervised_app_name)) },
             text = {
                 Text(
-                    "Supervised mode provides a parent-configured, restricted Android chat interface. " +
-                        "The selected Hermes profile owns the agent's tool and content restrictions.",
+                    stringResource(R.string.supervised_about_body),
                 )
             },
             confirmButton = {
-                TextButton(onClick = { showAbout = false }) { Text("Close") }
+                TextButton(onClick = { showAbout = false }) { Text(stringResource(R.string.supervised_close)) }
             },
         )
     }
@@ -272,10 +274,10 @@ fun SupervisedAppearanceSettingsScreen(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.supervised_back))
                     }
                 },
-                title = { Text("Appearance") },
+                title = { Text(stringResource(R.string.supervised_appearance)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
@@ -291,7 +293,7 @@ fun SupervisedAppearanceSettingsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                "This theme applies only while the supervised view is locked.",
+                stringResource(R.string.supervised_theme_scope),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -303,7 +305,7 @@ fun SupervisedAppearanceSettingsScreen(
                 policy.appearance.allowProfileIconChanges ||
                 policy.appearance.allowBackgroundChanges
             ) {
-                SupervisedSectionLabel("Agent look")
+                SupervisedSectionLabel(stringResource(R.string.supervised_agent_look))
                 SupervisedCard(isDarkTheme) {
                     SupervisedAgentLookControls(
                         connectionViewModel = connectionViewModel,
@@ -329,6 +331,7 @@ fun SupervisedControlsScreen(
     onReturnToSupervisedView: () -> Unit,
 ) {
     val context = LocalContext.current
+    val resources = LocalResources.current
     val parentAuthStore = remember(context) { SupervisedParentAuthStore(context) }
     val parentAuthStatus by produceState<SupervisedParentAuthStatus?>(
         initialValue = null,
@@ -350,7 +353,7 @@ fun SupervisedControlsScreen(
 
     fun requestFirstEnable() {
         if (!policy.isConfigured) {
-            enableAuthError = "Choose an agent profile before enabling Supervised Mode."
+            enableAuthError = resources.getString(R.string.supervised_choose_profile_first)
             return
         }
         when (parentAuthStatus) {
@@ -360,9 +363,9 @@ fun SupervisedControlsScreen(
             }
             SupervisedParentAuthStatus.Configured -> parentAuthDialog = ParentAuthDialog.Verify
             SupervisedParentAuthStatus.Corrupt -> {
-                enableAuthError = "Parent access data is unavailable. Reset local app data before enabling Supervised Mode."
+                enableAuthError = resources.getString(R.string.supervised_parent_data_reset)
             }
-            null -> enableAuthError = "Parent access is still loading."
+            null -> enableAuthError = resources.getString(R.string.supervised_parent_loading)
         }
     }
 
@@ -371,10 +374,10 @@ fun SupervisedControlsScreen(
             TopAppBar(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.supervised_back))
                     }
                 },
-                title = { Text("Supervised mode") },
+                title = { Text(stringResource(R.string.supervised_mode)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                 ),
@@ -391,14 +394,14 @@ fun SupervisedControlsScreen(
         ) {
             SupervisedCard(isDarkTheme) {
                 SupervisedSwitchRow(
-                    title = "Use supervised mode",
+                    title = stringResource(R.string.supervised_enable),
                     subtitle = when {
                         policy.pinnedProfileName.isNullOrBlank() ->
-                            "Choose an agent profile before enabling"
+                            stringResource(R.string.supervised_choose_profile_hint)
                         parentAuthStatus == SupervisedParentAuthStatus.Missing ->
-                            "Set an app-specific parent PIN or password"
+                            stringResource(R.string.supervised_set_credential_hint)
                         else ->
-                            "Show only the approved Android chat surfaces"
+                            stringResource(R.string.supervised_approved_surfaces)
                     },
                     checked = policy.enabled,
                     enabled = policy.enabled ||
@@ -421,8 +424,8 @@ fun SupervisedControlsScreen(
                 }
                 HorizontalDivider()
                 SupervisedValueRow(
-                    title = "Agent profile",
-                    value = policy.pinnedProfileName?.let(::profileLabel) ?: "Choose profile",
+                    title = stringResource(R.string.supervised_agent_profile),
+                    value = policy.pinnedProfileName?.let(::profileLabel) ?: stringResource(R.string.supervised_choose_profile),
                     onClick = { showProfilePicker = true },
                 )
             }
@@ -430,31 +433,31 @@ fun SupervisedControlsScreen(
             if (policy.enabled) {
                 SupervisedNavigationRow(
                     icon = Icons.Filled.Lock,
-                    title = "Return to supervised view",
-                    subtitle = "Lock parent access and open the pinned agent chat",
+                    title = stringResource(R.string.supervised_return),
+                    subtitle = stringResource(R.string.supervised_return_summary),
                     onClick = onReturnToSupervisedView,
                     isDarkTheme = isDarkTheme,
                 )
             }
 
             Text(
-                "This mode restricts this Android client. The selected Hermes profile remains responsible for agent tools and content policy.",
+                stringResource(R.string.supervised_client_boundary),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "Parent access uses an app-specific PIN or password, separate from the supervised user's Android screen lock and biometrics.",
+                stringResource(R.string.supervised_credential_boundary),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            SupervisedSectionLabel("Supervised appearance")
+            SupervisedSectionLabel(stringResource(R.string.supervised_appearance_title))
             SupervisedCard(isDarkTheme) {
                 SupervisedThemeControls(policy, onPolicyChange, appearanceShape)
                 HorizontalDivider()
                 SupervisedSwitchRow(
-                    title = "Show pet",
-                    subtitle = "Show the pet selected in the full Appearance settings",
+                    title = stringResource(R.string.supervised_show_pet),
+                    subtitle = stringResource(R.string.supervised_show_pet_summary),
                     checked = policy.appearance.showPet,
                     onCheckedChange = {
                         onPolicyChange(policy.copy(appearance = policy.appearance.copy(showPet = it)))
@@ -462,8 +465,8 @@ fun SupervisedControlsScreen(
                 )
                 HorizontalDivider()
                 SupervisedSwitchRow(
-                    title = "Let supervised user change the agent icon",
-                    subtitle = "The parent can always change the phone-local icon",
+                    title = stringResource(R.string.supervised_allow_icon_changes),
+                    subtitle = stringResource(R.string.supervised_icon_parent_override),
                     checked = policy.appearance.allowProfileIconChanges,
                     onCheckedChange = {
                         onPolicyChange(
@@ -475,8 +478,8 @@ fun SupervisedControlsScreen(
                 )
                 HorizontalDivider()
                 SupervisedSwitchRow(
-                    title = "Let supervised user change the background",
-                    subtitle = "The parent can always choose the supervised chat background",
+                    title = stringResource(R.string.supervised_allow_background_changes),
+                    subtitle = stringResource(R.string.supervised_background_parent_override),
                     checked = policy.appearance.allowBackgroundChanges,
                     onCheckedChange = {
                         onPolicyChange(
@@ -488,10 +491,10 @@ fun SupervisedControlsScreen(
                 )
             }
 
-            SupervisedSectionLabel("Parent-set agent look")
+            SupervisedSectionLabel(stringResource(R.string.supervised_parent_set_look))
             SupervisedCard(isDarkTheme) {
                 Text(
-                    "These controls remain available to the parent even when supervised-user changes are off.",
+                    stringResource(R.string.supervised_parent_controls_remain),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -502,30 +505,30 @@ fun SupervisedControlsScreen(
                 )
             }
 
-            SupervisedSectionLabel("Allowed features")
+            SupervisedSectionLabel(stringResource(R.string.supervised_allowed_features))
             SupervisedCard(isDarkTheme) {
-                SupervisedSwitchRow("Attachments", "Allow only the approved file types below", policy.capabilities.attachments) {
+                SupervisedSwitchRow(stringResource(R.string.supervised_attachments), stringResource(R.string.supervised_attachments_summary), policy.capabilities.attachments) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(attachments = it)))
                 }
                 HorizontalDivider()
-                SupervisedSwitchRow("Voice", "Allow standard Hermes voice", policy.capabilities.voice) {
+                SupervisedSwitchRow(stringResource(R.string.supervised_voice), stringResource(R.string.supervised_voice_summary), policy.capabilities.voice) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(voice = it)))
                 }
                 HorizontalDivider()
-                SupervisedSwitchRow("Generated images", "Show images returned in chat", policy.capabilities.generatedImages) {
+                SupervisedSwitchRow(stringResource(R.string.supervised_generated_images), stringResource(R.string.supervised_generated_images_summary), policy.capabilities.generatedImages) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(generatedImages = it)))
                 }
                 HorizontalDivider()
-                SupervisedSwitchRow("Conversation history", "Allow previous chats with this agent", policy.capabilities.conversationHistory) {
+                SupervisedSwitchRow(stringResource(R.string.supervised_history), stringResource(R.string.supervised_history_summary), policy.capabilities.conversationHistory) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(conversationHistory = it)))
                 }
                 HorizontalDivider()
-                SupervisedSwitchRow("Share generated images", "Allow Android sharing and saving", policy.capabilities.shareGeneratedImages) {
+                SupervisedSwitchRow(stringResource(R.string.supervised_share_images), stringResource(R.string.supervised_share_images_summary), policy.capabilities.shareGeneratedImages) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(shareGeneratedImages = it)))
                 }
                 if (policy.capabilities.attachments) {
                     HorizontalDivider()
-                    Text("Attachment count", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.supervised_attachment_count), style = MaterialTheme.typography.titleSmall)
                     val countOptions = listOf(1, 2, 4, 8)
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         countOptions.forEachIndexed { index, count ->
@@ -544,7 +547,7 @@ fun SupervisedControlsScreen(
                             ) { Text(count.toString()) }
                         }
                     }
-                    Text("Maximum size per attachment", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.supervised_attachment_size), style = MaterialTheme.typography.titleSmall)
                     val sizeOptions = listOf(5, 10, 25, 50)
                     SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                         sizeOptions.forEachIndexed { index, sizeMb ->
@@ -560,10 +563,10 @@ fun SupervisedControlsScreen(
                                     )
                                 },
                                 shape = SegmentedButtonDefaults.itemShape(index, sizeOptions.size),
-                            ) { Text("$sizeMb MB") }
+                            ) { Text(stringResource(R.string.supervised_size_mb, sizeMb)) }
                         }
                     }
-                    Text("Attachment types", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.supervised_attachment_types), style = MaterialTheme.typography.titleSmall)
                     SupervisedAttachmentCategory.entries.forEach { category ->
                         val enabled = category in policy.capabilities.attachmentCategories
                         SupervisedSwitchRow(
@@ -590,44 +593,44 @@ fun SupervisedControlsScreen(
                 }
             }
 
-            SupervisedSectionLabel("Conversation actions")
+            SupervisedSectionLabel(stringResource(R.string.supervised_conversation_actions))
             SupervisedCard(isDarkTheme) {
-                CapabilitySwitch("New chat", policy.capabilities.newChat) {
+                CapabilitySwitch(stringResource(R.string.supervised_new_chat), policy.capabilities.newChat) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(newChat = it)))
                 }
-                CapabilitySwitch("Cancel response", policy.capabilities.cancelResponse) {
+                CapabilitySwitch(stringResource(R.string.supervised_cancel_response), policy.capabilities.cancelResponse) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(cancelResponse = it)))
                 }
-                CapabilitySwitch("Steer response", policy.capabilities.steerResponse) {
+                CapabilitySwitch(stringResource(R.string.supervised_steer_response), policy.capabilities.steerResponse) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(steerResponse = it)))
                 }
-                CapabilitySwitch("Retry response", policy.capabilities.retryResponse) {
+                CapabilitySwitch(stringResource(R.string.supervised_retry_response), policy.capabilities.retryResponse) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(retryResponse = it)))
                 }
-                CapabilitySwitch("Copy responses", policy.capabilities.copyResponses) {
+                CapabilitySwitch(stringResource(R.string.supervised_copy_responses), policy.capabilities.copyResponses) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(copyResponses = it)))
                 }
-                CapabilitySwitch("Quote replies", policy.capabilities.quoteReplies) {
+                CapabilitySwitch(stringResource(R.string.supervised_quote_replies), policy.capabilities.quoteReplies) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(quoteReplies = it)))
                 }
-                CapabilitySwitch("Edit and resend", policy.capabilities.editAndResend, divider = false) {
+                CapabilitySwitch(stringResource(R.string.supervised_edit_resend), policy.capabilities.editAndResend, divider = false) {
                     onPolicyChange(policy.copy(capabilities = policy.capabilities.copy(editAndResend = it)))
                 }
             }
 
-            SupervisedSectionLabel("Session options")
+            SupervisedSectionLabel(stringResource(R.string.supervised_session_options))
             SupervisedCard(isDarkTheme) {
                 val actions = policy.capabilities.sessionActions
                 SupervisedValueRow(
-                    title = "History actions",
+                    title = stringResource(R.string.supervised_history_actions),
                     value = sessionActionsSummary(actions),
                     onClick = { sessionActionsExpanded = !sessionActionsExpanded },
                 )
                 Text(
                     if (policy.capabilities.conversationHistory) {
-                        "Choose which actions appear on previous chats. Delete still asks for confirmation."
+                        stringResource(R.string.supervised_history_actions_enabled)
                     } else {
-                        "Selections are saved, but previous-chat actions stay unavailable until Conversation history is on."
+                        stringResource(R.string.supervised_history_actions_disabled)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -648,7 +651,7 @@ fun SupervisedControlsScreen(
                                     ),
                                 )
                             },
-                            label = { Text("Allow all") },
+                            label = { Text(stringResource(R.string.supervised_allow_all)) },
                         )
                         FilterChip(
                             selected = actions.noneEnabled,
@@ -661,28 +664,28 @@ fun SupervisedControlsScreen(
                                     ),
                                 )
                             },
-                            label = { Text("Allow none") },
+                            label = { Text(stringResource(R.string.supervised_allow_none)) },
                         )
                     }
-                    SessionActionSwitch("Pin and unpin", actions.pin) {
+                    SessionActionSwitch(stringResource(R.string.supervised_pin_unpin), actions.pin) {
                         onPolicyChange(policy.withSessionActions(actions.copy(pin = it)))
                     }
-                    SessionActionSwitch("Rename", actions.rename) {
+                    SessionActionSwitch(stringResource(R.string.supervised_rename), actions.rename) {
                         onPolicyChange(policy.withSessionActions(actions.copy(rename = it)))
                     }
-                    SessionActionSwitch("Archive and restore", actions.archive) {
+                    SessionActionSwitch(stringResource(R.string.supervised_archive_restore), actions.archive) {
                         onPolicyChange(policy.withSessionActions(actions.copy(archive = it)))
                     }
-                    SessionActionSwitch("Share transcript", actions.shareTranscript) {
+                    SessionActionSwitch(stringResource(R.string.supervised_share_transcript), actions.shareTranscript) {
                         onPolicyChange(policy.withSessionActions(actions.copy(shareTranscript = it)))
                     }
-                    SessionActionSwitch("Delete", actions.delete, divider = false) {
+                    SessionActionSwitch(stringResource(R.string.supervised_delete), actions.delete, divider = false) {
                         onPolicyChange(policy.withSessionActions(actions.copy(delete = it)))
                     }
                 }
             }
 
-            SupervisedSectionLabel("What appears in chat")
+            SupervisedSectionLabel(stringResource(R.string.supervised_visible_elements))
             SupervisedCard(isDarkTheme) {
                 val presets = SupervisedVisibilityPreset.entries
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -698,52 +701,52 @@ fun SupervisedControlsScreen(
                 }
                 Text(
                     when (policy.visibility.preset) {
-                        SupervisedVisibilityPreset.Simple -> "Conversation only, with minimal technical detail"
-                        SupervisedVisibilityPreset.Transparent -> "Adds status, timestamps, and useful context"
-                        SupervisedVisibilityPreset.Custom -> "Choose each visible surface below"
+                        SupervisedVisibilityPreset.Simple -> stringResource(R.string.supervised_simple_summary)
+                        SupervisedVisibilityPreset.Transparent -> stringResource(R.string.supervised_transparent_summary)
+                        SupervisedVisibilityPreset.Custom -> stringResource(R.string.supervised_custom_summary)
                     },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (policy.visibility.preset == SupervisedVisibilityPreset.Custom) {
                     HorizontalDivider()
-                    VisibilitySwitch("Agent name and avatar", policy.visibility.showAgentIdentity) {
+                    VisibilitySwitch(stringResource(R.string.supervised_agent_identity), policy.visibility.showAgentIdentity) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showAgentIdentity = it)))
                     }
-                    VisibilitySwitch("Model name", policy.visibility.showModelName) {
+                    VisibilitySwitch(stringResource(R.string.supervised_model_name), policy.visibility.showModelName) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showModelName = it)))
                     }
-                    VisibilitySwitch("Profile name", policy.visibility.showProfileName) {
+                    VisibilitySwitch(stringResource(R.string.supervised_profile_name), policy.visibility.showProfileName) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showProfileName = it)))
                     }
-                    VisibilitySwitch("Connection status", policy.visibility.showConnectionStatus) {
+                    VisibilitySwitch(stringResource(R.string.supervised_connection_status), policy.visibility.showConnectionStatus) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showConnectionStatus = it)))
                     }
-                    VisibilitySwitch("Technical route", policy.visibility.showTechnicalRoute) {
+                    VisibilitySwitch(stringResource(R.string.supervised_technical_route), policy.visibility.showTechnicalRoute) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showTechnicalRoute = it)))
                     }
-                    VisibilitySwitch("Message timestamps", policy.visibility.showTimestamps) {
+                    VisibilitySwitch(stringResource(R.string.supervised_timestamps), policy.visibility.showTimestamps) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showTimestamps = it)))
                     }
-                    VisibilitySwitch("Working status", policy.visibility.showWorkingStatus) {
+                    VisibilitySwitch(stringResource(R.string.supervised_working_status), policy.visibility.showWorkingStatus) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showWorkingStatus = it)))
                     }
-                    VisibilitySwitch("Tool names", policy.visibility.showToolNames) {
+                    VisibilitySwitch(stringResource(R.string.supervised_tool_names), policy.visibility.showToolNames) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showToolNames = it)))
                     }
-                    VisibilitySwitch("Tool details", policy.visibility.showToolDetails) {
+                    VisibilitySwitch(stringResource(R.string.supervised_tool_details), policy.visibility.showToolDetails) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showToolDetails = it)))
                     }
-                    VisibilitySwitch("Reasoning", policy.visibility.showReasoning) {
+                    VisibilitySwitch(stringResource(R.string.supervised_reasoning), policy.visibility.showReasoning) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showReasoning = it)))
                     }
-                    VisibilitySwitch("Usage", policy.visibility.showUsage, divider = false) {
+                    VisibilitySwitch(stringResource(R.string.supervised_usage), policy.visibility.showUsage, divider = false) {
                         onPolicyChange(policy.copy(visibility = policy.visibility.copy(showUsage = it)))
                     }
                 }
             }
 
-            SupervisedSectionLabel("Parent access")
+            SupervisedSectionLabel(stringResource(R.string.supervised_parent_access))
             SupervisedCard(isDarkTheme) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -752,13 +755,13 @@ fun SupervisedControlsScreen(
                         tint = MaterialTheme.colorScheme.primary,
                     )
                     Column(Modifier.padding(start = 12.dp)) {
-                        Text("App parent credential", style = MaterialTheme.typography.titleSmall)
+                        Text(stringResource(R.string.supervised_app_credential), style = MaterialTheme.typography.titleSmall)
                         Text(
                             when (parentAuthStatus) {
-                                SupervisedParentAuthStatus.Configured -> "A parent PIN or password is configured for this app."
-                                SupervisedParentAuthStatus.Missing -> "Set a parent PIN or password before enabling Supervised Mode."
-                                SupervisedParentAuthStatus.Corrupt -> "Parent access data is unavailable and fails closed."
-                                null -> "Loading parent access…"
+                                SupervisedParentAuthStatus.Configured -> stringResource(R.string.supervised_credential_configured)
+                                SupervisedParentAuthStatus.Missing -> stringResource(R.string.supervised_credential_missing)
+                                SupervisedParentAuthStatus.Corrupt -> stringResource(R.string.supervised_credential_corrupt)
+                                null -> stringResource(R.string.supervised_loading_access)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -771,17 +774,17 @@ fun SupervisedControlsScreen(
                             enableAfterEnrollment = false
                             parentAuthDialog = ParentAuthDialog.Setup
                         },
-                    ) { Text("Set parent PIN or password") }
+                    ) { Text(stringResource(R.string.supervised_set_credential)) }
                     SupervisedParentAuthStatus.Configured -> {
                         OutlinedButton(onClick = { parentAuthDialog = ParentAuthDialog.Change }) {
-                            Text("Change parent PIN or password")
+                            Text(stringResource(R.string.supervised_change_credential))
                         }
                         TextButton(onClick = { parentAuthDialog = ParentAuthDialog.Recovery }) {
-                            Text("Reset with recovery phrase")
+                            Text(stringResource(R.string.supervised_reset_recovery))
                         }
                         TextButton(onClick = { showRemoveCredentialConfirm = true }) {
                             Text(
-                                "Remove parent credential",
+                                stringResource(R.string.supervised_remove_credential),
                                 color = MaterialTheme.colorScheme.error,
                             )
                         }
@@ -790,8 +793,8 @@ fun SupervisedControlsScreen(
                 }
                 HorizontalDivider()
                 SupervisedSwitchRow(
-                    title = "Relock when the app leaves the screen",
-                    subtitle = "Recommended for shared devices",
+                    title = stringResource(R.string.supervised_relock_background),
+                    subtitle = stringResource(R.string.supervised_shared_device_recommendation),
                     checked = policy.parentAccess.relockOnBackground,
                     onCheckedChange = {
                         onPolicyChange(
@@ -802,7 +805,7 @@ fun SupervisedControlsScreen(
                     },
                 )
                 HorizontalDivider()
-                Text("Automatic relock", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.supervised_automatic_relock), style = MaterialTheme.typography.titleSmall)
                 val timeoutOptions = listOf(1, 5, 15, 60)
                 SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                     timeoutOptions.forEachIndexed { index, minutes ->
@@ -818,7 +821,7 @@ fun SupervisedControlsScreen(
                                 )
                             },
                             shape = SegmentedButtonDefaults.itemShape(index, timeoutOptions.size),
-                        ) { Text(if (minutes == 60) "1 hr" else "$minutes min") }
+                        ) { Text(if (minutes == 60) stringResource(R.string.supervised_one_hour) else stringResource(R.string.supervised_minutes, minutes)) }
                     }
                 }
             }
@@ -830,7 +833,7 @@ fun SupervisedControlsScreen(
     if (showProfilePicker) {
         AlertDialog(
             onDismissRequest = { showProfilePicker = false },
-            title = { Text("Choose agent profile") },
+            title = { Text(stringResource(R.string.supervised_choose_agent_profile)) },
             text = {
                 Column {
                     profiles.forEach { profile ->
@@ -852,12 +855,12 @@ fun SupervisedControlsScreen(
                         }
                     }
                     if (profiles.isEmpty()) {
-                        Text("Profiles are not available yet. Connect to Hermes and try again.")
+                        Text(stringResource(R.string.supervised_profiles_unavailable))
                     }
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showProfilePicker = false }) { Text("Close") }
+                TextButton(onClick = { showProfilePicker = false }) { Text(stringResource(R.string.supervised_close)) }
             },
         )
     }
@@ -878,7 +881,7 @@ fun SupervisedControlsScreen(
                             onBack()
                         },
                         onFailure = {
-                            enableAuthError = "Parent access could not be removed. Try again."
+                            enableAuthError = resources.getString(R.string.supervised_remove_failed)
                         },
                     )
                 }
@@ -953,24 +956,22 @@ internal fun RemoveParentCredentialDialog(
 ) {
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
-        title = { Text("Remove parent credential?") },
+        title = { Text(stringResource(R.string.supervised_remove_title)) },
         text = {
             Text(
-                "This disables Supervised Mode on every connection and removes the app-wide " +
-                    "PIN or password and recovery phrase. Your supervised settings and toggles are kept. " +
-                    "Hermes sessions and server history are not deleted.",
+                stringResource(R.string.supervised_remove_warning),
             )
         },
         confirmButton = {
             TextButton(enabled = !busy, onClick = onConfirm) {
                 Text(
-                    if (busy) "Removing…" else "Remove",
+                    if (busy) stringResource(R.string.supervised_removing) else stringResource(R.string.supervised_remove),
                     color = MaterialTheme.colorScheme.error,
                 )
             }
         },
         dismissButton = {
-            TextButton(enabled = !busy, onClick = onDismiss) { Text("Cancel") }
+            TextButton(enabled = !busy, onClick = onDismiss) { Text(stringResource(R.string.supervised_cancel)) }
         },
     )
 }
@@ -993,9 +994,9 @@ private fun SupervisedSummaryCard(
             }
         }
         val features = buildList {
-            if (policy.capabilities.attachments) add("Attachments")
-            if (policy.capabilities.voice) add("Voice")
-            if (policy.capabilities.generatedImages) add("Generated images")
+            if (policy.capabilities.attachments) add(stringResource(R.string.supervised_attachments))
+            if (policy.capabilities.voice) add(stringResource(R.string.supervised_voice))
+            if (policy.capabilities.generatedImages) add(stringResource(R.string.supervised_generated_images))
         }
         if (features.isNotEmpty()) {
             Text(
@@ -1133,10 +1134,11 @@ private fun SupervisedValueRow(title: String, value: String, onClick: () -> Unit
     }
 }
 
+@Composable
 private fun SupervisedVisibilityPreset.displayLabel(): String = when (this) {
-    SupervisedVisibilityPreset.Simple -> "Simple"
-    SupervisedVisibilityPreset.Transparent -> "Transparent"
-    SupervisedVisibilityPreset.Custom -> "Custom"
+    SupervisedVisibilityPreset.Simple -> stringResource(R.string.supervised_simple)
+    SupervisedVisibilityPreset.Transparent -> stringResource(R.string.supervised_transparent)
+    SupervisedVisibilityPreset.Custom -> stringResource(R.string.supervised_custom)
 }
 
 private fun profileLabel(value: String): String = value
@@ -1144,11 +1146,12 @@ private fun profileLabel(value: String): String = value
     .replace('-', ' ')
     .replaceFirstChar { it.uppercase() }
 
+@Composable
 private fun SupervisedAttachmentCategory.displayLabel(): String = when (this) {
-    SupervisedAttachmentCategory.Images -> "Images"
-    SupervisedAttachmentCategory.Documents -> "Documents"
-    SupervisedAttachmentCategory.Audio -> "Audio"
-    SupervisedAttachmentCategory.Video -> "Video"
+    SupervisedAttachmentCategory.Images -> stringResource(R.string.supervised_images)
+    SupervisedAttachmentCategory.Documents -> stringResource(R.string.supervised_documents)
+    SupervisedAttachmentCategory.Audio -> stringResource(R.string.supervised_audio)
+    SupervisedAttachmentCategory.Video -> stringResource(R.string.supervised_video)
 }
 
 private fun SupervisedModePolicy.withSessionActions(
@@ -1157,10 +1160,11 @@ private fun SupervisedModePolicy.withSessionActions(
     capabilities = capabilities.copy(sessionActions = actions),
 )
 
+@Composable
 private fun sessionActionsSummary(actions: SupervisedSessionActions): String = when {
-    actions.allEnabled -> "All allowed"
-    actions.noneEnabled -> "None allowed"
-    else -> "${actions.enabledCount} of ${SupervisedSessionActions.TOTAL} allowed"
+    actions.allEnabled -> stringResource(R.string.supervised_all_allowed)
+    actions.noneEnabled -> stringResource(R.string.supervised_none_allowed)
+    else -> stringResource(R.string.supervised_allowed_count, actions.enabledCount, SupervisedSessionActions.TOTAL)
 }
 
 private enum class ParentAuthDialog {
@@ -1196,7 +1200,7 @@ private fun SupervisedThemeControls(
         restricted = true,
     )
 
-    Text("Theme", style = MaterialTheme.typography.titleSmall)
+    Text(stringResource(R.string.supervised_theme), style = MaterialTheme.typography.titleSmall)
     Row(
         modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -1217,7 +1221,7 @@ private fun SupervisedThemeControls(
     }
 
     if (selectedTheme.mode == ThemeMode.BOTH) {
-        val modeOptions = listOf("auto" to "System", "light" to "Light", "dark" to "Dark")
+        val modeOptions = listOf("auto" to stringResource(R.string.supervised_system), "light" to stringResource(R.string.supervised_light), "dark" to stringResource(R.string.supervised_dark))
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             modeOptions.forEachIndexed { index, option ->
                 SegmentedButton(
@@ -1235,7 +1239,7 @@ private fun SupervisedThemeControls(
         }
     } else {
         Text(
-            if (selectedTheme.mode == ThemeMode.LIGHT_ONLY) "Fixed light theme" else "Fixed dark theme",
+            if (selectedTheme.mode == ThemeMode.LIGHT_ONLY) stringResource(R.string.supervised_fixed_light) else stringResource(R.string.supervised_fixed_dark),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1258,23 +1262,23 @@ private fun SupervisedAgentLookControls(
     }
 
     if (allowProfileIconChanges) {
-        Text("Agent icon", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.supervised_agent_icon), style = MaterialTheme.typography.titleSmall)
         Text(
             if (localProfileIcon.isNullOrBlank()) {
-                "Using the profile's current icon"
+                stringResource(R.string.supervised_profile_icon_current)
             } else {
-                "Using a phone-local icon for this profile"
+                stringResource(R.string.supervised_profile_icon_local)
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { iconPicker.launch("image/*") }) {
-                Text("Choose image")
+                Text(stringResource(R.string.supervised_choose_image))
             }
             if (!localProfileIcon.isNullOrBlank()) {
                 TextButton(onClick = connectionViewModel::clearProfileIcon) {
-                    Text("Use profile icon")
+                    Text(stringResource(R.string.supervised_use_profile_icon))
                 }
             }
         }
@@ -1283,9 +1287,9 @@ private fun SupervisedAgentLookControls(
     if (allowProfileIconChanges && allowBackgroundChanges) HorizontalDivider()
 
     if (allowBackgroundChanges) {
-        Text("Chat background", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.supervised_background), style = MaterialTheme.typography.titleSmall)
         Text(
-            "Choose from backgrounds already installed by the parent.",
+            stringResource(R.string.supervised_background_choices),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -1296,12 +1300,12 @@ private fun SupervisedAgentLookControls(
             FilterChip(
                 selected = !backgroundEnabled,
                 onClick = { connectionViewModel.setBackgroundVisualizationEnabled(false) },
-                label = { Text("Off") },
+                label = { Text(stringResource(R.string.supervised_off)) },
             )
             FilterChip(
                 selected = backgroundEnabled && backgroundAvatar == SphereAvatar.id,
                 onClick = { connectionViewModel.setBackgroundAvatar(SphereAvatar.id) },
-                label = { Text("Sphere") },
+                label = { Text(stringResource(R.string.supervised_sphere)) },
             )
             availableBackgrounds.forEach { avatar ->
                 FilterChip(

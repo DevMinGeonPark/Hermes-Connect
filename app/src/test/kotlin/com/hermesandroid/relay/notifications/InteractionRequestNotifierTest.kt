@@ -156,6 +156,28 @@ class InteractionRequestNotifierTest {
     }
 
     @Test
+    @Config(qualifiers = "ko-rKR")
+    fun koreanNotificationKeepsSensitiveDetailsPrivate() {
+        val secret = GatewayAsk(
+            kind = GatewayAsk.Kind.SECRET,
+            requestId = "korean-secret",
+            text = "Do not expose this request",
+            envVar = "PRIVATE_TOKEN",
+            timeoutSeconds = 300,
+        )
+        assertTrue(post(secret, SESSION_ID))
+        val notification = manager.activeNotifications.single().notification
+        assertEquals("Hermes에 민감한 정보 입력 필요", notification.extras.getString(Notification.EXTRA_TITLE))
+        assertEquals("안전하게 응답", notification.actions.single().title)
+        val detail = notification.extras.getString(Notification.EXTRA_BIG_TEXT).orEmpty()
+        assertTrue(detail.contains("프로필: 서버 기본값"))
+        assertFalse(detail.contains(secret.text))
+        assertFalse(detail.contains(secret.envVar!!))
+        assertEquals("Hermes가 응답을 기다리고 있습니다", notification.publicVersion.extras.getString(Notification.EXTRA_TITLE))
+        assertEquals(Notification.VISIBILITY_PRIVATE, notification.visibility)
+    }
+
+    @Test
     fun missingAndroidPermissionSkipsPosting() {
         shadowOf(RuntimeEnvironment.getApplication()).denyPermissions(
             Manifest.permission.POST_NOTIFICATIONS,

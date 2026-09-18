@@ -6,6 +6,68 @@ import org.junit.Test
 
 class VoiceCommandInterpreterTest {
     @Test
+    fun `Korean commands require the exact phrase and matching state`() {
+        assertEquals(
+            VoiceCommandAction.StopResponse,
+            VoiceCommandInterpreter.interpretFinalTranscript("응답 중지!", VoiceCommandContext(responseActive = true)),
+        )
+        assertEquals(
+            VoiceCommandAction.CancelBackgroundTask,
+            VoiceCommandInterpreter.interpretFinalTranscript("백그라운드 작업 취소", VoiceCommandContext(backgroundTaskActive = true)),
+        )
+        assertEquals(
+            VoiceCommandAction.StartNewChat,
+            VoiceCommandInterpreter.interpretFinalTranscript("새 대화 시작", VoiceCommandContext(canStartNewChat = true)),
+        )
+        assertNull(VoiceCommandInterpreter.interpretFinalTranscript("새 대화 시작", VoiceCommandContext()))
+        assertNull(
+            VoiceCommandInterpreter.interpretFinalTranscript(
+                "백그라운드 작업 취소 방법을 알려줘",
+                VoiceCommandContext(backgroundTaskActive = true),
+            ),
+        )
+        assertNull(
+            VoiceCommandInterpreter.interpretFinalTranscript(
+                "응답 중지하지 말고 계속해",
+                VoiceCommandContext(responseActive = true),
+            ),
+        )
+    }
+
+    @Test
+    fun `Korean controls preserve configurable voice stop phrases`() {
+        assertNull(
+            VoiceCommandInterpreter.interpretFinalTranscript(
+                "취소", VoiceCommandContext(voiceChatActive = true, stopPhrases = emptyList()),
+            ),
+        )
+        assertEquals(
+            VoiceCommandAction.EndVoiceChat,
+            VoiceCommandInterpreter.interpretFinalTranscript(
+                "음성 종료", VoiceCommandContext(voiceChatActive = true, stopPhrases = listOf("음성 종료")),
+            ),
+        )
+        assertEquals(
+            VoiceCommandAction.PauseContinuousListening,
+            VoiceCommandInterpreter.interpretFinalTranscript(
+                "일시 중지", VoiceCommandContext(continuousModeSelected = true, continuousListeningActive = true),
+            ),
+        )
+        assertEquals(
+            VoiceCommandAction.ResumeContinuousListening,
+            VoiceCommandInterpreter.interpretFinalTranscript(
+                "재개", VoiceCommandContext(continuousModeSelected = true, continuousListeningPaused = true),
+            ),
+        )
+        assertEquals(
+            VoiceCommandAction.RepeatBackgroundAnswer,
+            VoiceCommandInterpreter.interpretFinalTranscript(
+                "다시 말해 줘", VoiceCommandContext(backgroundAnswerAvailable = true),
+            ),
+        )
+    }
+
+    @Test
     fun `normalizes casing whitespace and terminal punctuation`() {
         val action = VoiceCommandInterpreter.interpretFinalTranscript(
             rawTranscript = "  STOP TALKING!!!  ",

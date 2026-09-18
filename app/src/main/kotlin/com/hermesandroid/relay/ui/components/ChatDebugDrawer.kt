@@ -168,7 +168,7 @@ internal fun ChatDebugDrawer(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(title, style = MaterialTheme.typography.titleLarge)
-                    Text(listOf(if (gateway) "Gateway" else "Direct API", profile, model)
+                    Text(listOf(if (gateway) "Gateway" else stringResource(R.string.ko_direct_api), profile, model)
                         .filter(String::isNotBlank).joinToString(" · "), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }

@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.viewmodel
 
+import com.hermesandroid.relay.util.localizedString
 import android.app.Application
 import android.content.Context
 import android.os.SystemClock
@@ -451,9 +452,10 @@ internal fun preserveRealtimeTurnOnStop(backgroundPhase: BackgroundRunPhase?): B
 internal fun backgroundRunAfterCancelRequest(
     run: BackgroundRunState?,
     cancelSent: Boolean,
+    context: Context? = null,
 ): BackgroundRunState? = when {
     run == null || run.phase == BackgroundRunPhase.DONE -> null
-    cancelSent -> run.copy(message = "Cancelling…", statusLine = null)
+    cancelSent -> run.copy(message = context?.localizedString(R.string.runtime_cancelling) ?: "Cancelling…", statusLine = null)
     else -> null
 }
 
@@ -747,6 +749,9 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             "forget it",
             "wait",
         )
+        // Korean commands are exact-only: a longer sentence about cancellation
+        // must remain a normal prompt, rather than cancelling a pending action.
+        private val KOREAN_CANCEL_PHRASES = setOf("취소", "취소해", "취소해 줘", "취소해 주세요")
     }
 
     // --- Dependencies (injected via initialize) --------------------------
@@ -1422,7 +1427,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
 
         if (previous.state == VoiceState.Listening && mode != InteractionMode.Continuous) {
             cancelListeningWithoutProcessing(
-                title = getApplication<Application>().getString(R.string.voice_status_mode_switched),
+                title = getApplication<Application>().localizedString(R.string.voice_status_mode_switched),
                 detail = "Cancelled active listening before changing interaction mode",
             )
         }
@@ -1612,7 +1617,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         DiagnosticsLog.record(
             category = DiagnosticCategory.Voice,
             severity = DiagnosticSeverity.Info,
-            title = getApplication<Application>().getString(R.string.voice_status_standard_tts),
+            title = getApplication<Application>().localizedString(R.string.voice_status_standard_tts),
             detail = "Standard voice is routed through Hermes profile \"$profile\" " +
                 "for speech, transcription, streaming playback, and voice catalogs.",
         )
@@ -1762,7 +1767,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         updateBackgroundRun { run ->
             run.copy(
                 phase = BackgroundRunPhase.DONE,
-                message = "Background task finished.",
+                message = getApplication<Application>().localizedString(R.string.runtime_background_task_finished),
                 statusLine = null,
             )
         }
@@ -1798,7 +1803,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             // Keep the chip up while the respeak plays; its linger job will
             // re-dismiss afterwards.
             deliveringChipClearJob?.cancel()
-            updateBackgroundRun { it.copy(message = "Repeating the answer…") }
+            updateBackgroundRun { it.copy(message = getApplication<Application>().localizedString(R.string.runtime_repeating_the_answer)) }
             deliveringChipClearJob = viewModelScope.launch {
                 delay(DONE_CHIP_LINGER_MS)
                 _uiState.update { state ->
@@ -1847,7 +1852,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                     state
                 } else {
                     state.copy(
-                        backgroundRun = backgroundRunAfterCancelRequest(current, cancelSent),
+                        backgroundRun = backgroundRunAfterCancelRequest(current, cancelSent, getApplication()),
                         handoffStatus = if (cancelSent) state.handoffStatus else null,
                     )
                 }
@@ -1865,7 +1870,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                             val current = _uiState.value.backgroundRun
                             val shouldDismiss = current != null &&
                                 current.runId == run.runId &&
-                                current.message == "Cancelling…"
+                                current.message == getApplication<Application>().localizedString(R.string.runtime_cancelling)
                             if (shouldDismiss) {
                                 _uiState.update {
                                     it.copy(backgroundRun = null, handoffStatus = null)
@@ -1958,13 +1963,12 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             // Only for runs that haven't already settled.
             if (detachedRun.phase != BackgroundRunPhase.DONE) {
                 val queuedSuffix = if (detachedRun.queuedCount > 0) {
-                    " (+${detachedRun.queuedCount} queued)"
+                    getApplication<Application>().localizedString(R.string.runtime_queued_suffix, detachedRun.queuedCount)
                 } else {
                     ""
                 }
                 chatNoticeSink?.invoke(
-                    "🕐 Background voice task still running$queuedSuffix — " +
-                        "Hermes will report back when it finishes.",
+                    getApplication<Application>().localizedString(R.string.runtime_background_voice_running, queuedSuffix),
                 )
             }
         }
@@ -2046,7 +2050,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         responseInterruptedForVoiceCommand = false
         val rec = recorder
         if (rec == null) {
-            setError("Recorder not initialized")
+            setError(getApplication<Application>().localizedString(R.string.runtime_recorder_not_initialized))
             return
         }
         if (requireContinuousLoop && !canStartContinuousCapture()) return
@@ -2178,7 +2182,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         val captureDurationMs = listeningDurationMs()
         if (shouldDiscardVoiceCaptureBeforeStop(captureDurationMs)) {
             cancelListeningWithoutProcessing(
-                title = getApplication<Application>().getString(R.string.voice_status_capture_ignored),
+                title = getApplication<Application>().localizedString(R.string.voice_status_capture_ignored),
                 detail = "Released before speech capture settled",
             )
             return
@@ -2202,7 +2206,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Info,
-                title = getApplication<Application>().getString(R.string.voice_status_capture_ignored),
+                title = getApplication<Application>().localizedString(R.string.voice_status_capture_ignored),
                 detail = "duration=${captureDurationMs}ms pcm=${inputPcm.size} bytes",
             )
             _uiState.update {
@@ -2333,7 +2337,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 state = VoiceState.Idle,
                 amplitude = 0f,
                 outputAudioActive = false,
-                responseText = "Continuous listening resumed.",
+                responseText = getApplication<Application>().localizedString(R.string.runtime_continuous_listening_resumed),
             )
         }
         startListening()
@@ -2399,7 +2403,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                     !hasSpoken && (now - turnStartedMs) >= IDLE_NO_SPEECH_MS -> {
                         Log.d(TAG, "silence watchdog: ${IDLE_NO_SPEECH_MS}ms with no speech — closing idle turn")
                         cancelListeningWithoutProcessing(
-                            title = getApplication<Application>().getString(R.string.voice_status_no_speech),
+                            title = getApplication<Application>().localizedString(R.string.voice_status_no_speech),
                             detail = "No speech within ${IDLE_NO_SPEECH_MS / 1000}s",
                             notice = AssistantSessionNotice.NoSpeech,
                         )
@@ -2614,7 +2618,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(destructiveCountdown = null) }
         if (_uiState.value.state == VoiceState.Speaking) {
             _uiState.update {
-                it.copy(state = VoiceState.Idle, outputAudioActive = false, responseText = "Cancelled.")
+                it.copy(state = VoiceState.Idle, outputAudioActive = false, responseText = getApplication<Application>().localizedString(R.string.runtime_cancelled))
             }
         }
     }
@@ -2626,9 +2630,9 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update {
             it.copy(
                 hermesConfirmation = null,
-                responseText = if (sent) "Sent confirmation." else "Could not send confirmation.",
+                responseText = if (sent) getApplication<Application>().localizedString(R.string.runtime_sent_confirmation) else getApplication<Application>().localizedString(R.string.runtime_could_not_send_confirmation),
                 state = if (sent) VoiceState.Thinking else VoiceState.Error,
-                error = if (sent) null else "Realtime confirmation channel is not available",
+                error = if (sent) null else getApplication<Application>().localizedString(R.string.runtime_realtime_confirmation_channel_is_not_available),
             )
         }
     }
@@ -2643,20 +2647,20 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
     // Keyed progress feedback is cleared before an outcome replaces it.
     // Classified failures retain their existing error event/overlay flow.
     fun testVoice(
-        sample: String = "Hello, this is Hermes. Voice mode is working.",
+        sample: String = getApplication<Application>().localizedString(R.string.runtime_tts_test),
         onResult: (Result<Unit>) -> Unit = {},
     ) {
         val audioClient = voiceAudioClient
         val relayClient = voiceClient
         val p = player
         if (audioClient == null || p == null) {
-            onResult(Result.failure(IllegalStateException("Voice pipeline not initialized")))
-            UiMessageBus.error("Voice test failed: pipeline not initialized")
-            setError("Voice pipeline not initialized")
+            onResult(Result.failure(IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_voice_pipeline_not_initialized))))
+            UiMessageBus.error(getApplication<Application>().localizedString(R.string.runtime_voice_test_failed_pipeline_not_initialized))
+            setError(getApplication<Application>().localizedString(R.string.runtime_voice_pipeline_not_initialized))
             return
         }
         val feedbackKey = "voice-test-${System.nanoTime()}"
-        UiMessageBus.post("Testing voice…", severity = UiMessageSeverity.Status, ttlMillis = 0L, key = feedbackKey)
+        UiMessageBus.post(getApplication<Application>().localizedString(R.string.runtime_testing_voice), severity = UiMessageSeverity.Status, ttlMillis = 0L, key = feedbackKey)
         viewModelScope.launch {
             val profileAwareResult = if (audioClient.route == VoiceAudioRoute.Relay && relayClient != null) {
                 testVoiceViaVoiceOutput(relayClient, sample)
@@ -2667,7 +2671,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 if (profileAwareResult.isSuccess) {
                     UiMessageBus.clear(feedbackKey)
                     onResult(Result.success(Unit))
-                    UiMessageBus.success("Voice test successful")
+                    UiMessageBus.success(getApplication<Application>().localizedString(R.string.runtime_voice_test_successful))
                     return@launch
                 }
                 Log.w(TAG, "profile-aware voice test failed; falling back to legacy synthesize: ${profileAwareResult.exceptionOrNull()?.message}")
@@ -2685,8 +2689,8 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             val file = result.getOrNull()
             if (file == null) {
                 UiMessageBus.clear(feedbackKey)
-                onResult(Result.failure(IllegalStateException("No audio returned")))
-                UiMessageBus.error("Voice test failed: no audio returned")
+                onResult(Result.failure(IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_no_audio_returned))))
+                UiMessageBus.error(getApplication<Application>().localizedString(R.string.runtime_voice_test_failed_no_audio_returned))
                 return@launch
             }
             trackTtsFile(file)
@@ -2695,14 +2699,14 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 p.awaitCompletion()
                 UiMessageBus.clear(feedbackKey)
                 onResult(Result.success(Unit))
-                UiMessageBus.success("Voice test successful")
+                UiMessageBus.success(getApplication<Application>().localizedString(R.string.runtime_voice_test_successful))
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (e: Exception) {
                 Log.w(TAG, "test playback failed: ${e.message}")
                 UiMessageBus.clear(feedbackKey)
                 onResult(Result.failure(e))
-                UiMessageBus.error("Voice test failed: ${e.message ?: "playback error"}")
+                UiMessageBus.error(getApplication<Application>().localizedString(R.string.runtime_fmt_voice_test_failed_1_s, e.message ?: getApplication<Application>().localizedString(R.string.voice_settings_playback_error)))
             }
         }.invokeOnCompletion { UiMessageBus.clear(feedbackKey) }
     }
@@ -2723,7 +2727,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         voice: String,
         sampleRate: Int,
         language: String,
-        sample: String = "Hello, this is Hermes. This is how this voice sounds.",
+        sample: String = getApplication<Application>().localizedString(R.string.runtime_tts_preview),
         onResult: (Result<Unit>) -> Unit = {},
     ) {
         if (_voicePreviewState.value.isActive &&
@@ -2736,7 +2740,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         val client = voiceClient
         val pcmPlayer = realtimePcmPlayer
         if (client == null || pcmPlayer == null) {
-            val error = IllegalStateException("Relay voice preview is not available")
+            val error = IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_relay_voice_preview_is_not_available))
             _voicePreviewState.value = VoicePreviewUiState(error = error.message)
             onResult(Result.failure(error))
             return
@@ -2785,7 +2789,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 val finalResult = result.fold(
                     onSuccess = {
                         if (audioBytes.get() <= 0) {
-                            Result.failure(IllegalStateException("Voice preview returned no audio"))
+                            Result.failure(IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_voice_preview_returned_no_audio)))
                         } else {
                             val drainMs = pcmPlayer.flushBufferedPlayback().coerceIn(250L, 4_500L)
                             delay(drainMs)
@@ -2829,7 +2833,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         model: String,
         voice: String,
         sampleRate: Int,
-        sample: String = "Introduce this voice in one short sentence.",
+        sample: String = getApplication<Application>().localizedString(R.string.runtime_realtime_preview_prompt),
         onResult: (Result<Unit>) -> Unit = {},
     ) {
         if (_voicePreviewState.value.isActive && _voicePreviewState.value.selectionKey == selectionKey) {
@@ -2839,7 +2843,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         val client = voiceClient
         val pcmPlayer = realtimePcmPlayer
         if (client == null || pcmPlayer == null) {
-            val error = IllegalStateException("Realtime voice preview is not available")
+            val error = IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_realtime_voice_preview_is_not_available))
             _voicePreviewState.value = VoicePreviewUiState(error = error.message)
             onResult(Result.failure(error))
             return
@@ -2885,7 +2889,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 val finalResult = result.fold(
                     onSuccess = {
                         if (audioBytes.get() <= 0) {
-                            Result.failure(IllegalStateException("Realtime preview returned no audio"))
+                            Result.failure(IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_realtime_preview_returned_no_audio)))
                         } else {
                             val drainMs = pcmPlayer.flushBufferedPlayback().coerceIn(250L, 4_500L)
                             delay(drainMs)
@@ -2924,24 +2928,24 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun testRealtimeAgent(
-        sample: String = "Say a short confirmation that Hermes Realtime Agent is working.",
+        sample: String = getApplication<Application>().localizedString(R.string.runtime_realtime_test_prompt),
         onResult: (Result<Unit>) -> Unit = {},
     ) {
         val client = voiceClient
         val pcmPlayer = realtimePcmPlayer
         if (client == null || pcmPlayer == null) {
-            onResult(Result.failure(IllegalStateException("Voice pipeline not initialized")))
-            UiMessageBus.error("Realtime test failed: pipeline not initialized")
-            setError("Voice pipeline not initialized")
+            onResult(Result.failure(IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_voice_pipeline_not_initialized))))
+            UiMessageBus.error(getApplication<Application>().localizedString(R.string.runtime_realtime_test_failed_pipeline_not_initialized))
+            setError(getApplication<Application>().localizedString(R.string.runtime_voice_pipeline_not_initialized))
             return
         }
         val feedbackKey = "realtime-test-${System.nanoTime()}"
-        UiMessageBus.post("Testing Realtime Agent...", severity = UiMessageSeverity.Status, ttlMillis = 0L, key = feedbackKey)
+        UiMessageBus.post(getApplication<Application>().localizedString(R.string.runtime_testing_realtime_agent), severity = UiMessageSeverity.Status, ttlMillis = 0L, key = feedbackKey)
         viewModelScope.launch {
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Info,
-                title = getApplication<Application>().getString(R.string.voice_status_test_started),
+                title = getApplication<Application>().localizedString(R.string.voice_status_test_started),
                 detail = "Opening provider-native settings test session",
             )
             val audioBytes = AtomicInteger(0)
@@ -2974,7 +2978,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Voice,
                     severity = DiagnosticSeverity.Error,
-                    title = getApplication<Application>().getString(R.string.voice_status_test_failed),
+                    title = getApplication<Application>().localizedString(R.string.voice_status_test_failed),
                     detail = msg,
                 )
                 surfaceError(result.exceptionOrNull(), context = "voice_config")
@@ -2982,13 +2986,13 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             }
             if (audioBytes.get() <= 0) {
                 pcmPlayer.stop()
-                onResult(Result.failure(IllegalStateException("Provider returned no audio")))
-                UiMessageBus.error("Realtime test failed: no audio returned")
+                onResult(Result.failure(IllegalStateException(getApplication<Application>().localizedString(R.string.runtime_provider_returned_no_audio))))
+                UiMessageBus.error(getApplication<Application>().localizedString(R.string.runtime_realtime_test_failed_no_audio_returned))
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Voice,
                     severity = DiagnosticSeverity.Error,
-                    title = getApplication<Application>().getString(R.string.voice_status_test_failed),
-                    detail = "Provider returned no audio",
+                    title = getApplication<Application>().localizedString(R.string.voice_status_test_failed),
+                    detail = getApplication<Application>().localizedString(R.string.runtime_provider_returned_no_audio),
                 )
                 return@launch
             }
@@ -2997,11 +3001,11 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             delay(drainMs)
             pcmPlayer.stop()
             onResult(Result.success(Unit))
-            UiMessageBus.success("Realtime test successful")
+            UiMessageBus.success(getApplication<Application>().localizedString(R.string.runtime_realtime_test_successful))
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Info,
-                title = getApplication<Application>().getString(R.string.voice_status_test_complete),
+                title = getApplication<Application>().localizedString(R.string.voice_status_test_complete),
                 detail = "${audioBytes.get()} bytes streamed",
             )
         }.invokeOnCompletion { UiMessageBus.clear(feedbackKey) }
@@ -3132,7 +3136,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     state = VoiceState.Idle,
                     outputAudioActive = false,
-                    responseText = "That voice action is disabled by Parent controls.",
+                    responseText = getApplication<Application>().localizedString(R.string.runtime_that_voice_action_is_disabled_by_parent_controls),
                 )
             }
             return action
@@ -3182,7 +3186,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                     it.copy(
                         state = VoiceState.Idle,
                         outputAudioActive = false,
-                        responseText = "New chat started.",
+                        responseText = getApplication<Application>().localizedString(R.string.runtime_new_chat_started),
                     )
                 }
                 if (resumeContinuous) startListening()
@@ -3204,14 +3208,14 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         val audioClient = voiceAudioClient
         val chatVm = chatViewModel
         if (audioClient == null || chatVm == null) {
-            setError("Voice pipeline not initialized")
+            setError(getApplication<Application>().localizedString(R.string.runtime_voice_pipeline_not_initialized))
             return
         }
         if (
             supervisedModePolicy.enabled &&
             audioClient.effectiveRoute != VoiceAudioRoute.Standard
         ) {
-            setError("Supervised voice requires the Standard Hermes voice route")
+            setError(getApplication<Application>().localizedString(R.string.runtime_supervised_voice_requires_the_standard_hermes_voice_route))
             return
         }
         currentTurnPcm = inputPcm
@@ -3233,14 +3237,14 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         if (engineModeForTurn == VoiceEngineMode.RealtimeAgent) {
             val client = relayClient
             if (client == null) {
-                setError("Realtime Agent needs a Relay voice route")
+                setError(getApplication<Application>().localizedString(R.string.runtime_realtime_agent_needs_a_relay_voice_route))
                 return
             }
             Log.i(TAG, "Voice input routed to Realtime Agent")
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Info,
-                title = getApplication<Application>().getString(R.string.voice_status_turn_started_realtime),
+                title = getApplication<Application>().localizedString(R.string.voice_status_turn_started_realtime),
                 detail = "Checking relay before opening provider session",
             )
             if (!runVoiceRelayPreflight("Realtime Agent")) return
@@ -3291,7 +3295,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         DiagnosticsLog.record(
             category = DiagnosticCategory.Voice,
             severity = DiagnosticSeverity.Info,
-            title = getApplication<Application>().getString(R.string.voice_status_turn_started),
+            title = getApplication<Application>().localizedString(R.string.voice_status_turn_started),
             detail = "Hermes voice output (${audioClient.route.storageValue})",
         )
 
@@ -3312,8 +3316,8 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Error,
-                title = getApplication<Application>().getString(R.string.voice_status_transcription_failed),
-                detail = err?.message ?: "Unknown error",
+                title = getApplication<Application>().localizedString(R.string.voice_status_transcription_failed),
+                detail = err?.message ?: getApplication<Application>().localizedString(R.string.runtime_profile_unknown),
             )
             surfaceError(err, context = "transcribe")
             return
@@ -3395,11 +3399,11 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 it.copy(
                     state = VoiceState.Speaking,
                     outputAudioActive = false,
-                    responseText = "Cancelled.",
+                    responseText = getApplication<Application>().localizedString(R.string.runtime_cancelled),
                     destructiveCountdown = null,
                 )
             }
-            enqueueSentenceForTts("Cancelled.", immediate = true)
+            enqueueSentenceForTts(getApplication<Application>().localizedString(R.string.runtime_cancelled), immediate = true)
             return
         }
         // === END PHASE3-voice-cancel-midcountdown ===
@@ -3457,7 +3461,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                             it.copy(
                                 state = VoiceState.Idle,
                                 outputAudioActive = false,
-                                responseText = "${result.intentLabel}: $userText",
+                                responseText = "${localizedIntentLabel(result.intentLabel)}: $userText",
                             )
                         }
                     }
@@ -3552,7 +3556,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update {
                     voiceSubmissionRejectedState(
                         it,
-                        "Screen context was not sent. $reason Tap Try again to retry.",
+                        getApplication<Application>().localizedString(R.string.runtime_fmt_screen_context_was_not_sent_1_s_tap_try_again_to_retry, reason),
                     )
                 }
             },
@@ -3577,7 +3581,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                     it.copy(
                         state = VoiceState.Idle,
                         outputAudioActive = false,
-                        responseText = "Command sent.",
+                        responseText = getApplication<Application>().localizedString(R.string.runtime_command_sent),
                     )
                 }
                 return
@@ -3616,15 +3620,15 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         val message = when {
             raw.contains("timeout", ignoreCase = true) ||
                 raw.contains("not responding", ignoreCase = true) ->
-                "Relay is not responding. Check Gateways."
+                getApplication<Application>().localizedString(R.string.runtime_relay_is_not_responding_check_gateways)
             raw.contains("not configured", ignoreCase = true) ->
-                "Relay is not configured. Check Gateways."
+                getApplication<Application>().localizedString(R.string.runtime_relay_is_not_configured_check_gateways)
             else -> raw
         }
         DiagnosticsLog.record(
             category = DiagnosticCategory.Voice,
             severity = DiagnosticSeverity.Error,
-            title = getApplication<Application>().getString(R.string.voice_status_relay_check_failed),
+            title = getApplication<Application>().localizedString(R.string.voice_status_relay_check_failed),
             detail = "$engineLabel: $message",
         )
         setError(message)
@@ -3946,7 +3950,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                         _uiState.update {
                             it.copy(
                                 state = VoiceState.Thinking,
-                                responseText = "Using $tool...",
+                                responseText = getApplication<Application>().localizedString(R.string.runtime_fmt_using_1_s, tool),
                             )
                         }
                     }
@@ -3980,7 +3984,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                             if (run.phase == BackgroundRunPhase.DELIVERING ||
                                 run.phase == BackgroundRunPhase.DONE
                             ) run
-                            else run.copy(statusLine = "Drafting the answer…")
+                            else run.copy(statusLine = getApplication<Application>().localizedString(R.string.runtime_drafting_the_answer))
                         }
                     }
                 }
@@ -4093,9 +4097,9 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                                 runId = event.runId,
                                 tier = tier,
                                 message = if (tier == "durable") {
-                                    "Started a background task — I'll report back."
+                                    getApplication<Application>().localizedString(R.string.runtime_started_a_background_task_i_ll_report_back)
                                 } else {
-                                    "This is taking a moment — working on it in the background."
+                                    getApplication<Application>().localizedString(R.string.runtime_this_is_taking_a_moment_working_on_it_in_the_background)
                                 },
                                 queuedCount = event.queuedCount ?: 0,
                             ),
@@ -4132,7 +4136,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                         updateBackgroundRun { run ->
                             run.copy(
                                 phase = BackgroundRunPhase.DELIVERING,
-                                message = "Done — delivering the answer…",
+                                message = getApplication<Application>().localizedString(R.string.runtime_done_delivering_the_answer),
                                 statusLine = null,
                             )
                         }
@@ -4164,16 +4168,16 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                             it.copy(
                                 hermesConfirmation = HermesConfirmationState(
                                     confirmationId = confirmationId,
-                                    message = event.message ?: "Hermes is waiting for confirmation.",
+                                    message = event.message ?: getApplication<Application>().localizedString(R.string.runtime_hermes_is_waiting_for_confirmation),
                                 )
                             )
                         }
                     }
-                    emitStatus("confirmation", "Waiting for confirmation.")
+                    emitStatus("confirmation", getApplication<Application>().localizedString(R.string.runtime_waiting_for_confirmation_detail))
                     _uiState.update {
                         it.copy(
                             state = VoiceState.Thinking,
-                            responseText = event.message ?: "Waiting for confirmation",
+                            responseText = event.message ?: getApplication<Application>().localizedString(R.string.runtime_waiting_for_confirmation),
                         )
                     }
                 }
@@ -4209,13 +4213,13 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                     if (reason != "pre_hermes_ack") {
-                        emitStatus("done-summarizing", "Done, summarizing.", speak = false)
+                        emitStatus("done-summarizing", getApplication<Application>().localizedString(R.string.runtime_done_summarizing), speak = false)
                     }
                     _uiState.update {
                         it.copy(
                             state = if (audioSeen.get()) VoiceState.Speaking else VoiceState.Thinking,
                             responseText = responseText.toString().ifBlank {
-                                if (reason == "pre_hermes_ack") "Checking Hermes..." else "Finishing tool response..."
+                                if (reason == "pre_hermes_ack") getApplication<Application>().localizedString(R.string.runtime_checking_hermes) else getApplication<Application>().localizedString(R.string.runtime_finishing_tool_response)
                             },
                         )
                     }
@@ -4257,7 +4261,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                         it.copy(
                             state = VoiceState.Idle,
                             outputAudioActive = false,
-                            responseText = "Cancelled.",
+                            responseText = getApplication<Application>().localizedString(R.string.runtime_cancelled),
                             hermesConfirmation = null,
                             backgroundRun = null,
                         )
@@ -4283,11 +4287,11 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 "voice.error" -> {
                     realtimeConfirmationControl = null
-                    val rawDetail = event.message ?: "Realtime agent failed"
+                    val rawDetail = event.message ?: getApplication<Application>().localizedString(R.string.voice_test_status_agent_failed)
                     DiagnosticsLog.record(
                         category = DiagnosticCategory.Voice,
                         severity = DiagnosticSeverity.Error,
-                        title = getApplication<Application>().getString(R.string.voice_status_realtime_error),
+                        title = getApplication<Application>().localizedString(R.string.voice_status_realtime_error),
                         detail = rawDetail,
                     )
                     _uiState.update { it.copy(hermesConfirmation = null) }
@@ -4337,7 +4341,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Error,
                 title = "Realtime voice turn failed",
-                detail = err?.message ?: "Unknown error",
+                detail = err?.message ?: getApplication<Application>().localizedString(R.string.runtime_profile_unknown),
             )
             // A persistent session ending in error must drop so the next turn opens
             // a fresh one rather than submitting into a dead channel.
@@ -4361,7 +4365,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 if (rtAssistantMessageId.isNotBlank()) {
                     chatVm.failRealtimeAgentTurn(
                         rtAssistantMessageId,
-                        getApplication<Application>().getString(R.string.voice_connection_interrupted),
+                        getApplication<Application>().localizedString(R.string.voice_connection_interrupted),
                     )
                 }
                 surfaceError(err, context = "voice_config")
@@ -4378,7 +4382,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         DiagnosticsLog.record(
             category = DiagnosticCategory.Voice,
             severity = DiagnosticSeverity.Info,
-            title = getApplication<Application>().getString(R.string.voice_status_turn_complete_realtime),
+            title = getApplication<Application>().localizedString(R.string.voice_status_turn_complete_realtime),
         )
         Log.i(
             TAG,
@@ -4408,7 +4412,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         // for another task — the relay answers busy rather than orphaning it).
         updateBackgroundRun { run ->
             if (run.phase == BackgroundRunPhase.RUNNING) {
-                run.copy(statusLine = "Still working on the earlier task…")
+                run.copy(statusLine = getApplication<Application>().localizedString(R.string.runtime_still_working_on_the_earlier_task))
             } else {
                 run
             }
@@ -4492,7 +4496,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
         if (!assistantMessageId.isNullOrBlank()) {
             chatVm.failRealtimeAgentTurn(
                 assistantMessageId,
-                getApplication<Application>().getString(R.string.voice_connection_interrupted),
+                getApplication<Application>().localizedString(R.string.voice_connection_interrupted),
             )
         }
         closeRealtimeSession()
@@ -4542,15 +4546,15 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
     private fun realtimeToolStatusLine(toolName: String?): String {
         val normalized = toolName.orEmpty().lowercase()
         return when {
-            "desktop" in normalized -> "Searching desktop."
-            "search" in normalized -> "Searching."
-            "android" in normalized -> "Checking phone."
-            "browser" in normalized || "web" in normalized -> "Searching web."
-            "terminal" in normalized || "shell" in normalized -> "Running command."
-            "skill" in normalized -> "Checking Hermes skill."
-            "memory" in normalized -> "Checking memory."
-            "file" in normalized || "read" in normalized || "write" in normalized -> "Checking files."
-            else -> "Checking Hermes."
+            "desktop" in normalized -> getApplication<Application>().localizedString(R.string.runtime_searching_desktop)
+            "search" in normalized -> getApplication<Application>().localizedString(R.string.runtime_searching)
+            "android" in normalized -> getApplication<Application>().localizedString(R.string.runtime_checking_phone)
+            "browser" in normalized || "web" in normalized -> getApplication<Application>().localizedString(R.string.runtime_searching_web)
+            "terminal" in normalized || "shell" in normalized -> getApplication<Application>().localizedString(R.string.runtime_running_command)
+            "skill" in normalized -> getApplication<Application>().localizedString(R.string.runtime_checking_hermes_skill)
+            "memory" in normalized -> getApplication<Application>().localizedString(R.string.runtime_checking_memory)
+            "file" in normalized || "read" in normalized || "write" in normalized -> getApplication<Application>().localizedString(R.string.runtime_checking_files)
+            else -> getApplication<Application>().localizedString(R.string.runtime_checking_hermes_detail)
         }
     }
 
@@ -4902,7 +4906,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun brokeredToolStartStatus(toolName: String, indexForMessage: Int): String {
-        return brokeredToolStartStatusForTts(toolName, indexForMessage)
+        return brokeredToolStartStatusForTts(toolName, indexForMessage, getApplication())
     }
 
     private fun enqueueBrokeredToolStatus(status: String) {
@@ -5161,7 +5165,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                 DiagnosticsLog.record(
                     category = DiagnosticCategory.Voice,
                     severity = DiagnosticSeverity.Info,
-                    title = getApplication<Application>().getString(R.string.voice_status_render_basic),
+                    title = getApplication<Application>().localizedString(R.string.voice_status_render_basic),
                     detail = "Streaming /voice/output is disabled or unavailable — rendering via " +
                         "the /voice/synthesize fallback. Per-request enhanced voice applies here; " +
                         "the streaming renderer's speech-tags setting does not.",
@@ -5173,7 +5177,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             DiagnosticsLog.record(
                 category = DiagnosticCategory.Voice,
                 severity = DiagnosticSeverity.Info,
-                title = getApplication<Application>().getString(R.string.voice_status_render_streaming),
+                title = getApplication<Application>().localizedString(R.string.voice_status_render_streaming),
                 detail = "Streaming /voice/output renderer active" +
                     (cfg?.default_provider?.takeIf { it.isNotBlank() }?.let { " (provider $it)" }.orEmpty()) +
                     (if (cfg?.auto_speech_tags == true) "; expressive speech tags on" else "") + ".",
@@ -5274,7 +5278,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                     DiagnosticsLog.record(
                         category = DiagnosticCategory.Voice,
                         severity = DiagnosticSeverity.Warning,
-                        title = getApplication<Application>().getString(R.string.voice_status_realtime_audio_stuck),
+                        title = getApplication<Application>().localizedString(R.string.voice_status_realtime_audio_stuck),
                         detail = "Playback has been running ${elapsed}ms with no audio output. " +
                             "If this persists, the audio output route may need a nudge (volume key).",
                     )
@@ -5692,9 +5696,9 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             ?.replace(Regex("\\s+"), " ")
             ?.trim()
             ?.takeIf { it.isNotBlank() }
-            ?: "Waiting for Hermes response."
+            ?: getApplication<Application>().localizedString(R.string.runtime_waiting_for_hermes_response)
         return if (line.equals("Hermes is still working.", ignoreCase = true)) {
-            "Waiting for Hermes response."
+            getApplication<Application>().localizedString(R.string.runtime_waiting_for_hermes_response)
         } else {
             line
         }
@@ -6386,7 +6390,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
                         "Voice reconnected" -> updateBackgroundRun {
                             it.copy(
                                 phase = BackgroundRunPhase.RUNNING,
-                                statusLine = "Back online — still working…",
+                                statusLine = getApplication<Application>().localizedString(R.string.runtime_back_online_still_working),
                             )
                         }
                     }
@@ -6658,11 +6662,11 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun handleNoSpeechDetected(detail: String? = null) {
         val context = getApplication<Application>()
-        val message = context.getString(R.string.voice_no_speech_try_again)
+        val message = context.localizedString(R.string.voice_no_speech_try_again)
         DiagnosticsLog.record(
             category = DiagnosticCategory.Voice,
             severity = DiagnosticSeverity.Warning,
-            title = context.getString(R.string.voice_status_no_speech),
+            title = context.localizedString(R.string.voice_status_no_speech),
             detail = detail,
         )
         _uiState.update {
@@ -6746,7 +6750,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
             ?: return null
         if (permission.isBlank()) return null
         val friendly = friendlyPermissionName(permission)
-        val hint = "I need $friendly to $label here. Tap to open Settings."
+        val hint = getApplication<Application>().localizedString(R.string.runtime_fmt_i_need_1_s_to_2_s_here_tap_to_open_settings, friendly, localizedIntentLabel(label))
         return PermissionDeniedCallout(
             permission = permission,
             intentLabel = label,
@@ -6761,14 +6765,14 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
      * without forcing every new permission to update this map.
      */
     private fun friendlyPermissionName(permission: String): String = when (permission) {
-        "android.permission.READ_CONTACTS" -> "Contacts"
+        "android.permission.READ_CONTACTS" -> getApplication<Application>().localizedString(R.string.bpc_contacts)
         "android.permission.SEND_SMS" -> "SMS"
-        "android.permission.CALL_PHONE" -> "Phone"
-        "android.permission.ACCESS_FINE_LOCATION" -> "Location"
-        "android.permission.ACCESS_COARSE_LOCATION" -> "Location"
-        "android.permission.RECORD_AUDIO" -> "Microphone"
-        "android.permission.CAMERA" -> "Camera"
-        "android.permission.POST_NOTIFICATIONS" -> "Notifications"
+        "android.permission.CALL_PHONE" -> getApplication<Application>().localizedString(R.string.bpc_phone)
+        "android.permission.ACCESS_FINE_LOCATION" -> getApplication<Application>().localizedString(R.string.bpc_location)
+        "android.permission.ACCESS_COARSE_LOCATION" -> getApplication<Application>().localizedString(R.string.bpc_location)
+        "android.permission.RECORD_AUDIO" -> getApplication<Application>().localizedString(R.string.bpc_microphone)
+        "android.permission.CAMERA" -> getApplication<Application>().localizedString(R.string.chat_input_camera)
+        "android.permission.POST_NOTIFICATIONS" -> getApplication<Application>().localizedString(R.string.bridge_core_notifications)
         else -> permission.substringAfterLast('.').replace('_', ' ').lowercase()
             .replaceFirstChar { it.uppercase() }
     }
@@ -6819,27 +6823,27 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
     ): String {
         val base = when {
             result.isSuccess -> when (label) {
-                "Send SMS" -> "Text sent."
-                "Open App" -> "App opened."
-                "Tap" -> "Tapped."
-                "Navigate back" -> "Done."
-                "Home" -> "Done."
-                else -> "Done."
+                "Send SMS" -> getApplication<Application>().localizedString(R.string.runtime_text_sent)
+                "Open App" -> getApplication<Application>().localizedString(R.string.runtime_app_opened)
+                "Tap" -> getApplication<Application>().localizedString(R.string.runtime_tapped)
+                "Navigate back" -> getApplication<Application>().localizedString(R.string.runtime_done)
+                "Home" -> getApplication<Application>().localizedString(R.string.runtime_done)
+                else -> getApplication<Application>().localizedString(R.string.runtime_done)
             }
-            result.errorCode == "user_denied" -> "Cancelled."
+            result.errorCode == "user_denied" -> getApplication<Application>().localizedString(R.string.runtime_cancelled)
             result.errorCode == "bridge_disabled" ->
-                "Agent control is off. Enable it in the Bridge tab to retry."
+                getApplication<Application>().localizedString(R.string.runtime_agent_control_is_off_enable_it_in_the_bridge_tab_to_retry)
             result.errorCode == "permission_denied" -> {
                 val hint = firstClause(result.errorMessage)
-                if (hint.isNullOrBlank()) "Permission needed."
-                else "Permission needed. $hint"
+                if (hint.isNullOrBlank()) getApplication<Application>().localizedString(R.string.runtime_permission_needed)
+                else getApplication<Application>().localizedString(R.string.runtime_fmt_permission_needed_1_s, hint)
             }
             result.errorCode == "service_unavailable" -> "Bridge is offline."
             result.errorCode == "cancelled" -> "Cancelled before dispatch."
             else -> {
                 val hint = firstClause(result.errorMessage)
-                if (hint.isNullOrBlank()) "Action failed."
-                else "Action failed. $hint"
+                if (hint.isNullOrBlank()) getApplication<Application>().localizedString(R.string.runtime_action_failed)
+                else getApplication<Application>().localizedString(R.string.runtime_fmt_action_failed_1_s, hint)
             }
         }
         return sanitizeForTts(base)
@@ -6874,6 +6878,7 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
     internal fun isCancelUtterance(rawText: String): Boolean {
         val normalized = rawText.lowercase().trim().trimEnd('.', '!', '?')
         if (normalized.isEmpty()) return false
+        if (normalized in KOREAN_CANCEL_PHRASES) return true
         if (normalized in CANCEL_PHRASES) return true
         return CANCEL_PHRASES.any { phrase ->
             normalized == phrase || normalized.startsWith("$phrase ")
@@ -6896,121 +6901,100 @@ class VoiceViewModel(application: Application) : AndroidViewModel(application) {
      *    \nTo: Hannah (+1555...)\nBody: smoke test
      *  - Safe intents without details → bare label
      */
+    private fun localizedIntentLabel(label: String): String {
+        val resource = when (label) {
+            "Open App" -> R.string.agent_open_app
+            "Send SMS" -> R.string.agent_send_sms
+            "Call" -> R.string.agent_call
+            "Search Contacts" -> R.string.agent_search_contacts
+            "Screenshot" -> R.string.agent_screenshot
+            "Key Press" -> R.string.agent_key_press
+            "Navigate back" -> R.string.runtime_action_back
+            "Home" -> R.string.runtime_action_home
+            "Tap" -> R.string.runtime_action_tap
+            else -> return label
+        }
+        return getApplication<Application>().localizedString(resource)
+    }
+
     private fun formatVoiceIntentTrace(result: IntentResult.Handled): String {
-        val d = result.details
-        val errorCode = d["error"]
+        val context = getApplication<Application>()
+        val details = result.details
+        val errorCode = details["error"]
+        fun text(id: Int, vararg args: Any): String = context.localizedString(id, *args)
+        fun lines(heading: String, body: String): String = "$heading\n$body"
         return when (result.intentLabel) {
             "Open App" -> {
-                val label = d["appLabel"]
-                val pkg = d["packageName"]
-                val tier = d["matchTier"]
-                val requested = d["requestedName"]
+                val label = details["appLabel"]
+                val pkg = details["packageName"]
                 when {
                     label != null && pkg != null -> buildString {
-                        append("**Opened ")
-                        append(label)
-                        append("**")
-                        append('\n')
-                        append('`')
-                        append(pkg)
-                        append('`')
-                        if (tier != null) {
-                            append(" — ")
-                            append(tier)
-                            append(" match")
-                        }
+                        append(text(R.string.runtime_opened_app, label))
+                        append("\n`$pkg`")
+                        details["matchTier"]?.let { append(text(R.string.runtime_app_match_tier, it)) }
                     }
-                    errorCode == "app_not_found" -> buildString {
-                        append("**Open App**")
-                        append('\n')
-                        append("Couldn't find an app called '")
-                        append(requested ?: "?")
-                        append("'.")
-                    }
-                    errorCode == "service_missing" -> buildString {
-                        append("**Open App — bridge offline**")
-                        append('\n')
-                        append("Enable Hermes accessibility in Settings to open apps by voice.")
-                    }
-                    errorCode == "other_error" -> buildString {
-                        append("**Open App — error**")
-                        append('\n')
-                        append(d["errorMessage"] ?: "unknown error")
-                    }
-                    else -> "**Open App** — done"
+                    errorCode == "app_not_found" -> lines(
+                        text(R.string.runtime_open_app_heading),
+                        text(R.string.runtime_app_not_found, details["requestedName"] ?: "?"),
+                    )
+                    errorCode == "service_missing" -> lines(
+                        text(R.string.runtime_open_app_bridge_offline),
+                        text(R.string.runtime_open_app_enable_accessibility),
+                    )
+                    errorCode == "other_error" -> lines(
+                        text(R.string.runtime_open_app_error),
+                        details["errorMessage"] ?: text(R.string.runtime_unknown_error),
+                    )
+                    else -> text(R.string.runtime_open_app_done)
                 }
             }
             "Send SMS" -> {
-                val contact = d["contact"]
-                val number = d["resolvedNumber"]
-                val body = d["body"]
+                val contact = details["contact"]
+                val number = details["resolvedNumber"]
                 when {
                     number != null -> buildString {
-                        append("**Send SMS — awaiting confirmation**")
+                        append(text(R.string.runtime_sms_confirm_heading))
                         append('\n')
-                        append("To: ")
-                        append(contact ?: "?")
-                        append(" (")
-                        append(number)
-                        append(')')
-                        if (body != null) {
+                        append(text(R.string.runtime_sms_recipient, contact ?: "?", number))
+                        details["body"]?.let {
                             append('\n')
-                            append("Body: ")
-                            append(body)
+                            append(text(R.string.runtime_sms_body, it))
                         }
                     }
-                    errorCode == "permission_missing_sms" -> buildString {
-                        append("**Send SMS — permission needed**")
-                        append('\n')
-                        append("Grant SMS permission in Settings › Apps › Hermes-Relay › Permissions.")
-                    }
-                    errorCode == "permission_missing_contacts" -> buildString {
-                        append("**Send SMS — permission needed**")
-                        append('\n')
-                        append("Grant Contacts permission to look up '")
-                        append(contact ?: "?")
-                        append("' in Settings › Apps › Hermes-Relay › Permissions.")
-                    }
-                    errorCode == "service_missing" -> buildString {
-                        append("**Send SMS — bridge offline**")
-                        append('\n')
-                        append("Enable Hermes accessibility in Settings first.")
-                    }
-                    errorCode == "contact_not_found" -> buildString {
-                        append("**Send SMS**")
-                        append('\n')
-                        append("Couldn't find a contact called '")
-                        append(contact ?: "?")
-                        append("'.")
-                    }
-                    errorCode == "contact_no_phone" -> buildString {
-                        append("**Send SMS**")
-                        append('\n')
-                        append(contact ?: "Contact")
-                        append(" has no phone number on file.")
-                    }
-                    errorCode == "other_error" -> buildString {
-                        append("**Send SMS — error**")
-                        append('\n')
-                        append(d["errorMessage"] ?: "unknown error")
-                    }
-                    else -> "**Send SMS** — dispatched"
+                    errorCode == "permission_missing_sms" -> lines(
+                        text(R.string.runtime_sms_permission_heading),
+                        text(R.string.runtime_sms_permission_hint),
+                    )
+                    errorCode == "permission_missing_contacts" -> lines(
+                        text(R.string.runtime_sms_permission_heading),
+                        text(R.string.runtime_contacts_permission_hint, contact ?: "?"),
+                    )
+                    errorCode == "service_missing" -> lines(
+                        text(R.string.runtime_sms_bridge_offline),
+                        text(R.string.runtime_accessibility_first),
+                    )
+                    errorCode == "contact_not_found" -> lines(
+                        text(R.string.runtime_sms_heading),
+                        text(R.string.runtime_contact_not_found, contact ?: "?"),
+                    )
+                    errorCode == "contact_no_phone" -> lines(
+                        text(R.string.runtime_sms_heading),
+                        text(R.string.runtime_contact_no_phone, contact ?: text(R.string.runtime_contact_fallback)),
+                    )
+                    errorCode == "other_error" -> lines(
+                        text(R.string.runtime_sms_error),
+                        details["errorMessage"] ?: text(R.string.runtime_unknown_error),
+                    )
+                    else -> text(R.string.runtime_sms_dispatched)
                 }
             }
-            else -> buildString {
-                append("**")
-                append(result.intentLabel)
-                append("**")
-                if (result.spokenConfirmation != null) {
-                    append(" — ")
-                    append(result.spokenConfirmation)
-                } else {
-                    append(" — done")
-                }
+            else -> {
+                val label = localizedIntentLabel(result.intentLabel)
+                result.spokenConfirmation?.let { "**$label** — $it" }
+                    ?: text(R.string.runtime_action_done, label)
             }
         }
     }
-
 }
 
 internal fun shouldArmVoiceSilenceWatchdog(
@@ -7431,25 +7415,25 @@ internal fun sanitizeForTts(text: String): String {
  * voice mode is active. Hermes still owns the tool loop; this only prevents
  * long-running tool phases from feeling silent in the voice overlay.
  */
-internal fun brokeredToolStartStatusForTts(toolName: String, indexForMessage: Int): String {
-    if (indexForMessage > 0) return "I'm checking one more thing."
+internal fun brokeredToolStartStatusForTts(toolName: String, indexForMessage: Int, context: Context? = null): String {
+    if (indexForMessage > 0) return (context?.localizedString(R.string.runtime_tts_one_more) ?: "I'm checking one more thing.")
     val normalized = toolName.lowercase()
     return when {
-        normalized.startsWith("android_") -> "I'll check the phone."
+        normalized.startsWith("android_") -> (context?.localizedString(R.string.runtime_tts_phone) ?: "I'll check the phone.")
         normalized.startsWith("desktop_") ||
-            normalized.contains("computer") -> "I'll check the desktop."
+            normalized.contains("computer") -> (context?.localizedString(R.string.runtime_tts_desktop) ?: "I'll check the desktop.")
         normalized.contains("search") ||
             normalized.contains("browser") ||
-            normalized.contains("web") -> "I'll search that now."
+            normalized.contains("web") -> (context?.localizedString(R.string.runtime_tts_search) ?: "I'll search that now.")
         normalized.contains("file") ||
             normalized.contains("read") ||
             normalized.contains("grep") ||
-            normalized.contains("list") -> "I'll check the relevant files."
+            normalized.contains("list") -> (context?.localizedString(R.string.runtime_tts_files) ?: "I'll check the relevant files.")
         normalized.contains("shell") ||
             normalized.contains("terminal") ||
             normalized.contains("bash") ||
-            normalized.contains("powershell") -> "I'll run a quick check."
-        else -> "Let me check that."
+            normalized.contains("powershell") -> (context?.localizedString(R.string.runtime_tts_check) ?: "I'll run a quick check.")
+        else -> (context?.localizedString(R.string.runtime_tts_generic) ?: "Let me check that.")
     }
 }
 

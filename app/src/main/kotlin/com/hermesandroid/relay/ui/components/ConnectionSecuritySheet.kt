@@ -151,7 +151,7 @@ private fun SurfaceSecurityRow(surface: SurfaceSecurity) {
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = surface.label,
+                text = connectionDisplayLabel(surface.label),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Text(
@@ -163,14 +163,14 @@ private fun SurfaceSecurityRow(surface: SurfaceSecurity) {
         }
         Text(
             text = when (surface.useState) {
-                SurfaceUseState.InUse -> surface.mechanism
+                SurfaceUseState.InUse -> connectionDisplayLabel(surface.mechanism)
                 SurfaceUseState.Available -> stringResource(
                     R.string.security_sheet_available_mechanism,
-                    surface.mechanism,
+                    connectionDisplayLabel(surface.mechanism),
                 )
                 SurfaceUseState.Unavailable -> stringResource(
                     R.string.security_sheet_unavailable_mechanism,
-                    surface.mechanism,
+                    connectionDisplayLabel(surface.mechanism),
                 )
             },
             style = MaterialTheme.typography.labelMedium,

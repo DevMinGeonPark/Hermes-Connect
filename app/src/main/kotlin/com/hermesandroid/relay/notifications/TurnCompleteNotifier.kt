@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.notifications
 
+import com.hermesandroid.relay.util.localizedString
+import com.hermesandroid.relay.util.localizedResources
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -36,7 +38,6 @@ object TurnCompleteNotifier {
 
     private const val TAG = "TurnCompleteNotifier"
     private const val CHANNEL_ID = "chat_turn_complete"
-    private const val CHANNEL_NAME = "Hermes replies"
     const val NOTIFICATION_ID = 3822
 
     /**
@@ -103,9 +104,9 @@ object TurnCompleteNotifier {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
         if (toolCount > 0) {
-            val tools = "$toolCount tool${if (toolCount == 1) "" else "s"}"
+            val tools = context.localizedResources().getQuantityString(R.plurals.runtime_tool_count, toolCount, toolCount)
             builder.setSubText(
-                durationSeconds?.let { "$tools · ${it}s" } ?: tools
+                durationSeconds?.let { context.localizedString(R.string.runtime_tools_duration, tools, it) } ?: tools
             )
         }
 
@@ -124,14 +125,12 @@ object TurnCompleteNotifier {
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
-        val existing = nm.getNotificationChannel(CHANNEL_ID)
-        if (existing != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            context.localizedString(R.string.runtime_replies_channel),
             NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
-            description = "Notifies when Hermes finishes responding while the app is in the background."
+            description = context.localizedString(R.string.runtime_replies_channel_desc)
             // Unlike bridge_auto_disable, a reply badge is desirable.
             setShowBadge(true)
         }

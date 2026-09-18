@@ -1373,7 +1373,7 @@ fun ActiveCardSecurityPosture(
                             Icons.Filled.Shield
                         },
                         label = stringResource(R.string.active_section_transport),
-                        value = security.mechanism,
+                        value = connectionDisplayLabel(security.mechanism),
                         positive = security.kind != SurfaceSecurityKind.Plain,
                         warning = security.kind == SurfaceSecurityKind.Plain,
                     )
@@ -1651,7 +1651,7 @@ fun ActiveCardRoutesSection(
                         modifier = Modifier.size(20.dp),
                     )
                     Text(
-                        text = gatewayRoute.label,
+                        text = connectionDisplayLabel(gatewayRoute.label),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f),

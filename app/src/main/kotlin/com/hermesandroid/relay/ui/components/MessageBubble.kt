@@ -288,11 +288,14 @@ fun MessageBubble(
     } else {
         null
     }
-    val a11yDescription = buildString {
-        append(message.role.name.lowercase())
-        append(" message: ")
-        append(streamingStatusLabel ?: visibleMessageContent.take(100))
-    }
+    val a11yDescription = stringResource(
+        when (message.role) {
+            MessageRole.USER -> R.string.ko_user_message
+            MessageRole.ASSISTANT -> R.string.ko_assistant_message
+            MessageRole.SYSTEM -> R.string.ko_system_message
+        },
+        streamingStatusLabel ?: visibleMessageContent.take(100),
+    )
     val hasImageGenerationCall = remember(message.toolCalls) {
         message.toolCalls.any { isImageGenerationToolName(it.name) }
     }
@@ -506,6 +509,7 @@ fun MessageBubble(
                             .padding(horizontal = 4.dp, vertical = 6.dp),
                     ) {
                         MESSAGE_REACTIONS.forEach { emoji ->
+                            val reactionDescription = stringResource(R.string.ko_react_emoji, emoji)
                             IconButton(
                                 onClick = {
                                     showMessageActions = false
@@ -524,7 +528,7 @@ fun MessageBubble(
                                     text = emoji,
                                     fontSize = 24.sp,
                                     modifier = Modifier.semantics {
-                                        contentDescription = "React with $emoji"
+                                        contentDescription = reactionDescription
                                     },
                                 )
                             }
@@ -589,7 +593,7 @@ fun MessageBubble(
                 }
                 if (onReact != null && selectedUserReaction != null) {
                     DropdownMenuItem(
-                        text = { Text("Remove reaction") },
+                        text = { Text(stringResource(R.string.ko_remove_reaction)) },
                         onClick = {
                             showMessageActions = false
                             onReact(null)
@@ -709,7 +713,7 @@ fun MessageBubble(
                             onClick = { onSessionReference(reference) },
                             modifier = Modifier.padding(top = 2.dp),
                         ) {
-                            Text("Open ${reference.label}")
+                            Text(stringResource(R.string.ko_open_reference, reference.label))
                         }
                     }
                 }

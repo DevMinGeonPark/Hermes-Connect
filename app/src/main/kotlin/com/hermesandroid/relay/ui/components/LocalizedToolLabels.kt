@@ -49,6 +49,7 @@ fun localizeBadgeKey(badge: String): Int? = when (badge) {
     "Continued after an interrupted turn" -> R.string.badge_continued
     "Realtime Agent" -> R.string.bubble_realtime_agent
     "Voice" -> R.string.bubble_voice
+    "Tool" -> R.string.timeline_legend_tool
     else -> null
 }
 
@@ -110,8 +111,19 @@ fun localizeTimelineTitleName(title: String): Pair<String, Int?>? {
 fun localizeTimelineTitle(title: String): String {
     val parts = localizeTimelineTitleName(title) ?: return title
     val (name, key) = parts
-    if (key == null) return title
     val sep = " · "
     val idx = title.indexOf(sep)
-    return stringResource(key) + title.substring(idx)
+    val suffix = title.substring(idx + sep.length)
+    val localizedName = when {
+        name == "voice" -> stringResource(R.string.timeline_legend_voice)
+        key != null -> stringResource(key)
+        else -> name
+    }
+    val localizedSuffix = when (suffix) {
+        "running" -> stringResource(R.string.stats_running)
+        "ok" -> stringResource(R.string.stats_ok)
+        "failed" -> stringResource(R.string.stats_failed)
+        else -> suffix
+    }
+    return localizedName + sep + localizedSuffix
 }

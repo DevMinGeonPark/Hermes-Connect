@@ -10,6 +10,7 @@ enum class AppLanguage(val languageTag: String) {
     GERMAN("de"),
     BRAZILIAN_PORTUGUESE("pt-BR"),
     JAPANESE("ja"),
+    KOREAN("ko"),
     SIMPLIFIED_CHINESE("zh-Hans"),
     SPANISH("es"),
     RUSSIAN("ru"),
@@ -35,6 +36,7 @@ enum class AppLanguage(val languageTag: String) {
                 "en" -> ENGLISH
                 "es" -> SPANISH
                 "ja" -> JAPANESE
+                "ko" -> KOREAN
                 "pt" -> BRAZILIAN_PORTUGUESE
                 "ru" -> RUSSIAN
                 "zh" -> {

@@ -1,5 +1,7 @@
 package com.hermesandroid.relay.viewmodel.connection
 
+import com.hermesandroid.relay.util.localizedString
+import com.hermesandroid.relay.R
 import android.content.Context
 import android.net.Uri
 import com.hermesandroid.relay.auth.AuthManager
@@ -625,7 +627,7 @@ class ProfileController(
                 _hermesPetState.value = if (presentation == null) {
                     HermesPetState(
                         supported = true,
-                        error = "Hermes returned an animated pet that this phone could not cache",
+                        error = context.localizedString(R.string.runtime_hermes_returned_an_animated_pet_that_this_phone_could_not_cache),
                     )
                 } else {
                     _hermesPetState.value.copy(
@@ -643,7 +645,7 @@ class ProfileController(
                 } else {
                     _hermesPetState.value.copy(
                         loading = false,
-                        error = failure.message ?: "Could not load the Hermes animated pet",
+                        error = failure.message ?: context.localizedString(R.string.runtime_could_not_load_the_hermes_animated_pet),
                     )
                 }
             },
@@ -672,7 +674,7 @@ class ProfileController(
                     if (!isCurrentPetGallery(connectionId, profileName, generation)) return@fold
                     _hermesPetState.value = _hermesPetState.value.copy(
                         galleryLoading = false,
-                        error = failure.message ?: "Could not load the Hermes pet gallery",
+                        error = failure.message ?: context.localizedString(R.string.runtime_could_not_load_the_hermes_pet_gallery),
                     )
                 },
             )
@@ -730,7 +732,7 @@ class ProfileController(
                 onFailure = { failure ->
                     _hermesPetState.value = _hermesPetState.value.copy(
                         loading = false,
-                        error = failure.message ?: "Could not update the Hermes animated pet",
+                        error = failure.message ?: context.localizedString(R.string.runtime_could_not_update_the_hermes_animated_pet),
                     )
                 },
             )
@@ -1002,7 +1004,7 @@ class ProfileController(
         val client = relayHttpClient
         if (client == null) {
             _hostIconImportState.value = HostIconImportState(
-                error = "Relay is not available for host image import"
+                error = context.localizedString(R.string.runtime_relay_is_not_available_for_host_image_import)
             )
             return
         }
@@ -1013,7 +1015,7 @@ class ProfileController(
                     val path = copyIconBytes(connectionId, profileName, media.bytes)
                     if (path == null) {
                         _hostIconImportState.value = HostIconImportState(
-                            error = "Could not save the imported profile image"
+                            error = context.localizedString(R.string.runtime_could_not_save_the_imported_profile_image)
                         )
                     } else {
                         profileIconStore.setIcon(connectionId, profileName, path)
@@ -1023,7 +1025,7 @@ class ProfileController(
                 },
                 onFailure = { failure ->
                     _hostIconImportState.value = HostIconImportState(
-                        error = failure.message ?: "Host profile image import failed"
+                        error = failure.message ?: context.localizedString(R.string.runtime_host_profile_image_import_failed)
                     )
                 },
             )
@@ -1053,7 +1055,7 @@ class ProfileController(
         val profileName = resolveSharedAssetProfileName()
         val gateway = gatewayClientProvider()
         if (profileName.isNullOrBlank() || gateway == null) {
-            _sharedAvatarState.value = SharedAvatarState(error = "Shared avatars require a current Hermes Gateway")
+            _sharedAvatarState.value = SharedAvatarState(error = context.localizedString(R.string.runtime_shared_avatars_require_a_current_hermes_gateway))
             return
         }
         scope.launch {
@@ -1062,7 +1064,7 @@ class ProfileController(
                 prepareProfileAvatar(context, uri, GatewayChatClient.PROFILE_AVATAR_MAX_BYTES)
             }
             if (bytes == null) {
-                _sharedAvatarState.value = SharedAvatarState(error = "That image could not be prepared for Hermes")
+                _sharedAvatarState.value = SharedAvatarState(error = context.localizedString(R.string.runtime_that_image_could_not_be_prepared_for_hermes))
                 return@launch
             }
             gateway.setProfileAvatar(profileName, bytes).fold(
@@ -1072,7 +1074,7 @@ class ProfileController(
                 },
                 onFailure = { failure ->
                     _sharedAvatarState.value = SharedAvatarState(
-                        error = failure.message ?: "Shared avatar upload failed",
+                        error = failure.message ?: context.localizedString(R.string.runtime_shared_avatar_upload_failed),
                     )
                 },
             )
@@ -1084,12 +1086,12 @@ class ProfileController(
         val connectionId = activeConnectionId.value ?: return
         val profileName = resolveSharedAssetProfileName()
         if (profileName.isNullOrBlank()) {
-            _sharedAvatarState.value = SharedAvatarState(error = "Hermes profile identity is not available")
+            _sharedAvatarState.value = SharedAvatarState(error = context.localizedString(R.string.runtime_hermes_profile_identity_is_not_available))
             return
         }
         val gateway = gatewayClientProvider()
         if (gateway == null) {
-            _sharedAvatarState.value = SharedAvatarState(error = "Shared avatars require a current Hermes Gateway")
+            _sharedAvatarState.value = SharedAvatarState(error = context.localizedString(R.string.runtime_shared_avatars_require_a_current_hermes_gateway))
             return
         }
         scope.launch {
@@ -1105,7 +1107,7 @@ class ProfileController(
                 else -> withContext(Dispatchers.IO) { runCatching { file.readBytes() }.getOrNull() }
             }
             if (bytes == null) {
-                _sharedAvatarState.value = SharedAvatarState(error = "Choose a local PNG, JPEG, or WebP under 2 MB first")
+                _sharedAvatarState.value = SharedAvatarState(error = context.localizedString(R.string.runtime_choose_a_local_png_jpeg_or_webp_under_2_mb_first))
                 return@launch
             }
             gateway.setProfileAvatar(profileName, bytes).fold(
@@ -1115,7 +1117,7 @@ class ProfileController(
                 },
                 onFailure = { failure ->
                     _sharedAvatarState.value = SharedAvatarState(
-                        error = failure.message ?: "Shared avatar upload failed",
+                        error = failure.message ?: context.localizedString(R.string.runtime_shared_avatar_upload_failed),
                     )
                 },
             )
@@ -1128,7 +1130,7 @@ class ProfileController(
         val profileName = resolveSharedAssetProfileName()
         val gateway = gatewayClientProvider()
         if (profileName.isNullOrBlank() || gateway == null) {
-            _sharedAvatarState.value = SharedAvatarState(error = "Shared avatars require a current Hermes Gateway")
+            _sharedAvatarState.value = SharedAvatarState(error = context.localizedString(R.string.runtime_shared_avatars_require_a_current_hermes_gateway))
             return
         }
         scope.launch {
@@ -1144,7 +1146,7 @@ class ProfileController(
                 },
                 onFailure = { failure ->
                     _sharedAvatarState.value = SharedAvatarState(
-                        error = failure.message ?: "Shared avatar clear failed",
+                        error = failure.message ?: context.localizedString(R.string.runtime_shared_avatar_clear_failed),
                     )
                 },
             )

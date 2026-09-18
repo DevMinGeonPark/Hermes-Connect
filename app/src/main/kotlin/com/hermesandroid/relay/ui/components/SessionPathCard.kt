@@ -249,7 +249,7 @@ internal fun SessionPathSummary(
                     modifier = Modifier.size(18.dp),
                 )
             }
-            val routeSuffix = routeLabel?.takeIf { it.isNotBlank() }?.let { " · $it" }.orEmpty()
+            val routeSuffix = routeLabel?.takeIf { it.isNotBlank() }?.let { " · ${connectionDisplayLabel(it)}" }.orEmpty()
             val friendlyName = transportFriendlyName(transport.type)
             val descriptor = transportDescriptor(transport.type)
             Text(
@@ -366,7 +366,7 @@ internal fun SessionPathDetails(
         if (expanded) {
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 DetailRow(label = stringResource(R.string.session_path_transport), value = friendlyName)
-                DetailRow(label = stringResource(R.string.session_path_route), value = routeLabel?.takeIf { it.isNotBlank() } ?: "—")
+                DetailRow(label = stringResource(R.string.session_path_route), value = routeLabel?.takeIf { it.isNotBlank() }?.let { connectionDisplayLabel(it) } ?: "—")
                 DetailChipRow(label = stringResource(R.string.session_path_relay_state)) {
                     SessionPathConnectionChip(relayConnectionState)
                 }

@@ -274,7 +274,7 @@ fun AboutScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = BuildFlavor.displayName,
+                            text = localizedBuildFlavor(),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -506,4 +506,16 @@ fun AboutScreen(
             ChangelogScreen(onClose = { showChangelog = false })
         }
     }
+}
+
+@Composable
+private fun localizedBuildFlavor(): String {
+    val label = when (BuildFlavor.current) {
+        BuildFlavor.GOOGLE_PLAY -> "Google Play"
+        BuildFlavor.SIDELOAD -> stringResource(R.string.settings_sideload)
+        else -> BuildFlavor.current.ifBlank { stringResource(R.string.bsc_unknown) }
+    }
+    return if (com.hermesandroid.relay.data.CandidateBuild.isCandidate) {
+        stringResource(R.string.ui_label_candidate_track, label)
+    } else label
 }

@@ -235,8 +235,9 @@ private fun NotificationTriggerCard(
 ) {
     val emptyRule = remember { NotificationTriggerStore.defaultRule() }
     val savedRule = settings.rules.firstOrNull() ?: emptyRule
+    val displayRuleLabel = localizedRuleLabel(savedRule.label)
     var ruleEnabled by remember { mutableStateOf(savedRule.enabled) }
-    var label by remember { mutableStateOf(savedRule.label) }
+    var label by remember { mutableStateOf(displayRuleLabel) }
     var appPackage by remember { mutableStateOf(savedRule.appPackage.orEmpty()) }
     var titleContains by remember { mutableStateOf(savedRule.titleContains.orEmpty()) }
     var textContains by remember { mutableStateOf(savedRule.textContains.orEmpty()) }
@@ -244,13 +245,13 @@ private fun NotificationTriggerCard(
     LaunchedEffect(
         savedRule.id,
         savedRule.enabled,
-        savedRule.label,
+        displayRuleLabel,
         savedRule.appPackage,
         savedRule.titleContains,
         savedRule.textContains,
     ) {
         ruleEnabled = savedRule.enabled
-        label = savedRule.label
+        label = displayRuleLabel
         appPackage = savedRule.appPackage.orEmpty()
         titleContains = savedRule.titleContains.orEmpty()
         textContains = savedRule.textContains.orEmpty()
@@ -291,7 +292,7 @@ private fun NotificationTriggerCard(
 
         LabeledSwitchRow(
             title = stringResource(R.string.ncs_rule_enabled),
-            subtitle = savedRule.summary(),
+            subtitle = savedRule.summary(LocalContext.current),
             checked = ruleEnabled,
             onCheckedChange = { ruleEnabled = it },
         )
@@ -388,7 +389,7 @@ private fun NotificationActivityLogCard(
         settings.activityLog.take(10).forEach { entry ->
             Column(modifier = Modifier.padding(vertical = 6.dp)) {
                 Text(
-                    text = entry.ruleLabel,
+                    text = localizedRuleLabel(entry.ruleLabel),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(
@@ -407,7 +408,7 @@ private fun NotificationActivityLogCard(
                     )
                 }
                 Text(
-                    text = entry.result,
+                    text = localizedTriggerResult(entry.result),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
@@ -602,4 +603,18 @@ private fun NotifSectionCard(
             content()
         }
     }
+}
+
+@Composable
+private fun localizedRuleLabel(label: String): String =
+    if (label == "Ask me about matching notifications") stringResource(R.string.ui_label_trigger_default) else label
+
+@Composable
+private fun localizedTriggerResult(result: String): String = when {
+    result == "prompt posted" -> stringResource(R.string.ui_label_trigger_posted)
+    result == "skipped: post-notifications permission missing" -> stringResource(R.string.ui_label_trigger_permission)
+    result.startsWith("skipped: prompt failed (") && result.endsWith(")") -> stringResource(
+        R.string.ui_label_trigger_failed, result.removePrefix("skipped: prompt failed (").dropLast(1),
+    )
+    else -> result
 }

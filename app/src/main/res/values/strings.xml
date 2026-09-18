@@ -5,41 +5,41 @@
     <string name="clarify_batch_expired">This request has ended</string>
     <string name="clarify_batch_sending">Sending answer…</string>
     <string name="clarify_batch_answered">Answered questions (%1$d)</string>
-    <string name="chat_debug_title" translatable="false">Session diagnostics</string>
-    <string name="chat_debug_open" translatable="false">Open session diagnostics</string>
-    <string name="chat_debug_close" translatable="false">Close session diagnostics</string>
-    <string name="chat_debug_preparing" translatable="false">Preparing session…</string>
-    <string name="chat_debug_sign_in" translatable="false">Dashboard sign-in</string>
-    <string name="chat_debug_sign_in_needed" translatable="false">Sign in to continue this conversation.</string>
-    <string name="chat_debug_authenticated" translatable="false">Authenticated for this connection.</string>
-    <string name="chat_debug_auth_unknown" translatable="false">Sign-in has not been confirmed.</string>
-    <string name="chat_debug_gateway" translatable="false">Live connection</string>
-    <string name="chat_debug_socket_ready" translatable="false">Gateway is ready to receive requests.</string>
-    <string name="chat_debug_ticket" translatable="false">Requesting a secure connection ticket…</string>
-    <string name="chat_debug_socket_connecting" translatable="false">Opening the Gateway connection…</string>
-    <string name="chat_debug_socket_waiting" translatable="false">Waiting for the Gateway to become ready…</string>
-    <string name="chat_debug_socket_idle" translatable="false">No live Gateway connection.</string>
-    <string name="chat_debug_session" translatable="false">Conversation session</string>
-    <string name="chat_debug_preparing_detail" translatable="false">Hermes is initializing this session. The message has not been sent yet.</string>
-    <string name="chat_debug_history_loading" translatable="false">Loading saved messages…</string>
-    <string name="chat_debug_history_failed" translatable="false">Saved conversations could not be refreshed.</string>
-    <string name="chat_debug_session_selected" translatable="false">Session selected.</string>
-    <string name="chat_debug_session_new" translatable="false">A session will be created when you send.</string>
-    <string name="chat_debug_response" translatable="false">Agent response</string>
-    <string name="chat_debug_response_failed" translatable="false">The request failed. Details are below.</string>
-    <string name="chat_debug_response_waiting" translatable="false">Waiting for session initialization.</string>
-    <string name="chat_debug_response_active" translatable="false">Waiting for the current reply to finish.</string>
-    <string name="chat_debug_response_idle" translatable="false">No reply is currently in progress.</string>
-    <string name="chat_debug_init_recovery" translatable="false">Hermes could not initialize the agent. Check the server runtime and logs before retrying; signing in again may not resolve this.</string>
-    <string name="chat_debug_session_id" translatable="false">Session · %1$s</string>
-    <string name="chat_debug_connections" translatable="false">Connection settings</string>
-    <string name="app_name">Hermes-Relay</string>
-    <string name="app_title">Hermes-Relay</string>
+    <string name="chat_debug_title">Session diagnostics</string>
+    <string name="chat_debug_open">Open session diagnostics</string>
+    <string name="chat_debug_close">Close session diagnostics</string>
+    <string name="chat_debug_preparing">Preparing session…</string>
+    <string name="chat_debug_sign_in">Dashboard sign-in</string>
+    <string name="chat_debug_sign_in_needed">Sign in to continue this conversation.</string>
+    <string name="chat_debug_authenticated">Authenticated for this connection.</string>
+    <string name="chat_debug_auth_unknown">Sign-in has not been confirmed.</string>
+    <string name="chat_debug_gateway">Live connection</string>
+    <string name="chat_debug_socket_ready">Gateway is ready to receive requests.</string>
+    <string name="chat_debug_ticket">Requesting a secure connection ticket…</string>
+    <string name="chat_debug_socket_connecting">Opening the Gateway connection…</string>
+    <string name="chat_debug_socket_waiting">Waiting for the Gateway to become ready…</string>
+    <string name="chat_debug_socket_idle">No live Gateway connection.</string>
+    <string name="chat_debug_session">Conversation session</string>
+    <string name="chat_debug_preparing_detail">Hermes is initializing this session. The message has not been sent yet.</string>
+    <string name="chat_debug_history_loading">Loading saved messages…</string>
+    <string name="chat_debug_history_failed">Saved conversations could not be refreshed.</string>
+    <string name="chat_debug_session_selected">Session selected.</string>
+    <string name="chat_debug_session_new">A session will be created when you send.</string>
+    <string name="chat_debug_response">Agent response</string>
+    <string name="chat_debug_response_failed">The request failed. Details are below.</string>
+    <string name="chat_debug_response_waiting">Waiting for session initialization.</string>
+    <string name="chat_debug_response_active">Waiting for the current reply to finish.</string>
+    <string name="chat_debug_response_idle">No reply is currently in progress.</string>
+    <string name="chat_debug_init_recovery">Hermes could not initialize the agent. Check the server runtime and logs before retrying; signing in again may not resolve this.</string>
+    <string name="chat_debug_session_id">Session · %1$s</string>
+    <string name="chat_debug_connections">Connection settings</string>
+    <string name="app_name">Hermes-Connect</string>
+    <string name="app_title">Hermes-Connect</string>
     <string name="agent_interface">agent interface</string>
-    <string name="notification_companion_label">Hermes-Relay notification companion</string>
+    <string name="notification_companion_label">Hermes-Connect notification companion</string>
 
     <string name="onboarding_skip_setup_title">Skip setup?</string>
-    <string name="onboarding_skip_setup_text">No problem — you can explore the demo to see how Hermes-Relay works, and add your own Hermes Gateway anytime from Settings → Gateways. Relay pairing for power tools can be added later too.</string>
+    <string name="onboarding_skip_setup_text">No problem — you can explore the demo to see how Hermes-Connect works, and add your own Hermes Gateway anytime from Settings → Gateways. Relay pairing for power tools can be added later too.</string>
     <string name="onboarding_skip_for_now">Skip for now</string>
     <string name="onboarding_go_back">Go back</string>
     <string name="onboarding_skip">Skip</string>
@@ -734,7 +734,7 @@
     <string name="ncs_status">Status</string>
     <string name="ncs_access_granted">Access granted</string>
     <string name="ncs_access_not_granted">Access not granted</string>
-    <string name="ncs_can_read_notifications">Hermes-Relay can read posted notifications</string>
+    <string name="ncs_can_read_notifications">Hermes-Connect can read posted notifications</string>
     <string name="ncs_tap_to_enable">Tap below to enable in Android Settings</string>
     <string name="ncs_refresh_status">Refresh status</string>
     <string name="ncs_manage_in_settings">Manage in Android Settings</string>
@@ -1385,7 +1385,7 @@
     <string name="about_title">About</string>
     <string name="about_back">Back</string>
     <string name="about_section_title">About</string>
-    <string name="about_app_name">Hermes-Relay</string>
+    <string name="about_app_name">Hermes-Connect</string>
     <string name="about_app_tagline">Native Android client for Hermes Agent</string>
     <string name="about_em_dash">—</string>
     <string name="about_dev_options_unlocked">Developer options unlocked</string>
@@ -1470,7 +1470,7 @@
     <string name="appearance_theme">Theme</string>
     <string name="appearance_theme_desc">Pick a look. The brand chrome, accents, and chat background all follow your choice.</string>
     <string name="appearance_language">Language</string>
-    <string name="appearance_language_desc">Choose the language used by Hermes-Relay. System default follows your device setting.</string>
+    <string name="appearance_language_desc">Choose the language used by Hermes-Connect. System default follows your device setting.</string>
     <string name="appearance_language_system">System default</string>
     <string name="appearance_language_english">English</string>
     <string name="appearance_language_german">Deutsch</string>
@@ -3249,12 +3249,12 @@
     <string name="attachment_type_file">File</string>
 
     <!-- CrashReportDialog -->
-    <string name="crash_title">Hermes-Relay closed unexpectedly</string>
-    <string name="crash_body">Hermes-Relay restarted after an unexpected problem. You can continue using the app.</string>
+    <string name="crash_title">Hermes-Connect closed unexpectedly</string>
+    <string name="crash_body">Hermes-Connect restarted after an unexpected problem. You can continue using the app.</string>
     <string name="crash_privacy">Nothing was sent. Review the locally redacted report before choosing copy, share, or GitHub.</string>
     <string name="crash_review">Review report</string>
     <string name="crash_share_title">Share crash report</string>
-    <string name="crash_share_subject">Hermes-Relay crash report — %1$s</string>
+    <string name="crash_share_subject">Hermes-Connect crash report — %1$s</string>
     <string name="crash_toast_no_share">Report copied — no app found to share to</string>
     <string name="crash_toast_opened">Full report copied — review the GitHub issue before submitting</string>
     <string name="crash_toast_no_browser">Report copied — no browser found to open GitHub</string>
@@ -3943,12 +3943,12 @@
     <string name="tool_output_risk_a11y">, %1$s output risk</string>
     <string name="tool_output_risk_findings">Output risk findings</string>
     <string name="tool_output_risk_redacted">Sensitive spans were redacted upstream.</string>
-    <string name="diag_gateway_heartbeat" translatable="false">Gateway loop: %1$s%2$s</string>
-    <string name="diag_toolsets_inventory" translatable="false">API toolsets: %1$d of %2$d enabled · Relay tools visible: %3$s</string>
-    <string name="diag_yes" translatable="false">yes</string>
-    <string name="diag_no" translatable="false">no</string>
-    <string name="dashboard_nous_terminal_warning" translatable="false">The Nous provider login needs attention on the Hermes host. This is separate from Manage sign-in; chat can continue through another configured provider.</string>
-    <string name="dashboard_gateway_topology" translatable="false">Gateway: %1$s · Profiles: %2$s · Ports: %3$s</string>
+    <string name="diag_gateway_heartbeat">Gateway loop: %1$s%2$s</string>
+    <string name="diag_toolsets_inventory">API toolsets: %1$d of %2$d enabled · Relay tools visible: %3$s</string>
+    <string name="diag_yes">yes</string>
+    <string name="diag_no">no</string>
+    <string name="dashboard_nous_terminal_warning">The Nous provider login needs attention on the Hermes host. This is separate from Manage sign-in; chat can continue through another configured provider.</string>
+    <string name="dashboard_gateway_topology">Gateway: %1$s · Profiles: %2$s · Ports: %3$s</string>
     <string name="onboarding_talk_to_agent">Talk to Your Agent</string>
     <string name="onboarding_stream_desc">Stream conversations with any Hermes profile. Ask questions, run tasks, and collaborate in real time</string>
     <string name="onboarding_lets_connect">Let\'s Connect</string>
@@ -4453,7 +4453,7 @@
 <string name="support_bundle_privacy">Nothing is uploaded automatically. Review the exact local export below. It contains %1$d recent reports and diagnostics.</string>
     <string name="support_bundle_copied">Support information copied</string>
     <string name="support_bundle_no_share">Support information copied — no app found to share to</string>
-    <string name="support_bundle_share_title">Share Hermes-Relay support information</string>
+    <string name="support_bundle_share_title">Share Hermes-Connect support information</string>
     <string name="drawer_all_profiles">All Profiles</string>
     <string name="drawer_no_profile_sessions">No matching profile sessions.</string>
     <string name="drawer_customize_sessions">Customize sessions</string>
@@ -4645,20 +4645,20 @@
     <string name="tool_progress_status_dispatched">Dispatched</string>
     <string name="chat_activity_history_notice">Recorded activity. Progress updates are not retained; available child history can be opened read-only.</string>
     <string name="chat_activity_output_unavailable">Output is no longer available. This entry preserves the recorded process status.</string>
-    <string name="dev_message_previews" translatable="false">Message previews</string>
-    <string name="dev_message_previews_desc" translatable="false">Local-only samples using the app’s real message surfaces. No requests are sent. Samples clear when you leave this screen.</string>
-    <string name="dev_message_info" translatable="false">Info preview</string>
-    <string name="dev_message_success" translatable="false">Success preview</string>
-    <string name="dev_message_progress" translatable="false">Progress preview</string>
-    <string name="dev_message_warning" translatable="false">Warning preview</string>
-    <string name="dev_message_error" translatable="false">Error preview</string>
-    <string name="dev_message_preview_sample" translatable="false">Show a themed sample. Progress stays until replaced or cleared.</string>
-    <string name="dev_message_action" translatable="false">Actionable error preview</string>
-    <string name="dev_message_action_body" translatable="false">This is a simulated error with a longer explanation. Expand or scroll to check readability. Retry only confirms the preview action; it does not contact a server.</string>
-    <string name="dev_message_retry" translatable="false">Retry</string>
-    <string name="dev_message_retry_result" translatable="false">Preview retry selected — no request sent.</string>
-    <string name="dev_message_clear" translatable="false">Clear previews</string>
-    <string name="dev_message_clear_desc" translatable="false">Dismiss only these samples; real app messages are preserved.</string>
+    <string name="dev_message_previews">Message previews</string>
+    <string name="dev_message_previews_desc">Local-only samples using the app’s real message surfaces. No requests are sent. Samples clear when you leave this screen.</string>
+    <string name="dev_message_info">Info preview</string>
+    <string name="dev_message_success">Success preview</string>
+    <string name="dev_message_progress">Progress preview</string>
+    <string name="dev_message_warning">Warning preview</string>
+    <string name="dev_message_error">Error preview</string>
+    <string name="dev_message_preview_sample">Show a themed sample. Progress stays until replaced or cleared.</string>
+    <string name="dev_message_action">Actionable error preview</string>
+    <string name="dev_message_action_body">This is a simulated error with a longer explanation. Expand or scroll to check readability. Retry only confirms the preview action; it does not contact a server.</string>
+    <string name="dev_message_retry">Retry</string>
+    <string name="dev_message_retry_result">Preview retry selected — no request sent.</string>
+    <string name="dev_message_clear">Clear previews</string>
+    <string name="dev_message_clear_desc">Dismiss only these samples; real app messages are preserved.</string>
     <string name="profile_follow_server_default">Follow server default</string>
 
     <!-- User-started voice overlay, independent of Device Control. -->
@@ -4668,4 +4668,5 @@
     <string name="voice_overlay_settings_hint">Optional in both builds. Open Voice Focus in Chat and choose Overlay to start. Permissions alone never start listening.</string>
     <string name="voice_overlay_reset_position">Reset position</string>
     <string name="injected_context_gateway_unsupported">Not sent in Gateway chat. This connection does not support extra per-turn context.</string>
+    <string name="appearance_language_korean">한국어</string>
 </resources>

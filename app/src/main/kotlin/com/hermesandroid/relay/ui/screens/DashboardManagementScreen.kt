@@ -529,7 +529,7 @@ fun DashboardManagementScreen(
             withDashboardClient(clientFactory) {
                 it.downloadServerBackup(archive) {
                     context.contentResolver.openOutputStream(uri)
-                        ?: throw IOException("The selected destination could not be opened.")
+                        ?: throw IOException(context.getString(R.string.ko_destination_open_failed))
                 }
             }.fold(
                 onSuccess = { actionMessage = context.getString(R.string.dashboard_backup_saved, it) },
@@ -559,7 +559,7 @@ fun DashboardManagementScreen(
                             contentLength = file.length,
                             openStream = {
                             context.contentResolver.openInputStream(uri)
-                                ?: throw IOException("The selected archive could not be opened.")
+                                ?: throw IOException(context.getString(R.string.ko_archive_open_failed))
                             },
                         )
                     }.fold(
@@ -1023,10 +1023,10 @@ fun DashboardManagementScreen(
                 onSuccess = { root ->
                     backupArchive = root.stringField("archive")
                     root.stringField("message")
-                        ?: root.stringField("archive")?.let { "Server backup started: $it" }
-                        ?: "Server backup started."
+                        ?: root.stringField("archive")?.let { context.getString(R.string.ko_backup_started_archive, it) }
+                        ?: context.getString(R.string.ko_backup_started)
                 },
-                onFailure = { error -> error.message ?: "Server backup failed." },
+                onFailure = { error -> error.message ?: context.getString(R.string.ko_backup_failed) },
             )
             actionInFlight = false
         }
@@ -1046,7 +1046,7 @@ fun DashboardManagementScreen(
                         profile = effectiveProfileName,
                     )
                 },
-                onFailure = { actionMessage = it.message ?: "Learning node could not be loaded." },
+                onFailure = { actionMessage = it.message ?: context.getString(R.string.ko_learning_load_failed) },
             )
             actionInFlight = false
         }
@@ -1061,7 +1061,7 @@ fun DashboardManagementScreen(
             }
             result.fold(
                 onSuccess = { memoryProviderEditor = MemoryProviderEditorState(item.id, it, effectiveProfileName) },
-                onFailure = { actionMessage = it.message ?: "Memory provider configuration could not be loaded." },
+                onFailure = { actionMessage = it.message ?: context.getString(R.string.ko_memory_load_failed) },
             )
             actionInFlight = false
         }
@@ -3579,10 +3579,10 @@ private fun ModelPickerDialog(
                 onSuccess = { root ->
                     providers = parseModelOptions(root)
                     if (providers.isEmpty()) {
-                        error = "The dashboard returned no model options."
+                        error = context.getString(R.string.dashboard_no_model_options)
                     }
                 },
-                onFailure = { err -> error = err.message ?: "Could not load model options" },
+                onFailure = { err -> error = err.message ?: context.getString(R.string.dashboard_model_options_load_failed) },
             )
             if (refresh) refreshing = false else loading = false
         }
@@ -3619,8 +3619,7 @@ private fun ModelPickerDialog(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            text = "Applies to new sessions. Greyed providers need a key — " +
-                                "add one under Manage → Keys.",
+                            text = stringResource(R.string.dashboard_model_picker_help),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
@@ -3641,7 +3640,7 @@ private fun ModelPickerDialog(
                                     modifier = Modifier.size(18.dp),
                                 )
                             }
-                            Text(if (refreshing) "Refreshing" else "Refresh")
+                            Text(if (refreshing) stringResource(R.string.ko_refreshing) else stringResource(R.string.dashboard_refresh))
                         }
                     }
                     LazyColumn(modifier = Modifier.heightIn(max = 400.dp)) {
@@ -3666,7 +3665,7 @@ private fun ModelPickerDialog(
                                 item(key = "setup-${provider.id}") {
                                     Text(
                                         text = provider.setupHint
-                                            ?: "Add a key under Manage → Keys to unlock models.",
+                                            ?: stringResource(R.string.ko_dashboard_add_key),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier

@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.ui.screens
 
+import com.hermesandroid.relay.ui.components.connectionDisplayLabel
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -742,7 +743,7 @@ private fun CurrentRouteOverviewCard(
                     modifier = Modifier.size(26.dp),
                 )
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = route.label, style = MaterialTheme.typography.titleSmall)
+                    Text(text = connectionDisplayLabel(route.label), style = MaterialTheme.typography.titleSmall)
                     Text(
                         text = status.text,
                         style = MaterialTheme.typography.bodySmall,

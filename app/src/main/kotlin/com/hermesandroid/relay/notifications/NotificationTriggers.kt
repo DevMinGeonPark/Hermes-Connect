@@ -1,5 +1,6 @@
 package com.hermesandroid.relay.notifications
 
+import com.hermesandroid.relay.util.localizedString
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
@@ -202,12 +203,20 @@ fun NotificationTriggerRule.summary(): String {
     return if (parts.isEmpty()) "No filters set" else parts.joinToString(" · ")
 }
 
+fun NotificationTriggerRule.summary(context: Context): String {
+    val parts = buildList {
+        appPackage.cleanBlank()?.let { add(context.localizedString(R.string.ui_label_trigger_app, it)) }
+        titleContains.cleanBlank()?.let { add(context.localizedString(R.string.ui_label_trigger_title, it)) }
+        textContains.cleanBlank()?.let { add(context.localizedString(R.string.ui_label_trigger_text, it)) }
+    }
+    return if (parts.isEmpty()) context.localizedString(R.string.ui_label_trigger_no_filters) else parts.joinToString(" · ")
+}
+
 private fun String?.cleanBlank(): String? = this?.trim()?.takeIf { it.isNotBlank() }
 
 object NotificationTriggerPromptNotifier {
     private const val TAG = "NotifTriggerPrompt"
     private const val CHANNEL_ID = "notification_triggers"
-    private const val CHANNEL_NAME = "Notification triggers"
     private const val NOTIFICATION_ID_BASE = 4300
     private const val CHAT_ROUTE = "chat"
 
@@ -235,11 +244,11 @@ object NotificationTriggerPromptNotifier {
         val pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         val tapPending = PendingIntent.getActivity(context, notificationId(entry), tapIntent, pendingFlags)
 
-        val title = context.getString(R.string.notification_trigger_prompt_title)
+        val title = context.localizedString(R.string.notification_trigger_prompt_title)
         val source = entry.title?.takeIf { it.isNotBlank() } ?: entry.packageName
         val body = entry.text?.takeIf { it.isNotBlank() }
-            ?: "Rule matched: ${rule.summary()}"
-        val expanded = "Matched ${rule.summary()}\n\n$source\n$body"
+            ?: context.localizedString(R.string.runtime_trigger_match, rule.summary(context))
+        val expanded = context.localizedString(R.string.runtime_trigger_detail, rule.summary(context), source, body)
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -270,13 +279,12 @@ object NotificationTriggerPromptNotifier {
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = context.getSystemService(NotificationManager::class.java) ?: return
-        if (nm.getNotificationChannel(CHANNEL_ID) != null) return
         val channel = NotificationChannel(
             CHANNEL_ID,
-            CHANNEL_NAME,
+            context.localizedString(R.string.ncs_triggers_title),
             NotificationManager.IMPORTANCE_DEFAULT,
         ).apply {
-            description = "Prompts shown when an explicitly enabled notification trigger matches."
+            description = context.localizedString(R.string.runtime_triggers_channel_desc)
             setShowBadge(true)
         }
         nm.createNotificationChannel(channel)

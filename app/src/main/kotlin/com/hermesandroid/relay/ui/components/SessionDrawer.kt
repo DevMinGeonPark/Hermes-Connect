@@ -850,7 +850,7 @@ fun SessionDrawerContent(
                                 )
                             } else {
                                 Text(
-                                    text = label,
+                                    text = localizedGroupLabel(label, viewOptions.grouping),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1235,7 +1235,7 @@ private fun SessionDrawerOptionsDialog(
                                         options.copy(projects = toggleMember(options.projects, project)),
                                     )
                                 },
-                                label = { Text(project) },
+                                label = { Text(localizedGroupLabel(project, SessionDrawerGrouping.Project)) },
                             )
                         }
                     }
@@ -1368,40 +1368,44 @@ private fun ProfileColorEditor(
     }
 }
 
-private fun SessionDrawerGrouping.label(): String = when (this) {
-    SessionDrawerGrouping.None -> "None"
-    SessionDrawerGrouping.Updated -> "Date"
-    SessionDrawerGrouping.Project -> "Project"
-    SessionDrawerGrouping.Status -> "Status"
-    SessionDrawerGrouping.Profile -> "Profile"
-}
+@Composable
+private fun SessionDrawerGrouping.label(): String = stringResource(when (this) {
+    SessionDrawerGrouping.None -> R.string.conn_info_none
+    SessionDrawerGrouping.Updated -> R.string.ui_label_date
+    SessionDrawerGrouping.Project -> R.string.drawer_filter_project
+    SessionDrawerGrouping.Status -> R.string.drawer_filter_status
+    SessionDrawerGrouping.Profile -> R.string.drawer_filter_profile
+})
 
-private fun SessionDrawerOrdering.label(): String = when (this) {
-    SessionDrawerOrdering.Updated -> "Updated"
-    SessionDrawerOrdering.Created -> "Created"
-    SessionDrawerOrdering.Title -> "Title"
-    SessionDrawerOrdering.Status -> "Status"
-    SessionDrawerOrdering.Tokens -> "Tokens"
-    SessionDrawerOrdering.Cost -> "Cost"
-}
+@Composable
+private fun SessionDrawerOrdering.label(): String = stringResource(when (this) {
+    SessionDrawerOrdering.Updated -> R.string.drawer_option_updated
+    SessionDrawerOrdering.Created -> R.string.ui_label_created
+    SessionDrawerOrdering.Title -> R.string.drawer_title
+    SessionDrawerOrdering.Status -> R.string.drawer_filter_status
+    SessionDrawerOrdering.Tokens -> R.string.drawer_option_tokens
+    SessionDrawerOrdering.Cost -> R.string.drawer_option_cost
+})
 
-private fun SessionDrawerStatus.label(): String = when (this) {
-    SessionDrawerStatus.NeedsInput -> "Needs input"
-    SessionDrawerStatus.Starting -> "Starting"
-    SessionDrawerStatus.Working -> "Working"
-    SessionDrawerStatus.BackgroundWork -> "Background work"
-    SessionDrawerStatus.Checking -> "Checking"
-    SessionDrawerStatus.Unavailable -> "Unavailable"
-    SessionDrawerStatus.Idle -> "Idle"
-}
+@Composable
+private fun SessionDrawerStatus.label(): String = stringResource(when (this) {
+    SessionDrawerStatus.NeedsInput -> R.string.drawer_activity_needs_input
+    SessionDrawerStatus.Starting -> R.string.drawer_activity_starting
+    SessionDrawerStatus.Working -> R.string.drawer_activity_working
+    SessionDrawerStatus.BackgroundWork -> R.string.drawer_activity_background_work
+    SessionDrawerStatus.Checking -> R.string.drawer_activity_checking
+    SessionDrawerStatus.Unavailable -> R.string.drawer_activity_unavailable
+    SessionDrawerStatus.Idle -> R.string.voice_test_status_idle
+})
 
-private fun SessionDrawerPrState.label(): String = when (this) {
-    SessionDrawerPrState.Open -> "Open"
-    SessionDrawerPrState.Draft -> "Draft"
-    SessionDrawerPrState.Merged -> "Merged"
-    SessionDrawerPrState.Closed -> "Closed"
-    SessionDrawerPrState.None -> "No PR"
-}
+@Composable
+private fun SessionDrawerPrState.label(): String = stringResource(when (this) {
+    SessionDrawerPrState.Open -> R.string.ui_label_pr_open
+    SessionDrawerPrState.Draft -> R.string.ui_label_pr_draft
+    SessionDrawerPrState.Merged -> R.string.ui_label_pr_merged
+    SessionDrawerPrState.Closed -> R.string.ui_label_pr_closed
+    SessionDrawerPrState.None -> R.string.ui_label_no_pr
+})
 
 private fun <T> toggleMember(values: Set<T>, value: T): Set<T> =
     if (value in values) values - value else values + value
@@ -1774,17 +1778,18 @@ private fun SessionWorkBadgeChip(badge: SessionWorkBadge) {
         SessionWorkBadgeKind.BRANCH -> Icons.Filled.AccountTree
         SessionWorkBadgeKind.PULL_REQUEST -> Icons.Filled.Code
     }
+    val badgeLabel = if (badge.kind == SessionWorkBadgeKind.PULL_REQUEST) localizedPrBadge(badge.label) else badge.label
     val kindLabel = when (badge.kind) {
-        SessionWorkBadgeKind.PROJECT -> "Project"
-        SessionWorkBadgeKind.BRANCH -> "Branch"
-        SessionWorkBadgeKind.PULL_REQUEST -> "Pull request"
+        SessionWorkBadgeKind.PROJECT -> stringResource(R.string.drawer_filter_project)
+        SessionWorkBadgeKind.BRANCH -> stringResource(R.string.ui_label_branch)
+        SessionWorkBadgeKind.PULL_REQUEST -> stringResource(R.string.drawer_filter_pull_request)
     }
     Row(
         modifier = Modifier
             .clip(appearanceRoundedCornerShape(6.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(horizontal = 6.dp, vertical = 1.dp)
-            .semantics { contentDescription = "$kindLabel: ${badge.label}" },
+            .semantics { contentDescription = "$kindLabel: $badgeLabel" },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
@@ -1795,7 +1800,7 @@ private fun SessionWorkBadgeChip(badge: SessionWorkBadge) {
             modifier = Modifier.size(11.dp),
         )
         Text(
-            text = badge.label,
+            text = badgeLabel,
             style = relayMetadataStyle(),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
@@ -2065,3 +2070,43 @@ private fun formatTimestamp(
 }
 
 private const val MINUTE_MILLIS = 60_000L
+
+/** Grouping keys remain stable; only the generated headings are localized. */
+@Composable
+private fun localizedGroupLabel(label: String, grouping: SessionDrawerGrouping): String {
+    val resource = when (grouping) {
+        SessionDrawerGrouping.Project -> if (label == "No project") R.string.ui_label_no_project else null
+        SessionDrawerGrouping.Updated -> when (label) {
+            "Today" -> R.string.chat_date_today
+            "Yesterday" -> R.string.chat_date_yesterday
+            "Last 7 days" -> R.string.ui_label_last_week
+            "Older" -> R.string.ui_label_older
+            else -> null
+        }
+        SessionDrawerGrouping.Status -> when (label) {
+            "Needs input" -> R.string.drawer_activity_needs_input
+            "Starting" -> R.string.drawer_activity_starting
+            "Working" -> R.string.drawer_activity_working
+            "Background work" -> R.string.drawer_activity_background_work
+            "Checking" -> R.string.drawer_activity_checking
+            "Unavailable" -> R.string.drawer_activity_unavailable
+            "Idle" -> R.string.voice_test_status_idle
+            else -> null
+        }
+        else -> null
+    }
+    return resource?.let { stringResource(it) } ?: label
+}
+
+@Composable
+private fun localizedPrBadge(label: String): String {
+    val state = label.substringAfterLast(" · ", "")
+    val resource = when (state.lowercase()) {
+        "open" -> R.string.ui_label_pr_open
+        "draft" -> R.string.ui_label_pr_draft
+        "merged" -> R.string.ui_label_pr_merged
+        "closed" -> R.string.ui_label_pr_closed
+        else -> null
+    }
+    return if (resource == null) label else label.substringBeforeLast(" · ") + " · " + stringResource(resource)
+}

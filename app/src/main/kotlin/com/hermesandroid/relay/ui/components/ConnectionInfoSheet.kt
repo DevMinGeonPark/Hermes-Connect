@@ -826,16 +826,16 @@ fun AgentInfoSheet(
             ?.firstOrNull {
                 it.dashboard?.url?.trimEnd('/') == effectiveDashboardUrl.trimEnd('/')
             }
-            ?.displayLabel()
+            ?.localizedDisplayLabel()
             ?: effectiveDashboardUrl.takeIf { it.isNotBlank() }?.let { url ->
                 com.hermesandroid.relay.data.Connection.endpointCandidateFromDashboardUrl(
                     role = com.hermesandroid.relay.data.Connection.inferRouteRole(url),
                     priority = 0,
                     dashboardUrl = url,
-                )?.displayLabel()
+                )?.localizedDisplayLabel()
             }
     } else {
-        activeEndpoint?.displayLabel()
+        activeEndpoint?.localizedDisplayLabel()
             ?: com.hermesandroid.relay.data.Connection
                 .extractDefaultLabel(effectiveApiServerUrl)
                 .takeIf { it.isNotBlank() }
@@ -3404,16 +3404,16 @@ private fun LegacyAgentInfoSheet(
                         ?.firstOrNull {
                             it.dashboard?.url?.trimEnd('/') == effectiveDashboardUrl.trimEnd('/')
                         }
-                        ?.displayLabel()
+                        ?.localizedDisplayLabel()
                         ?: effectiveDashboardUrl.takeIf { it.isNotBlank() }?.let { url ->
                             com.hermesandroid.relay.data.Connection.endpointCandidateFromDashboardUrl(
                                 role = com.hermesandroid.relay.data.Connection.inferRouteRole(url),
                                 priority = 0,
                                 dashboardUrl = url,
-                            )?.displayLabel()
+                            )?.localizedDisplayLabel()
                         }
                 } else {
-                    activeEndpoint?.displayLabel()
+                    activeEndpoint?.localizedDisplayLabel()
                         ?: com.hermesandroid.relay.data.Connection
                             .extractDefaultLabel(effectiveApiServerUrl)
                             .takeIf { it.isNotBlank() }
